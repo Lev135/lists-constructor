@@ -1,33 +1,72 @@
 const express = require('express');
 const app = express();
 
-const mysql = require("mysql2");
+const MySql = require('mysql2/promise');
+const Sequelize = require('sequelize');
 
-const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  port: 3306,
-  password: "password"
+const dbInfo = {
+  name : "constructorDb",
+  user : "root",
+  password : "password",
+  host : "localhost",
+  port : "3306"
+};
+
+/*
+  Создаём базу данных. Можно ли это сделать как-то проще,
+  без отдельного подключения MySQL?
+*/
+MySql.createConnection({
+  host: dbInfo.host,
+  user: dbInfo.user,
+  port: dbInfo.port,
+  password: dbInfo.password
+}).then(connection => {
+  console.log("Соединение с сервером MySql успешно установлено");
+  connection.query(`CREATE DATABASE IF NOT EXISTS ${dbInfo.name};`).then(res => {
+    console.log("База данных создана/успешно проверена");
+    closeConnection(connection);
+    startSequelize();
+  }).catch(err => {
+    closeConnection(connection);
+    console.error("Ошибка при создании/проверке базы данных: " + err.message);
+  });
+}).catch(err => {
+  console.error("Ошибка при подключении к серверу MySql: " + err.message);
 });
 
-connection.connect(function (err){
-  if (err) {
-    return console.error("Ошибка: " + err.message);
-  }
-  else{
-    console.log("Подключение к серверу MySQL успешно установлено");
-  }
-});
+function closeConnection(connection) {
+  connection.end().then(()=> {
+    console.log("Подключение к серверу MySql успешно закрыто");
+  }).catch(err => {
+    console.log("Ошибка при закрытии подключении к серверу MySql: " + err.message);
+  });
+}
 
-connection.end(function(err) {
-  if (err) {
-    return console.log("Ошибка: " + err.message);
-  }
-  console.log("Подключение закрыто");
-});
+/*
+  Основная часть запуска. Вынесена в функцию, чтобы запускалась после создания БД.
+  Опять же, выглядит кривовато, можно ли это как-то поправить?
+*/
 
-app.get('/*', function (req, res) {
-  res.end('Hello, world!');
-});
+function startSequelize() {
+  const sequelize = new Sequelize(dbInfo.name, dbInfo.user, dbInfo.password, {
+    dialect: "mysql",
+    host: dbInfo.host,
+    port: dbInfo.port
+  });
+  console.log(sequelize);
 
- app.listen(3000);
+  console.log("Подключение User");
+  const Models = require('./modules/sequelize-models/sequelize-models')(sequelize, Sequelize);
+  console.log("Подключение User успешно завершено");
+
+  sequelize.sync().then(result => {
+    console.log("Sequelize успешно синхронизован");
+    sequelize.close();
+  }).catch(err => {
+    console.log("Ошибка при синхронизации sequelize" + err);
+    sequelize.close();
+  });
+
+
+}
