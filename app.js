@@ -23,13 +23,15 @@ MySql.createConnection({
   password: dbInfo.password
 }).then(connection => {
   console.log("Соединение с сервером MySql успешно установлено");
-  connection.query(`CREATE DATABASE IF NOT EXISTS ${dbInfo.name};`).then(res => {
-    console.log("База данных создана/успешно проверена");
-    closeConnection(connection);
-    startSequelize();
-  }).catch(err => {
-    closeConnection(connection);
-    console.error("Ошибка при создании/проверке базы данных: " + err.message);
+  connection.query(`DROP DATABASE IF EXISTS ${dbInfo.name}`).then(res => {
+    connection.query(`CREATE DATABASE IF NOT EXISTS ${dbInfo.name};`).then(res => {
+      console.log("База данных создана/успешно проверена");
+      closeConnection(connection);
+      startSequelize();
+    }).catch(err => {
+      closeConnection(connection);
+      console.error("Ошибка при создании/проверке базы данных: " + err.message);
+    });
   });
 }).catch(err => {
   console.error("Ошибка при подключении к серверу MySql: " + err.message);
@@ -54,8 +56,7 @@ function startSequelize() {
     host: dbInfo.host,
     port: dbInfo.port
   });
-  console.log(sequelize);
-
+  console.log("Подключение моделей...");
   try {
     const Models = require('./modules/sequelize-models/sequelize-models')
                                                         (sequelize, Sequelize);
@@ -65,7 +66,7 @@ function startSequelize() {
   }
   console.log("Подключение User успешно завершено");
 
-  sequelize.sync().then(result => {
+  sequelize.sync({force:true}).then(result => {
     console.log("Sequelize успешно синхронизован");
     sequelize.close();
   }).catch(err => {

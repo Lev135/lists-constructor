@@ -1,13 +1,13 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('Source', {
+  return sequelize.define('TaskItem', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false
     },
-    name: {
-      type: DataTypes.STRING,
+    index: {
+      type: DataTypes.INTEGER,
       allowNull: false
     }
   });

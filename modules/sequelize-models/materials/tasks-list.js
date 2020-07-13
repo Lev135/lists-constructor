@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('TaskList', {
+  return sequelize.define('TasksList', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,

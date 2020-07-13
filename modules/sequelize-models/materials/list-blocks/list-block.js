@@ -1,13 +1,13 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('Method', {
+  return sequelize.define('ListBlock', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false
     },
-    name: {
-      type: DataTypes.STRING,
+    index: {
+      type: DataTypes.INTEGER,
       allowNull: false
     }
   });
