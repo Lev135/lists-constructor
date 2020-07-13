@@ -21,13 +21,13 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    registrationDate: {
-      type: DataTypes.DATE
-    },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true
+    },
+    telephone: {
+      type: DataTypes.STRING
     },
     isTeacher: {
       type: DataTypes.BOOLEAN
@@ -38,8 +38,11 @@ module.exports = (sequelize, DataTypes) => {
     isAdmin: {
       type: DataTypes.BOOLEAN
     },
-    telephone: {
+    photo: {
       type: DataTypes.STRING
+    },
+    registrationDate: {
+      type: DataTypes.DATE
     }
   });
 };

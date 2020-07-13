@@ -1,24 +1,24 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('TaskList', {
+  return sequelize.define('Task', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false
     },
-    title: {
+    statement: {
       type: DataTypes.STRING,
       allowNull: false
     },
+    answer: {
+      type: DataTypes.STRING
+      // null for 'prove' tasks
+    },
+    solution: {
+      type: DataTypes.STRING
+    },
     grade: {
       type: DataTypes.INTEGER
-    },
-    creatorId: {
-      type: DataTypes.INTEGER
     }
-    // logo: {
-    //   type: DataTypes.
-    // },
-
   });
 };

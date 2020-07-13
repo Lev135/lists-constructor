@@ -1,14 +1,17 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('TasksBlock', {
+  return sequelize.define('TaskList', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false
     },
-    taskIds: {
-      type: DataTypes.INTEGER,
-      unique: true
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    logo: {
+      type: DataTypes.STRING
     }
   });
 };

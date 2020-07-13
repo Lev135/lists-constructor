@@ -56,8 +56,13 @@ function startSequelize() {
   });
   console.log(sequelize);
 
-  console.log("Подключение User");
-  const Models = require('./modules/sequelize-models/sequelize-models')(sequelize, Sequelize);
+  try {
+    const Models = require('./modules/sequelize-models/sequelize-models')
+                                                        (sequelize, Sequelize);
+  } catch (err) {
+    console.log("Ошибка при подключении моделей sequelize: " + err.message);
+    throw err;
+  }
   console.log("Подключение User успешно завершено");
 
   sequelize.sync().then(result => {
@@ -67,6 +72,4 @@ function startSequelize() {
     console.log("Ошибка при синхронизации sequelize" + err);
     sequelize.close();
   });
-
-
 }
