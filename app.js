@@ -4,27 +4,24 @@ const app = express();
 const MySql = require('mysql2/promise');
 const Sequelize = require('sequelize');
 
-const dbInfo = {
-  name : "constructorDb",
-  user : "root",
-  password : "password",
-  host : "localhost",
-  port : "3306"
-};
+const FileStream = require('fs');
+const options = FileStream.readFileSync('./personal-options.json', 'utf8')
+      .toString().split(/(?={")/).map(x => JSON.parse(x))[0];
+console.log(options);
 
 /*
   Создаём базу данных. Можно ли это сделать как-то проще,
   без отдельного подключения MySQL?
 */
 MySql.createConnection({
-  host: dbInfo.host,
-  user: dbInfo.user,
-  port: dbInfo.port,
-  password: dbInfo.password
+  host: options.dataBase.host,
+  user: options.dataBase.user,
+  port: options.dataBase.port,
+  password: options.dataBase.password
 }).then(connection => {
   console.log("Соединение с сервером MySql успешно установлено");
-  connection.query(`DROP DATABASE IF EXISTS ${dbInfo.name}`).then(res => {
-    connection.query(`CREATE DATABASE IF NOT EXISTS ${dbInfo.name};`).then(res => {
+  connection.query(`DROP DATABASE IF EXISTS ${options.dataBase.name}`).then(res => {
+    connection.query(`CREATE DATABASE IF NOT EXISTS ${options.dataBase.name};`).then(res => {
       console.log("База данных создана/успешно проверена");
       closeConnection(connection);
       startSequelize();
@@ -51,10 +48,10 @@ function closeConnection(connection) {
 */
 
 function startSequelize() {
-  const sequelize = new Sequelize(dbInfo.name, dbInfo.user, dbInfo.password, {
+  const sequelize = new Sequelize(options.dataBase.name, options.dataBase.user, options.dataBase.password, {
     dialect: "mysql",
-    host: dbInfo.host,
-    port: dbInfo.port
+    host: options.dataBase.host,
+    port: options.dataBase.port
   });
   console.log("Подключение моделей...");
   try {

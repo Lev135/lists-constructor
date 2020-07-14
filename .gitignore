@@ -1,4 +1,4 @@
 node_modules
 .jscsrc
 .jshintrc
-dbInfo.json
+personal-options.json
