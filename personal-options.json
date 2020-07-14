@@ -7,7 +7,6 @@
     "port" : "3306"
   },
   "site" : {
-    "host" : "localhost",
-    "port" : ""
+    "port" : "3000"
   }
 }

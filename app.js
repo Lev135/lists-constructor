@@ -1,5 +1,4 @@
 const express = require('express');
-const app = express();
 
 const MySql = require('mysql2/promise');
 const Sequelize = require('sequelize');
@@ -54,20 +53,43 @@ function startSequelize() {
     port: options.dataBase.port
   });
   console.log("Подключение моделей...");
-  try {
-    const Models = require('./modules/sequelize-models/sequelize-models')
-                                                        (sequelize, Sequelize);
-  } catch (err) {
-    console.log("Ошибка при подключении моделей sequelize: " + err.message);
-    throw err;
-  }
+//  try {
+  const Models = require('./modules/sequelize-models/sequelize-models')
+                                                      (sequelize, Sequelize);
+//  } catch (err) {
+//    console.log("Ошибка при подключении моделей sequelize: " + err.message);
+//    throw err;
+//  }
   console.log("Подключение User успешно завершено");
 
   sequelize.sync({force:true}).then(result => {
     console.log("Sequelize успешно синхронизован");
-    sequelize.close();
+    try {
+      startExpress(sequelize, Models);
+    }
+    catch (err) {
+      console.error("Ошибка при запуске Express: " + err);
+    }
   }).catch(err => {
     console.log("Ошибка при синхронизации sequelize" + err);
     sequelize.close();
   });
+}
+
+function startExpress(sequelize, Models) {
+  const app = express();
+  app.set("view engine", "pug");
+  const bodyParser = require('body-parser');
+  app.use(bodyParser.urlencoded({ extended: false }));
+
+  const Controllers = require('./modules/controllers/controllers')(Models);
+  const Routers = require('./modules/routers/routers')(Controllers);
+  app.use('/user', Routers.UserRouter);
+
+  // обработка ошибки 404
+  app.use(function (req, res, next) {
+      res.status(404).send("Not Found");
+  });
+
+  app.listen(options.site.port);
 }
