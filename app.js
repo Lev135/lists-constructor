@@ -82,6 +82,63 @@ function startExpress(sequelize, Models) {
   const bodyParser = require('body-parser');
   app.use(bodyParser.urlencoded({ extended: false }));
 
+
+
+  // Passport:
+  console.log("Passport...");
+  const passport = require('passport');
+  const LocalStrategy = require('passport-local').Strategy;
+  console.log(LocalStrategy);
+
+  passport.use(new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password'
+  }, function(email, password, done) {
+    Models.User.findOne({where: {email: email}}).then(user => {
+      if (!user) {
+        return done(null, false, {message: "Пользователь с такой почтой не найден"});
+      }
+      if (user.password != password) {
+        return done(null, false, {message: "Неверный пароль"});
+      }
+      else {
+        return done(null, user);
+      }
+    }).catch(err => {
+      return done(err);
+    });
+  }));
+
+  passport.serializeUser(function(user, done) {
+    done(null, user.id);
+  });
+  passport.deserializeUser(function(id, done) {
+    Models.User.findByPk(id).then(user => {
+      done(null, user);
+    }).catch(err => {
+      done(err);
+    });
+  });
+
+  const cookieParser = require('cookie-parser');
+  app.use(cookieParser());
+  const session = require('express-session');
+  app.use(session({ secret: 'SECRET' }));
+
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  app.use((req, res, next) => {
+    if (req.url == '/user/login' || req.url == '/user/register' || req.isAuthenticated()) {
+      next();
+    } else {
+      console.log("Нашли зайца!)");
+      res.redirect('/user/login');
+    }
+  });
+
+  app.listen(options.site.port);
+
   const Controllers = require('./modules/controllers/controllers')(Models);
   const Routers = require('./modules/routers/routers')(Controllers);
   app.use('/user', Routers.UserRouter);
@@ -90,6 +147,4 @@ function startExpress(sequelize, Models) {
   app.use(function (req, res, next) {
       res.status(404).send("Not Found");
   });
-
-  app.listen(options.site.port);
 }

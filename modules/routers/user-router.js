@@ -4,10 +4,10 @@ module.exports = (Controllers) => {
   const userController = Controllers.UserController;
   const userRouter = express.Router();
 
-  userRouter.use('/registration', userController.registrationPage);
-  userRouter.use('/registrationPost', userController.registrationPost);
-  userRouter.use('/profile', userController.profilePage);
-  userRouter.use('/users', userController.usersPage);
+  userRouter.post('/login', userController.login);
+  userRouter.post('/register', userController.register);
+  userRouter.get('/logout', userController.logout);
+  userRouter.get('/register', userController.registrationPage);
 
   return userRouter;
 };
