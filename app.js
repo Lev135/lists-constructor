@@ -82,7 +82,7 @@ function startExpress(sequelize, Models) {
   const bodyParser = require('body-parser');
   app.use(bodyParser.urlencoded({ extended: false }));
 
-
+app.use(express.static("public"));
 
   // Passport:
   console.log("Passport...");
@@ -128,14 +128,14 @@ function startExpress(sequelize, Models) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  app.use((req, res, next) => {
+/*  app.use((req, res, next) => {
     if (req.url == '/user/login' || req.url == '/user/register' || req.isAuthenticated()) {
       next();
     } else {
       console.log("Нашли зайца!)");
       res.redirect('/user/login');
     }
-  });
+  });*/
 
   app.listen(options.site.port);
 
