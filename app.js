@@ -19,7 +19,7 @@ MySql.createConnection({
   password: options.dataBase.password
 }).then(connection => {
   console.log("Соединение с сервером MySql успешно установлено");
-  connection.query(`DROP DATABASE IF EXISTS ${options.dataBase.name}`).then(res => {
+//  connection.query(`DROP DATABASE IF EXISTS ${options.dataBase.name}`).then(res => {
     connection.query(`CREATE DATABASE IF NOT EXISTS ${options.dataBase.name};`).then(res => {
       console.log("База данных создана/успешно проверена");
       closeConnection(connection);
@@ -28,7 +28,7 @@ MySql.createConnection({
       closeConnection(connection);
       console.error("Ошибка при создании/проверке базы данных: " + err.message);
     });
-  });
+//  });
 }).catch(err => {
   console.error("Ошибка при подключении к серверу MySql: " + err.message);
 });
@@ -137,9 +137,7 @@ function startExpress(sequelize, Models) {
     }
   });
 
-  app.listen(options.site.port);
-
-  const Controllers = require('./modules/controllers/controllers')(Models);
+  const Controllers = require('./modules/controllers/controllers')(Models, passport);
   const Routers = require('./modules/routers/routers')(Controllers);
   app.use('/user', Routers.UserRouter);
 
@@ -147,4 +145,9 @@ function startExpress(sequelize, Models) {
   app.use(function (req, res, next) {
       res.status(404).send("Not Found");
   });
+
+  require('./test-data/create-test-users')(Models);
+
+  app.listen(options.site.port);
+
 }
