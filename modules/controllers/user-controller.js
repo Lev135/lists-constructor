@@ -1,4 +1,4 @@
-const hash = str => str;
+const hash = str => "hash_" + str;
 
 const getUserInfoFromBody = body => ({
   name: body.name,
@@ -30,6 +30,9 @@ const getAllInfo = user => ({
 module.exports = (Models, passport) => {
   const User = Models.User;
   return {
+    loginPage: (req, res) => {
+      res.render("user/login.pug");
+    },
     login: (req, res, next) => {
       passport.authenticate('local', (err, user, info) => {
         if (err) {
@@ -42,9 +45,9 @@ module.exports = (Models, passport) => {
           (err ? next(err) : res.redirect(`./profile?id=${user.id}`)));
       })(req, res, next);
     },
-    logout: (req, res) => {
-      req.logout();
-      res.redirect('/');
+
+    registrationPage: (req, res) => {
+      res.render("user/register.pug");
     },
     register: (req, res, next) => {
       console.log(req.body);
@@ -65,12 +68,12 @@ module.exports = (Models, passport) => {
         res.send(`<p>Ошибка при обработке запроса: ${err}</p>`);
       });
     },
-    registrationPage: (req, res) => {
-      res.render("user/register.pug");
+
+    logout: (req, res) => {
+      req.logout();
+      res.redirect('/');
     },
-    loginPage: (req, res) => {
-      res.render("user/login.pug");
-    },
+
     usersPage: (req, res) => {
       User.findAll({raw: true}).then(users => {
         console.log(users);
@@ -80,6 +83,7 @@ module.exports = (Models, passport) => {
         res.send(`<p>Ошибка при обработке запроса: ${err.message}</p>`);
       });
     },
+
     profilePage: (req, res) => {
       console.log(`user.id: ${req.user.id}, query.id: ${req.body.id}`);
       User.findByPk(req.query.id).then(profileUser => {
@@ -97,35 +101,5 @@ module.exports = (Models, passport) => {
         res.send(`Ошибка при открытии страницы пользователя: ${err}`);
       });
     },
-
-    /*
-    registrationPost: (req, res) => {
-      console.log(`Registration post: `);
-      console.log(req.body);
-      if (!req.body) {
-        return res.sendStatus(400);
-      }
-      const info = getUserInfoFromBody(req.body);
-      if (!info) {
-        return res.sendStatus(400);
-      }
-      Models.User.create(info).then(user => {
-        console.log(user);
-        res.redirect(`./profile?${user.id}`);
-      });
-    },
-    profilePage: (req, res) => {
-      res.send("Профиль пользователя");
-    },
-    editPage: (req, res) => {
-      res.send("Редактирование профиля");
-    },
-    editPost: (req, res) => {
-
-    },
-    usersPage: (req, res) => {
-      res.send("Информация о пользователях");
-    }
-    */
   };
 };

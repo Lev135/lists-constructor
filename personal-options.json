@@ -4,7 +4,8 @@
     "user" : "root",
     "password" : "password",
     "host" : "localhost",
-    "port" : "3306"
+    "port" : "3306",
+    "logDir" : "\\logs\\"
   },
   "site" : {
     "port" : "3000"

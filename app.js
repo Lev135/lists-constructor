@@ -46,11 +46,34 @@ function closeConnection(connection) {
   Опять же, выглядит кривовато, можно ли это как-то поправить?
 */
 
+function getLoggingFile() {
+  if (!options.dataBase.logDir) {
+    console.log("Добавьте папку для логов sequelize в personal-options.json:\n" +
+                "(dataBase.\"logDir\" : \"\\\\logs\\\\\")");
+    return;
+  }
+  const now = new Date();
+  const dir = options.dataBase.logDir +
+              `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  const fileName = `/${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}.txt`;
+  const shell = require('shelljs');
+  shell.mkdir('-p', __dirname + dir);
+  FileStream.writeFileSync(__dirname + dir + fileName, "Sequelize logs\n");
+  return __dirname + dir + fileName;
+}
+
 function startSequelize() {
-  const sequelize = new Sequelize(options.dataBase.name, options.dataBase.user, options.dataBase.password, {
+  const logFile = getLoggingFile();
+  const logFunction = logFile ? tmp =>
+    FileStream.appendFileSync(logFile, tmp + "\n")
+                              : console.log;
+  const sequelize = new Sequelize(options.dataBase.name,
+                                  options.dataBase.user,
+                                  options.dataBase.password, {
     dialect: "mysql",
     host: options.dataBase.host,
-    port: options.dataBase.port
+    port: options.dataBase.port,
+    logging: logFunction,
   });
   console.log("Подключение моделей...");
 //  try {
