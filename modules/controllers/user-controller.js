@@ -65,7 +65,7 @@ module.exports = (Models, passport) => {
         });
       }).catch(err => {
         console.error(err);
-        res.send(`<p>Ошибка при обработке запроса: ${err}</p>`);
+        res.send(`<p>Ошибка при обработке запроса: ${err.message}</p>`);
       });
     },
 

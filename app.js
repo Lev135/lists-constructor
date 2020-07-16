@@ -154,26 +154,28 @@ function startExpress(sequelize, Models) {
   app.use(passport.session());
 
   // Перенаправление невошедших на user/login
-/*  app.use((req, res, next) => {
+  app.use((req, res, next) => {
     if (req.url == '/user/login' || req.url == '/user/register' || req.isAuthenticated()) {
       next();
     } else {
       console.log("Нашли зайца!)");
       res.redirect('/user/login');
     }
-  });*/
+  });
 
   const Controllers = require('./modules/controllers/controllers')(Models, passport);
   const Routers = require('./modules/routers/routers')(Controllers);
   app.use('/user', Routers.UserRouter);
+  app.use('/task', Routers.TaskRouter);
 
-  // обработка ошибки 404
+  // обработка ошибки 404тщ
   app.use(function (req, res, next) {
       res.status(404).send("Not Found");
   });
 
   // Создание тестовых пользователей
   require('./test-data/create-test-users')(Models);
+  require('./test-data/create-test-tasks')(Models);
 
   app.listen(options.site.port);
 }
