@@ -29,7 +29,7 @@ module.exports = (Models, passport) => {
                 res.redirect(`./view?id=${task.id}`);
             }).catch(err => {
                 console.error(err);
-                res.send(`Ошибка при создании новой задачи: ${err}`)
+                res.send(`Ошибка при создании новой задачи: ${err}`);
             });
         },
         editPage: (req, res) => {
@@ -43,7 +43,7 @@ module.exports = (Models, passport) => {
                     res.send(`Ошибка при рендеринге страницы редактирования задачи: ${err}`);
                     console.error(err);
                 });
-            }   
+            }
         },
         edit: (req, res) => {
             const updatedTask = getTaskInfoFromBody(req.body);
