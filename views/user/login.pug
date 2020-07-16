@@ -1,20 +1,20 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Вход</title>
-  <meta charset="utf-8" />
-</head>
-<body>
-  <h1>Вход</h1>
-  <form action="" method="POST">
+doctype html
+html
+    head
+        title Регистрация
+        meta(charset = "utf8")
+        meta(name = 'descripton' content = 'Описание страницы')
+        mets(name = 'viewport' content = 'width = device-width, initial-scale = 1.0')
+        meta(http-equiv = 'X-UA-Compatible', content = 'IE=Edge')
+        link(rel="stylesheet" type="text/css" href='./assets/style.css')
+    body
+      .login_block
+        h1 Вход
+        form(action="" method="POST")
+          label Электронная почта
+          input(name="email" type="email")
+          label Пароль
+          input(name="password" type="password")
+          input(type="submit" value="Отправить")
 
-    <label>Электронная почта</label>
-    <input name="email" type="email"/><br/>
-    <label>Пароль</label>
-    <input name="password" type="password"/><br/>
-
-    <input type="submit" value="Отправить" />
-  </form>
-  <a href="./users">К списку пользователей</a>
-</body>
-<html>
+        a(href="./users") К списку пользователей
