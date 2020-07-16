@@ -1,17 +1,19 @@
+// requires :
+// Main framework:
 const express = require('express');
 
+// For dataBases
 const MySql = require('mysql2/promise');
 const Sequelize = require('sequelize');
 
+// For files
 const FileStream = require('fs');
+// Reading options user options
 const options = FileStream.readFileSync('./personal-options.json', 'utf8')
       .toString().split(/(?={")/).map(x => JSON.parse(x))[0];
 console.log(options);
 
-/*
-  Создаём базу данных. Можно ли это сделать как-то проще,
-  без отдельного подключения MySQL?
-*/
+// Creating dataBase if not exists
 MySql.createConnection({
   host: options.dataBase.host,
   user: options.dataBase.user,
@@ -19,16 +21,21 @@ MySql.createConnection({
   password: options.dataBase.password
 }).then(connection => {
   console.log("Соединение с сервером MySql успешно установлено");
-//  connection.query(`DROP DATABASE IF EXISTS ${options.dataBase.name}`).then(res => {
-    connection.query(`CREATE DATABASE IF NOT EXISTS ${options.dataBase.name};`).then(res => {
+    connection.query(`CREATE DATABASE IF NOT EXISTS ${options.dataBase.name};`)
+      .then(res => {
       console.log("База данных создана/успешно проверена");
       closeConnection(connection);
-      startSequelize();
+      try {
+        startSequelize();
+      }
+      catch (err) {
+        console.error("Ошибка при запуске sequelize: " + err.message);
+      }
+
     }).catch(err => {
       closeConnection(connection);
       console.error("Ошибка при создании/проверке базы данных: " + err.message);
     });
-//  });
 }).catch(err => {
   console.error("Ошибка при подключении к серверу MySql: " + err.message);
 });
@@ -65,7 +72,7 @@ function getLoggingFile() {
 function startSequelize() {
   const logFile = getLoggingFile();
   const logFunction = logFile ? tmp =>
-    FileStream.appendFileSync(logFile, tmp + "\n")
+          FileStream.appendFileSync(logFile, tmp + "\n")
                               : console.log;
   const sequelize = new Sequelize(options.dataBase.name,
                                   options.dataBase.user,
@@ -76,14 +83,10 @@ function startSequelize() {
     logging: logFunction,
   });
   console.log("Подключение моделей...");
-//  try {
+
   const Models = require('./modules/sequelize-models/sequelize-models')
                                                       (sequelize, Sequelize);
-//  } catch (err) {
-//    console.log("Ошибка при подключении моделей sequelize: " + err.message);
-//    throw err;
-//  }
-  console.log("Подключение User успешно завершено");
+  console.log("Подключение моделей успешно завершено");
 
   sequelize.sync({force:true}).then(result => {
     console.log("Sequelize успешно синхронизован");
@@ -102,16 +105,15 @@ function startSequelize() {
 function startExpress(sequelize, Models) {
   const app = express();
   app.set("view engine", "pug");
+  // json parser для передачи данных на север
   const bodyParser = require('body-parser');
   app.use(bodyParser.urlencoded({ extended: false }));
-
-app.use(express.static("public"));
+  // директория для статический файлов
+  app.use(express.static("public"));
 
   // Passport:
-  console.log("Passport...");
   const passport = require('passport');
   const LocalStrategy = require('passport-local').Strategy;
-  console.log(LocalStrategy);
 
   passport.use(new LocalStrategy({
     usernameField: 'email',
@@ -151,6 +153,7 @@ app.use(express.static("public"));
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Перенаправление невошедших на user/login
 /*  app.use((req, res, next) => {
     if (req.url == '/user/login' || req.url == '/user/register' || req.isAuthenticated()) {
       next();
@@ -169,8 +172,8 @@ app.use(express.static("public"));
       res.status(404).send("Not Found");
   });
 
+  // Создание тестовых пользователей
   require('./test-data/create-test-users')(Models);
 
   app.listen(options.site.port);
-
 }

@@ -85,7 +85,6 @@ module.exports = (Models, passport) => {
     },
 
     profilePage: (req, res) => {
-      console.log(`user.id: ${req.user.id}, query.id: ${req.body.id}`);
       User.findByPk(req.query.id).then(profileUser => {
         User.findByPk(req.user.id).then(user => {
           if (profileUser.id === user.id) {
