@@ -1,15 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Мой профиль</title>
-    <meta charset="utf-8" />
-</head>
-<body>
+doctype html
+html
+    head
+        title Мой профиль
+        meta(charset = "utf8")
+        meta(name = 'descripton' content = 'Описание страницы')
+        mets(name = 'viewport' content = 'width = device-width, initial-scale = 1.0')
+        meta(http-equiv = 'X-UA-Compatible' content = 'IE=Edge')
+        link(rel="stylesheet" href="/assets/css/style.css")
+        link(rel="stylesheet" href="/assets/css/register.css")
+        link(rel="stylesheet" href="/assets/css/navbar-footer.css")
+        link(rel="stylesheet" href="/assets/css/profile.css")
+    body
+    include ../../public/includes/navbar.pug
+    .my_profile    
+        .my_profile_box    
+            h2(class="my_profile_title") Мой профиль
+            label Электронная почта:
+            label #{mainInfo.email}<br>
+            label Фамилия:
+            label #{mainInfo.surname}<br>
+            label Имя:
+            label #{mainInfo.name}<br>
+            label Отчество:
+            label #{mainInfo.patronymic}<br>
+            label Номер телефона:
+            label #{mainInfo.tel}
+    include ../../public/includes/footer.pug
 
-    <h1>Мой профиль</h1>
 
-    <label>Электронная почта</label><br/>
-    <label>#{mainInfo.email}</label><br/>
 
-</body>
-<html>
