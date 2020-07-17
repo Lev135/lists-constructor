@@ -1,6 +1,5 @@
 const express = require('express');
 module.exports = (Controllers) => {
-  console.log(Controllers);
   const taskController = Controllers.TaskController;
   const taskRouter = express.Router();
 

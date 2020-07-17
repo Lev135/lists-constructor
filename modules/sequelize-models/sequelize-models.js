@@ -1,16 +1,18 @@
 module.exports = (sequelize, DataTypes) => {
   const models = {
     User: require('./user')(sequelize, DataTypes),
-    Tag: require('./tag')(sequelize, DataTypes),
+    tags: require('./tags/tags')(sequelize, DataTypes),
     materials: require('./materials/materials')(sequelize, DataTypes),
-    MaterialTag: require('./material-tag')(sequelize, DataTypes)
   };
   // Other links
   models.User.hasMany(models.materials.Material, {onDelete: "set null"});
   models.User.hasMany(models.materials.AccessRule, {onDelete: "cascade"});
   // Materials <-> Tags many-many link (through MaterialTag)
-  models.materials.Material.belongsToMany(models.Tag, {through: models.MaterialTag});
-  models.Tag.belongsToMany(models.materials.Material, {through: models.MaterialTag});
+  models.materials.Material.belongsToMany(models.tags.Source, {through: "MaterialSource"});
+  models.tags.Source.belongsToMany(models.materials.Material, {through: "MaterialSource"});
+  models.materials.Material.belongsToMany(models.tags.Theme, {through: "MaterialTheme"});
+  models.tags.Theme.belongsToMany(models.materials.Material, {through: "MaterialTheme"});
+
 
   return models;
 };

@@ -21,21 +21,25 @@ MySql.createConnection({
   password: options.dataBase.password
 }).then(connection => {
   console.log("Соединение с сервером MySql успешно установлено");
-    connection.query(`CREATE DATABASE IF NOT EXISTS ${options.dataBase.name};`)
-      .then(res => {
-      console.log("База данных создана/успешно проверена");
-      closeConnection(connection);
-      try {
-        startSequelize();
-      }
-      catch (err) {
-        console.error("Ошибка при запуске sequelize: " + err.message);
-      }
+    connection.query(`DROP DATABASE IF EXISTS ${options.dataBase.name};`)
+      .then(() => {
+        connection.query(`CREATE DATABASE IF NOT EXISTS ${options.dataBase.name};`)
+          .then(res => {
+          console.log("База данных создана/успешно проверена");
+          closeConnection(connection);
+          try {
+            startSequelize();
+          }
+          catch (err) {
+            console.error("Ошибка при запуске sequelize: " + err.message);
+          }
 
-    }).catch(err => {
-      closeConnection(connection);
-      console.error("Ошибка при создании/проверке базы данных: " + err.message);
-    });
+        }).catch(err => {
+          closeConnection(connection);
+          console.error("Ошибка при создании/проверке базы данных: " + err.message);
+        });
+      })
+      .catch(err => console.error("Ошибка при удалении базы данных " + err.message));
 }).catch(err => {
   console.error("Ошибка при подключении к серверу MySql: " + err.message);
 });
@@ -173,9 +177,8 @@ function startExpress(sequelize, Models) {
       res.status(404).send("Not Found");
   });
 
-  // Создание тестовых пользователей
-  require('./test-data/create-test-users')(Models);
-  require('./test-data/create-test-tasks')(Models);
+  // Создание тестовых данных
+  require('./test-data/test-data')(Models);
 
   app.listen(options.site.port);
 }
