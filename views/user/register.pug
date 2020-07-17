@@ -7,16 +7,10 @@ html
         mets(name = 'viewport' content = 'width = device-width, initial-scale = 1.0')
         meta(http-equiv = 'X-UA-Compatible' content = 'IE=Edge')
         link(rel="stylesheet" href="/assets/css/style.css")
-        style(type = "text/css")      
+        link(rel="stylesheet" href="/assets/css/register.css")
+        link(rel="stylesheet" href="/assets/css/navbar-footer.css")
     body
-      .main_nav
-        .logo 
-        .menubar
-          a(href="/") Главная
-          a(href="#") Профиль
-          a(href="#") Задачи
-          a(href="#") Листы
-          a(href="#") Папки
+      include ../../public/includes/navbar.pug
       .registration_block
         h1(class = "register_title") Регистрация
         form(class = "register_form" action="" method="POST")
@@ -34,14 +28,7 @@ html
           input(name="telephone" type="tel") 
           input(class="register_btn" type="submit" value="Отправить")    
         a(class = "register_link" href="./users") Уже зарегистрирован
-      .footer
-        .menubar
-          a(href="/") Главная
-          a(href="#") Профиль
-          a(href="#") Задачи
-          a(href="#") Листы
-          a(href="#") Папки
-        h3(class = "footer_year") 2020
+      include ../../public/includes/footer.pug
 
 
       

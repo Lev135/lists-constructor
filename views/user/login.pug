@@ -1,20 +1,23 @@
 doctype html
 html
     head
-        title Регистрация
+        title Вход
         meta(charset = "utf8")
         meta(name = 'descripton' content = 'Описание страницы')
         mets(name = 'viewport' content = 'width = device-width, initial-scale = 1.0')
-        meta(http-equiv = 'X-UA-Compatible', content = 'IE=Edge')
-        link(rel="stylesheet" type="text/css" href='./assets/style.css')
+        meta(http-equiv = 'X-UA-Compatible' content = 'IE=Edge')
+        link(rel="stylesheet" href="/assets/css/style.css")
+        link(rel="stylesheet" href="/assets/css/register.css")
+        link(rel="stylesheet" href="/assets/css/navbar-footer.css")      
     body
-      .login_block
-        h1 Вход
-        form(action="" method="POST")
+      include ../../public/includes/navbar.pug
+      .registration_block
+        h1(class = "register_title") Вход
+        form(class = "register_form" action="" method="POST")
           label Электронная почта
-          input(name="email" type="email")
+          input(name="email" type="email") 
           label Пароль
           input(name="password" type="password")
-          input(type="submit" value="Отправить")
-
-        a(href="./users") К списку пользователей
+          input(class="register_btn" type="submit" value="Войти")    
+        a(class = "register_link" href="./users") К списку пользователей
+      include ../../public/includes/footer.pug
