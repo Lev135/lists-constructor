@@ -7,12 +7,15 @@ module.exports = (Models) => {
       return theme1.createSubtag({name: "Source 1.1"});
     })
     .then(() => {
+      return Models.tags.Source.findAll({raw: true});
+    })
+    .then((sources) => {
+      console.log("SOURCES", sources);
       const ThemeWrapper = require('../modules/models-wrappers/tag-wrapper')
                                     (Models.tags.Source);
-      ThemeWrapper.allToObjects
-        .then(arr => console.log(JSON.stringify(arr, null, 2)))
-        .catch(err => console.error(err));
+      return ThemeWrapper.allToObjects();
     })
+    .then(arr => console.log("SOURCES", JSON.stringify(arr, null, 2)))
     .catch(err => console.log(err));
 
 };
