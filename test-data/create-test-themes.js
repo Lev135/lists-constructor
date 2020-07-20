@@ -33,9 +33,9 @@ module.exports = (Models) => {
       return Models.tags.Theme.findAll({raw: true});
     })
     .then((themes) => {
-      console.log("THEMES", themes);
+      /*console.log("THEMES", themes);*/
       return ThemeWrapper.allToObjects();
     })
-    .then(arr => console.log("THEMES", JSON.stringify(arr, null, 2)))
+    .then(arr => null /*console.log("THEMES", JSON.stringify(arr, null, 2))*/)
     .catch(err => console.error("ERROR", err));
 };

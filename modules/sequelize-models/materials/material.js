@@ -8,9 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     isPublished: {
       type: DataTypes.BOOLEAN
-    },
-    isAllUserAccess : {
-      type: DataTypes.BOOLEAN
     }
+    // TODO: access
   });
 };

@@ -1,18 +1,18 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('Task', {
+  return sequelize.define('Note', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false
     },
-    statement: {
-      type: DataTypes.STRING,
+    index: {
+      type: DataTypes.INTEGER,
       allowNull: false
     },
-    answer: {
-      type: DataTypes.STRING
-      // null for 'prove' tasks
+    body: {
+      type: DataTypes.STRING,
+      allowNull: false
     }
   });
 };

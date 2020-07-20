@@ -6,12 +6,30 @@ module.exports = (sequelize, DataTypes) => {
   };
   // Other links
   models.User.hasMany(models.materials.Material, {onDelete: "set null"});
-  models.User.hasMany(models.materials.AccessRule, {onDelete: "cascade"});
-  // Materials <-> Tags many-many link (through MaterialTag)
-  models.materials.Material.belongsToMany(models.tags.Source, {through: "MaterialSource"});
-  models.tags.Source.belongsToMany(models.materials.Material, {through: "MaterialSource"});
-  models.materials.Material.belongsToMany(models.tags.Theme, {through: "MaterialTheme"});
-  models.tags.Theme.belongsToMany(models.materials.Material, {through: "MaterialTheme"});
+  models.User.hasMany(models.materials.UserAccessRule, {onDelete: "cascade"});
+  // Task solution  <-> Theme many-many link (through SolutionTheme)
+  models.materials.taskFields.Solution.belongsToMany(
+    models.tags.Theme, {
+      through: "SolutionTheme",
+      as: 'themes'
+    });
+  models.tags.Theme.belongsToMany(
+    models.materials.taskFields.Solution, {
+      through: "SolutionTheme",
+      as: 'solutions'
+    });
+
+  // Source <-- Task one-many link
+  models.tags.Source.hasMany(models.materials.Task, {
+    as: 'tasks',
+    foreignKey: {
+      name: 'sourceId',
+      allowNull: true,
+    }
+  });
+  models.materials.Task.belongsTo(models.tags.Source, {
+    as: 'source'
+  });
 
 
   return models;

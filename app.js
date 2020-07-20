@@ -180,5 +180,5 @@ function startExpress(sequelize, Models) {
   // Создание тестовых данных
   require('./test-data/test-data')(Models);
 
-  app.listen(options.site.port);
+//  app.listen(options.site.port);
 }

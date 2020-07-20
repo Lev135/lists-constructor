@@ -11,12 +11,16 @@ module.exports = (sequelize, DataTypes) => {
 
   // Implementation links (child -> parent)
   listBlocks.CommentBlock.belongsTo(listBlocks.ListBlock,
-            {onDelete: "cascade"});
+            {onDelete: "cascade", allowNull: false});
   listBlocks.TasksBlock.belongsTo(listBlocks.ListBlock,
-            {onDelete: "cascade"});
+            {onDelete: "cascade", allowNull: false});
   // Array -> Elements (one <- many) link
-  listBlocks.TasksBlock.hasMany(listBlocks.TaskItem,
-            {onDelete: "cascade"});
+  listBlocks.TasksBlock.hasMany(listBlocks.TaskItem, {as: 'items'});
+  listBlocks.TaskItem.belongsTo(listBlocks.TasksBlock, {
+                                as: 'block',
+                                foreignKey: {
+                                  allowNull: false
+                                }});
 
   return listBlocks;
 };

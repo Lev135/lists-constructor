@@ -1,18 +1,14 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('Task', {
+  return sequelize.define('AccessRule', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false
     },
-    statement: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false
-    },
-    answer: {
-      type: DataTypes.STRING
-      // null for 'prove' tasks
     }
   });
 };

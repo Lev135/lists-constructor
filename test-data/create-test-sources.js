@@ -10,12 +10,12 @@ module.exports = (Models) => {
       return Models.tags.Source.findAll({raw: true});
     })
     .then((sources) => {
-      console.log("SOURCES", sources);
+      /*console.log("SOURCES", sources);*/
       const ThemeWrapper = require('../modules/models-wrappers/tag-wrapper')
                                     (Models.tags.Source);
       return ThemeWrapper.allToObjects();
     })
-    .then(arr => console.log("SOURCES", JSON.stringify(arr, null, 2)))
+    .then(arr => null /*console.log("SOURCES", JSON.stringify(arr, null, 2))*/)
     .catch(err => console.log(err));
 
 };
