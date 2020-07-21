@@ -1,7 +1,7 @@
 doctype html
 html
     head
-        title Регистрация
+        title Редактирование профиля
         meta(charset = "utf8")
         meta(name = 'descripton' content = 'Описание страницы')
         mets(name = 'viewport' content = 'width = device-width, initial-scale = 1.0')
@@ -9,10 +9,8 @@ html
         link(rel="stylesheet" href="/assets/css/style.css")
         link(rel="stylesheet" href="/assets/css/register.css")
         link(rel="stylesheet" href="/assets/css/navbar-footer.css")
+        link(rel="stylesheet" href="/assets/css/my-profile.css")
     body
         include ../../public/includes/navbar.pug
-        h1 Список пользователей
-        table
-            tr <th> Имя <th> Почта
-            each user in users
-                <tr><td>#{user.name}</td><td>#{user.email}</td></tr>
+        .edit_profile
+        include ../../public/includes/footer.pug

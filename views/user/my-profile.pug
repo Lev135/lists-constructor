@@ -9,22 +9,31 @@ html
         link(rel="stylesheet" href="/assets/css/style.css")
         link(rel="stylesheet" href="/assets/css/register.css")
         link(rel="stylesheet" href="/assets/css/navbar-footer.css")
-        link(rel="stylesheet" href="/assets/css/profile.css")
+        link(rel="stylesheet" href="/assets/css/my-profile.css")
+        link(rel="stylesheet" href="/assets/css/leftside-menu.css")
+        script(type="text/javascpript" src="/assets/css/downfall.js")
     body
     include ../../public/includes/navbar.pug
-    .my_profile    
-        .my_profile_box    
-            h2(class="my_profile_title") Мой профиль
-            label Электронная почта:
-            label #{mainInfo.email}<br>
-            label Фамилия:
-            label #{mainInfo.surname}<br>
-            label Имя:
-            label #{mainInfo.name}<br>
-            label Отчество:
-            label #{mainInfo.patronymic}<br>
-            label Номер телефона:
-            label #{mainInfo.tel}
+    .my_profile_content
+        include ../../public/includes/leftside-menu.pug
+        .my_profile
+            h1(class="my_profile_title") Личная информация
+            .my_profile_box                        
+                h2 Профиль
+                a(class="edit_profile_link" href="../views/user/edit-profile") Редактировать
+                label Фотография
+                //label(class="my_profile_photo") #{mainInfo.photo}
+                label Photo
+                label Электронная почта:
+                label(class="my_profile_info") #{mainInfo.email}   
+                label Фамилия:
+                label(class="my_profile_info") #{mainInfo.surname}  
+                label Имя:
+                label(class="my_profile_info") #{mainInfo.name}
+                label Отчество:
+                label(class="my_profile_info") #{mainInfo.patronymic}       
+                label Номер телефона:
+                label(class="my_profile_info") #{mainInfo.telephone}
     include ../../public/includes/footer.pug
 
 

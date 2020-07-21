@@ -110,7 +110,7 @@ function startExpress(sequelize, Models) {
   app.use(bodyParser.urlencoded({ extended: false }));
   // директория для статический файлов
   app.use(express.static("public"));
-
+  app.locals.basedir=__dirname+"/public";
   // Passport:
   const passport = require('passport');
   const LocalStrategy = require('passport-local').Strategy;
