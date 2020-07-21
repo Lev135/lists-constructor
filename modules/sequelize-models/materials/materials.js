@@ -10,9 +10,6 @@ module.exports = (sequelize, DataTypes) => {
     Task: require('./task')(sequelize, DataTypes),
     TasksList: require('./tasks-list')(sequelize, DataTypes),
     Folder: require('./folder')(sequelize, DataTypes),
-    // Access rules for materials
-    AccessRuleType: require('./access-rule-type')(sequelize, DataTypes),
-    UserAccessRule: require('./user-access-rule')(sequelize, DataTypes)
   };
 
   // Implementation links (child -> parent)
