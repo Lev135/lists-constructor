@@ -1,6 +1,6 @@
 const express = require('express');
 module.exports = (Controllers) => {
-  console.log(Controllers);
+
   const userController = Controllers.UserController;
   const userRouter = express.Router();
 
