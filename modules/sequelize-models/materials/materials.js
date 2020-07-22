@@ -51,9 +51,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
   // Other links
-  materials.Material.hasMany(materials.UserAccessRule);
-  materials.AccessRuleType.hasMany(materials.UserAccessRule);
-
+  
   materials.Folder.hasMany(materials.Material, {constraints: false});
 
   return materials;

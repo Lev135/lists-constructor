@@ -105,7 +105,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     }
   });
-  models.materials.material.hasMany(models.access.RoleAccessRule, {
+  models.materials.Material.hasMany(models.access.RoleAccessRule, {
     as: 'role-access-rules',
     foreignKey: {
       name: 'materialId',
