@@ -27,5 +27,5 @@
     margin-bottom: 1px;
 }
 .downfall_li_1, .downfall_li_2, .downfall_li_3{
-    display:none;
+    display:none !important;
 }

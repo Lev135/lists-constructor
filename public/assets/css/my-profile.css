@@ -1,8 +1,8 @@
 .my_profile{
     display: flex;
     flex-direction: column;
-    margin:20px 380px;
-
+    position: absolute;
+    left: 700px;
 }
 .my_profile_content{
     height: min-content;

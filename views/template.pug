@@ -1,0 +1,20 @@
+doctype html
+html
+    head
+        title 
+            block title
+        meta(charset = "utf8")
+        meta(name = 'descripton' content = 'Описание страницы')
+        mets(name = 'viewport' content = 'width = device-width, initial-scale = 1.0')
+        meta(http-equiv = 'X-UA-Compatible' content = 'IE=Edge')
+        link(rel="stylesheet" href="/assets/css/style.css")
+        link(rel="stylesheet" href="/assets/css/register.css")
+        link(rel="stylesheet" href="/assets/css/navbar-footer.css")
+        link(rel="stylesheet" href="/assets/css/my-profile.css")
+        link(rel="stylesheet" href="/assets/css/leftside-menu.css")
+        script(type="text/javascpript" src="/assets/css/downfall.js")
+    body
+        include ../public/includes/navbar.pug
+        block content
+        include ../public/includes/footer.pug
+

@@ -1,17 +1,10 @@
-doctype html
-html
-    head
-        title Регистрация
-        meta(charset = "utf8")
-        meta(name = 'descripton' content = 'Описание страницы')
-        mets(name = 'viewport' content = 'width = device-width, initial-scale = 1.0')
-        meta(http-equiv = 'X-UA-Compatible' content = 'IE=Edge')
-        link(rel="stylesheet" href="/assets/css/style.css")
-        link(rel="stylesheet" href="/assets/css/register.css")
-        link(rel="stylesheet" href="/assets/css/navbar-footer.css")
-    body
-      include ../../public/includes/navbar.pug
-      .registration_block
+extends ../../views/template.pug
+
+block title 
+  | Регистрация
+  
+block content
+  .registration_block
         h1(class = "register_title") Регистрация
         form(class = "register_form" action="" method="POST")
           label Фамилия
@@ -28,8 +21,6 @@ html
           input(name="telephone" type="tel") 
           input(class="register_btn" type="submit" value="Отправить")    
         a(class = "register_link" href="./login") Уже зарегистрирован
-      include ../../public/includes/footer.pug
-
 
       
         

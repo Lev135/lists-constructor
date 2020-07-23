@@ -1,16 +1,18 @@
 .main_leftside_block
     ul
         li <a href="../../views/user/my-profile.pug"> Профиль</a>
-        li <button class="downfall1" onclick="downfall_button_1()")>Задачи<i class="right_arrow"></i>
-            ul(class="downfall_li_1")
+        li <button class="downfall1" onclick="downfall_button_1()")>Задачи<i class="right_arrow"></i></button>
+            ul(id="downfall_li_1")
                 li Искать 
                 li Создать
                 li Мои задачи  
         li <button class="downfall2" onclick="downfall_button_2()">Листы<i class="right_arrow"></i></button>
-            ul(class="downfall_li_2")
+            ul(id="downfall_li_2")
                 li Создать 
                 li Редактировать
         li <button class="downfall3" onclick="downfall_button_3()">Папки<i class="right_arrow"></i></button>
-        
+            ul(id="downfall_li_3")
+                li Создать 
+                li Редактировать
 script
     include /scripts/downfall.js
