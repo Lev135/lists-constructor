@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('Material', {
-    materialId: {
+    baseId: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     changeId: {
       type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    changeComment: { // comment for changes
+      type: DataTypes.STRING,
       allowNull: false
     },
     id: {

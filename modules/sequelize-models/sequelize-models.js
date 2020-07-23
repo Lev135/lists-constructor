@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
     as: 'users',
     foreignKey: {
       name: 'roleId',
-      allowNull: false
+ //     allowNull: false
     }
   });
   models.User.belongsTo(models.Role, {
@@ -112,5 +112,20 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     }
   });
+  
+  /////////////////////////// Author //////////////////////
+
+  models.materials.Material.belongsTo(models.User, {
+    as: 'author'
+  });
+
+  models.User.hasMany(models.materials.Material, {
+    as: 'materials',
+    foreignKey: {
+      name: 'authorId',
+      allowNull: true
+    }
+  });
+
   return models;
 };

@@ -54,8 +54,8 @@ const users = [
 
 ];
 
-module.exports = (Models) => {
+module.exports = async (Models) => {
   for (const user of users) {
-    Models.User.create(user);
+    await Models.User.create(user);
   }
 };
