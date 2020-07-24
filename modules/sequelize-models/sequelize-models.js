@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
     as: 'users',
     foreignKey: {
       name: 'roleId',
- //     allowNull: false
+      allowNull: false
     }
   });
   models.User.belongsTo(models.Role, {
@@ -59,21 +59,21 @@ module.exports = (sequelize, DataTypes) => {
     as: 'material'
   });
   models.User.hasMany(models.access.UserAccessRule, {
-    as: 'access-rules',
+    as: 'accessRules',
     foreignKey: {
       name: 'userId',
       allowNull: false
     }
   });
   models.access.AccessType.hasMany(models.access.UserAccessRule, {
-    as: 'user-access-rules',
+    as: 'userAccessRules',
     foreignKey: {
       name: 'typeId',
       allowNull: false
     }
   });
   models.materials.Material.hasMany(models.access.UserAccessRule, {
-    as: 'user-access-rules',
+    as: 'userAccessRules',
     foreignKey: {
       name: 'materialId',
       allowNull: false
@@ -92,21 +92,21 @@ module.exports = (sequelize, DataTypes) => {
     as: 'material'
   });
   models.Role.hasMany(models.access.RoleAccessRule, {
-    as: 'access-rules',
+    as: 'accessRules',
     foreignKey: {
       name: 'roleId',
       allowNull: false
     }
   });
   models.access.AccessType.hasMany(models.access.RoleAccessRule, {
-    as: 'role-access-rules',
+    as: 'roleAccessRules',
     foreignKey: {
       name: 'typeId',
       allowNull: false
     }
   });
   models.materials.Material.hasMany(models.access.RoleAccessRule, {
-    as: 'role-access-rules',
+    as: 'roleAccessRules',
     foreignKey: {
       name: 'materialId',
       allowNull: false

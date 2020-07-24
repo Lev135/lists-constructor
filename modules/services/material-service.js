@@ -1,8 +1,11 @@
 module.exports = (Models) => {
   const Material = Models.materials.Material;
+  const UserAccessRule = Models.access.UserAccessRule;
+  const RoleAccessRule = Models.access.RoleAccessRule;
+  const User = Models.User;
 
   const userAttributes = [
-    'id', 'name', 'surname', 'patronymic', 'email'
+    'id', 'name', 'surname', 'patronymic', 'email', 'roleId'
   ];
   /// GET 
 
@@ -63,21 +66,21 @@ module.exports = (Models) => {
 
   /// CREATE
 
-  async function _createMaterial(author, changeComment) {
+  async function _createMaterial(authorId, changeComment) {
     const lastId = await Material.max('baseId');
     const baseId = isNaN(lastId) ? 1 : lastId + 1;
-    return await _addVersion(baseId, author, changeComment);
+    return await _addVersion(baseId, authorId, changeComment);
   }
-  async function _addVersion(baseId, author, changeComment) {
+  async function _addVersion(baseId, authorId, changeComment) {
     const lastId = await Material.max('versionId', { 
       where : {
         baseId: baseId
       }
     });
     const versionId = isNaN(lastId) ? 1 : lastId + 1;
-    return _addChange(baseId, versionId, author, changeComment);
+    return _addChange(baseId, versionId, authorId, changeComment);
   }
-  async function _addChange(baseId, versionId, author, changeComment) {
+  async function _addChange(baseId, versionId, authorId, changeComment) {
     const lastId = await Material.max('changeId', {
       where : {
         baseId: baseId,
@@ -88,10 +91,10 @@ module.exports = (Models) => {
       baseId: baseId,
       versionId: versionId,
       changeId: isNaN(lastId) ? 0 : lastId + 1,
-      changeComment: changeComment
+      changeComment: changeComment,
+      authorId: authorId
     }
-    console.log("MATERIAL", newMaterial);
-    return await author.createMaterial(newMaterial, changeComment);
+    return await Material.create(newMaterial);
   }
 
   /// TO OBJECT
@@ -111,128 +114,140 @@ module.exports = (Models) => {
     });
   }
   
-  ///// ACCESS FOR USERS //////
+  // ACCESS FUNCTIONS
 
-  async function _addUserAccessRuleByIds(materialId, userId, accessTypeId) {
-    return await Models.access.UserAccessRule.create({
-      materialId : materialId,
-      userId : userId,
-      typeId : accessTypeId
-    });
-  }
-
-  async function _getUserAccessRulesById(materialId) {
-    return await Models.access.UserAccessRule.findAll({
-      where : {
-        materialId : materialId
-      },
-      group : [
-        'typeId'
-      ],
-      attributes : [
-        'typeId' 
-      ],
-      include : [
-        {
-          model : Models.User,
-          as : 'user',
-          attributes : [
-            'id', 'name', 'surname', 'patronomyc', 'email'
-          ]
-        }
-      ]
-    });
-  }
-
-  async function _removeUserAccessRuleByIds(materialId, userId, accessTypeId) {
-    return await Models.access.UserAccessRule.destroy({
-      where : {
-        materialId : materialId,
-        userId : userId,
-        typeId : accessTypeId
-      }
-    });
-  }
-
-  /////// ACCESS FOR ROLES /////
-
-  async function _addRoleAccessRuleByIds(materialId, roleId, accessTypeId) {
-    return await Models.access.RoleAccessRule.create({
-      materialId : materialId,
-      roleId : roleId,
-      typeId : accessTypeId
-    });
-  }
-
-  async function _getRoleAccessRulesById(materialId) {
-    return await Models.access.RoleAccessRule.findAll({
-      where : {
-        materialId : materialId
-      },
-      group : [
-        'typeId'
-      ],
-      attributes : [
-        'typeId', 'roleId'
-      ]
-    });
-  }
-
-  async function _removeRoleAccessRuleByIds(materialId, roleId, accessTypeId) {
-    return await Models.access.UserAccessRule.destroy({
-      where : {
-        materialId : materialId,
-        roleId : roleId,
-        typeId : accessTypeId
-      }
-    });
-  }
-
-  async function _getUserAccessTypeIdByIds(materialId, userId) {
-    const personalAccess = await Models.access.UserAccessRule.findOne({
+  async function _getUseraccessTypeId(materialId, userId) {
+    const personalAccess = await UserAccessRule.findOne({
       where : {
         materialId : materialId,
         userId : userId
       },
       attributes : [
-        typeId
+        'typeId'
       ]
     });
     const personalAccessType = personalAccess ? personalAccess.typeId : 0;
 
-    const roleId = await Models.User.findByPk(userId).roleId;
-    const roleAccess = await Models.access.RoleAccessRule.findOne({
+    const roleId = (await User.findByPk(userId)).roleId;
+    const roleAccess = await RoleAccessRule.findOne({
       where : {
         materialId : materialId,
         roleId : roleId
       },
       attributes : [
-        typeId
+        'typeId'
       ]
     });
     const roleAccessType = roleAccess ? roleAccess.typeId : 0;
-    return max(personalAccessType, roleAccessType);
+    return Math.max(personalAccessType, roleAccessType);
+  }
+
+  async function _getRoleAccessRules(material) {
+    const rolesAccessQuery = {
+      attributes: [
+        'roleId', 'typeId'
+      ]
+    }
+    return (await material.getRoleAccessRules(rolesAccessQuery))
+                            .map(tmp => tmp.get({plain: true}));
+  }
+
+  async function _getUserAccessRoles(material) {
+    const usersAccessQuery = {
+      attributes: [
+        'typeId'
+      ],
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: userAttributes
+        }        
+      ]
+    }
+    return (await material.getUserAccessRules(usersAccessQuery))
+                            .map(tmp => tmp.get({plain: true}));
+  }
+
+  async function _getAccessRules(materialId) {
+    const material = await Material.findByPk(materialId);
+    if (!material) {
+      throw `Материал с id ${materialId} не найден`;
+    }
+    return {
+      roles: await _getRoleAccessRules(material),
+      users: await _getUserAccessRoles(material)
+    };
+  }
+
+  async function _clearRoleAccessRules(materialId) {
+    await RoleAccessRule.destroy({
+      where: {
+        materialId: materialId
+      }
+    });
+  }
+
+  async function _clearUserAccessRules(materialId) {
+    await UserAccessRule.destroy({
+      where: {
+        materialId: materialId
+      }
+    });
+  }
+
+  async function _clearAccessRules(materialId) {
+    await _clearRoleAccessRules(materialId);
+    await _clearUserAccessRules(materialId);
+  }
+
+  async function _addRoleAccessRules(materialId, roleRulesObj) {
+    for (rule of roleRulesObj) {
+      await RoleAccessRule.create({
+        materialId: materialId,
+        roleId: rule.roleId,
+        typeId: rule.typeId
+      });
+    }
+  }
+
+  async function _addUserAccessRules(materialId, userRulesObj) {
+    for (rule of userRulesObj) {
+      await UserAccessRule.create({
+        materialId: materialId,
+        userId: rule.userId,
+        typeId: rule.typeId
+      });
+    }
+  }
+
+  async function _addAccessRules(materialId, rulesObj) {
+    await _addRoleAccessRules(materialId, rulesObj.roles);
+    await _addUserAccessRules(materialId, rulesObj.users);
+  }
+
+  async function _setAccessRules(materialId, rulesObj) {
+    await _clearAccessRules(materialId);
+    await _addAccessRules(materialId, rulesObj);
   }
 
 
   return {
+    // version getters:
     getMaterialById : _getMaterialById,
     getVersions : _getVersions,
     getChanges : _getChanges,
     getVersionTree: _getVersionTree,
+    // version create-functions
     createMaterial : _createMaterial,
     addVersion : _addVersion,
     addChange : _addChange,
     toObject : _toObjectById,
-
-    addUserAccessRule : _addUserAccessRuleByIds,
-    getUserAccessRules : _getUserAccessRulesById,
-    removeUserAccessRules : _removeUserAccessRuleByIds,
-
-    addRoleAccessRule : _addRoleAccessRuleByIds,
-    getRoleAccessRules : _getRoleAccessRulesById,
-    removeRoleAccessRule : _removeRoleAccessRuleByIds,
-
-    getUserAccessTypeId : _getUserAccessTypeIdByIds
+    // accesss functions
+    getUseraccessTypeId : _getUseraccessTypeId,
+    getAccessRules : _getAccessRules,
+    addAccessRules: _addAccessRules,
+    setAccessRules: _setAccessRules,
+    clearAccessRules: _clearAccessRules,
   }
 };

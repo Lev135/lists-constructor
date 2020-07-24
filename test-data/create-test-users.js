@@ -6,9 +6,7 @@ const users = [
     password: "ПарольИванова",
     email: "Иванов@test.ru",
     telephone: "88005553535",
-    isTeacher: false,
-    isEditor: false,
-    isAdmin: false,
+    roleId: 1, 
     photo: null,
     registrationDate: Date()
   },
@@ -19,9 +17,7 @@ const users = [
     password: "ПарольПетрова",
     email: "Петров@test.ru",
     telephone: null,
-    isTeacher: true,
-    isEditor: false,
-    isAdmin: false,
+    roleId: 2, 
     photo: null,
     registrationDate: Date()
   },
@@ -32,9 +28,7 @@ const users = [
     password: "ПарольНиколаева",
     email: "Николаев@test.ru",
     telephone: "88000000000",
-    isTeacher: true,
-    isEditor: true,
-    isAdmin: false,
+    roleId: 3,
     photo: null,
     registrationDate: Date()
   },
@@ -45,9 +39,7 @@ const users = [
     password: "admin",
     email: "admin@a",
     telephone: null,
-    isTeacher: false,
-    isEditor: false,
-    isAdmin: true,
+    roleId: 4, 
     photo: null,
     registrationDate: Date()
   },

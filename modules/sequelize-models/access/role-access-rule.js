@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('UserAccessRule', {
+  return sequelize.define('RoleAccessRule', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
