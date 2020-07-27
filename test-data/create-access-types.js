@@ -1,16 +1,19 @@
 const accessTypeNames = [
   'no-access',
-  'simple-access',
+  'pupil-access',
+  'teacher-access',
   'editor-access',
-  'moderator-access'
+  'moderator-access',
+  'admin-access'
 ];
 
 
 module.exports = async (Models) => {
   const AccessType = Models.access.AccessType;
-  for (const accessTypeName of accessTypeNames) {
+  for (const accessTypeI in accessTypeNames) {
     await AccessType.create({
-      name: accessTypeName
+      id: accessTypeI,
+      name: accessTypeNames[accessTypeI]
     });
   }
 };

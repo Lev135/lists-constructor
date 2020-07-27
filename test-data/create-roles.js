@@ -1,16 +1,19 @@
 const roleNames = [
+  'anonymus',
   'pupil',
   'teacher',
   'editor',
+  'moderator',
   'admin'
 ];
 
 
 module.exports = async (Models) => {
   const Role = Models.Role;
-  for (const roleName of roleNames) {
+  for (const roleI in roleNames) {
     await Role.create({
-      name: roleName
+      id: roleI,
+      name: roleNames[roleI]
     });
   }
 };

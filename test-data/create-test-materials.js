@@ -27,7 +27,7 @@ module.exports = async (Models) => {
     /// ACCESS RULES
     console.log('ACCESS RULES TESTING....');
 
-    await MaterialService.setAccessRules(1, {
+    await MaterialService.addAccessRules(1, {
         roles: [],
         users: [
             { userId: 1, typeId: 3 }
@@ -43,7 +43,7 @@ module.exports = async (Models) => {
                 {compact: false, depth: null, colors: true}));
     
     console.log('UPDATING RULES...');
-    await MaterialService.addAccessRules(1, {
+    await MaterialService.setAccessRules(1, {
         roles: [
             { roleId: 1, typeId: 1 },
             { roleId: 2, typeId: 2 }
