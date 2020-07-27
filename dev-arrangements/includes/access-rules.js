@@ -34,7 +34,7 @@ const GET = {
   ],
   users: [
     {
-      typeId: 3,
+      typeId: 5,
       user: {
         id: 1,
         name: 'Иван',
@@ -88,7 +88,7 @@ const POST = {
       { roleId: 2, typeId: 2 }
   ],
   users: [
-      { userId: 1, typeId: 3 },
+      { userId: 1, typeId: 5 },
       { userId: 2, typeId: 1 },
       { userId: 3, typeId: 1 },
       { userId: 4, typeId: 1 }

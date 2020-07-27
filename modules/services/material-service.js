@@ -10,7 +10,7 @@ module.exports = (Models) => {
   /// GET 
 
   async function _getMaterialById(id) {
-    return await Material.getElementByPk(id);
+    return await Material.findByPk(id);
   }
   async function _getVersions(baseId) {
     const query = {
@@ -231,6 +231,51 @@ module.exports = (Models) => {
     await _addAccessRules(materialId, rulesObj);
   }
 
+  // OTHER FUNCTIONS
+
+  async function _getcreationDate(materialId) {
+    return (await Material.findByPk(materialId)).createdAt;
+  }
+
+  async function _getAuthor(materialId) {
+    const query = {
+      attributes: [],
+      include: [
+        {
+          model: User,
+          as: 'author',
+          attributes: userAttributes
+        }
+      ]
+    }
+    return (await Material.findByPk(materialId)).author;
+  }
+
+  async function _getComments(materialId) {
+    const query = {
+      attributes: [],
+      include: [
+        {
+          model: Models.Comment,
+          as: 'comments',
+          attributes: [
+            'body'
+          ],
+          order: [
+            ['index', 'ASC']
+          ],
+          include: [
+            {
+              model: User,
+              as: 'author',
+              attributes: userAttributes
+            }
+          ]
+        }
+      ]
+    };
+    return (await Material.findByPk(materialId)).comments;
+  }
 
   return {
     // version getters:
@@ -242,12 +287,15 @@ module.exports = (Models) => {
     createMaterial : _createMaterial,
     addVersion : _addVersion,
     addChange : _addChange,
-    toObject : _toObjectById,
     // accesss functions
     getUseraccessTypeId : _getUseraccessTypeId,
     getAccessRules : _getAccessRules,
     addAccessRules: _addAccessRules,
     setAccessRules: _setAccessRules,
     clearAccessRules: _clearAccessRules,
+    // other functions
+    getCreationDate: _getcreationDate,
+    getAuthor: _getAuthor,
+    getComments: _getComments
   }
 };

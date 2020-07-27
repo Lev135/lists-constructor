@@ -2,6 +2,7 @@ module.exports = (sequelize, DataTypes) => {
   const models = {
     User: require('./user')(sequelize, DataTypes),
     Role: require('./role')(sequelize, DataTypes),
+    Comment: require('./comment')(sequelize, DataTypes),
     tags: require('./tags/tags')(sequelize, DataTypes),
     materials: require('./materials/materials')(sequelize, DataTypes),
     access: require('./access/access')(sequelize, DataTypes)
@@ -126,6 +127,32 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true
     }
   });
+
+  /////////////////////////// Comments //////////////////////
+
+  models.Comment.belongsTo(models.materials.Material, {
+    as: 'material'
+  });
+
+  models.materials.Material.hasMany(models.Comment, {
+    as: 'comments',
+    foreignKey: {
+      name: 'materialId',
+      allowNull: false
+    }
+  });
+
+  models.Comment.belongsTo(models.User, {
+    as: 'author'
+  });
+
+  models.User.hasMany(models.Comment, {
+    as: 'comments',
+    foreignKey: {
+      name: 'authorId',
+      allowNull: false
+    }
+  })
 
   return models;
 };
