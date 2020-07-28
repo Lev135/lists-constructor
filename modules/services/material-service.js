@@ -248,7 +248,7 @@ module.exports = (Models) => {
         }
       ]
     }
-    return (await Material.findByPk(materialId)).author;
+    return (await Material.findByPk(materialId, query)).get({plain: true}).author;
   }
 
   async function _getComments(materialId) {
@@ -274,7 +274,7 @@ module.exports = (Models) => {
         }
       ]
     };
-    return (await Material.findByPk(materialId)).comments;
+    return (await Material.findByPk(materialId, query)).get({plain: true}).comments;
   }
 
   return {

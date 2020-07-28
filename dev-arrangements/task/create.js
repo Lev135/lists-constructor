@@ -51,6 +51,6 @@ const POST = {
     }
   ],
   "access" : {
-    // Смотри includes/access-rules.js -> GET
+    // Смотри includes/access-rules.js -> POST
   }
 };

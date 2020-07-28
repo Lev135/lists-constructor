@@ -9,16 +9,34 @@ module.exports = (sequelize, DataTypes) => {
     // Materials. Implement Material (one-one link)
     Task: require('./task')(sequelize, DataTypes),
     TasksList: require('./tasks-list')(sequelize, DataTypes),
-    Folder: require('./folder')(sequelize, DataTypes),
+    // Folder: require('./folder')(sequelize, DataTypes),
   };
 
   // Implementation links (child -> parent)
-  materials.Task.belongsTo(materials.Material,
-            {onDelete: "cascade", allowNull: false});
-  materials.TasksList.belongsTo(materials.Material,
-            {onDelete: "cascade", allowNull: false});
-  materials.Folder.belongsTo(materials.Material,
-            {onDelete: "cascade", allowNull: false});
+  materials.Material.hasOne(materials.Task, {
+    as: 'task',
+    foreignKey: {
+      name: 'materialId',
+      allowNull: false
+    }
+  });
+  materials.Task.belongsTo(materials.Material, {
+    as: 'material'
+  });
+
+  materials.Material.hasOne(materials.TasksList, {
+    as: 'taskList',
+    foreignKey: {
+      name: 'materialId',
+      allowNull: false
+    }
+  });
+  materials.TasksList.belongsTo(materials.Material, {
+    as: 'material'
+  });
+
+  // materials.Folder.belongsTo(materials.Material,
+  //           {onDelete: "cascade", allowNull: false});
   // Array -> Elements (one <- many) link
   materials.Task.hasMany(materials.taskFields.Note, {
     as: 'notes',
@@ -52,7 +70,7 @@ module.exports = (sequelize, DataTypes) => {
   });
   // Other links
   
-  materials.Folder.hasMany(materials.Material, {constraints: false});
+  // materials.Folder.hasMany(materials.Material, {constraints: false});
 
   return materials;
 };
