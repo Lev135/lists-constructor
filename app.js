@@ -152,7 +152,11 @@ function startExpress(sequelize, Models) {
   const cookieParser = require('cookie-parser');
   app.use(cookieParser());
   const session = require('express-session');
-  app.use(session({ secret: 'SECRET' }));
+  app.use(session({
+    secret: 'SECRET',
+    resave: true,
+    saveUninitialized: true,
+  }));
 
   app.use(passport.initialize());
   app.use(passport.session());
@@ -180,5 +184,5 @@ function startExpress(sequelize, Models) {
   // Создание тестовых данных
   require('./test-data/test-data')(Models);
 
-//  app.listen(options.site.port);
+  app.listen(options.site.port);
 }

@@ -1,65 +1,75 @@
-const getTaskInfoFromBody = body => ({
-    statement: body.statement,
-    answer: body.answer,
-    solution: body.solution,
-    grade: body.grade
-});
+module.exports = (Models) => {
+    const TaskService = require('../services/task-service')(Models);
 
-module.exports = (Models, passport) => {
     return{
-        viewPage: (req, res) => {
-            Models.materials.Task.findByPk(req.query.id).then(task => {
-                res.render('task/view.pug', {task: task, user: req.user});
-            }).catch(err => {
+        viewPage: async (req, res) => {
+            try {
+                const id = req.query.id;
+                if (!id) {
+                    throw {message: "в запросе не указан id задачи"};
+                }
+                const accessType = await TaskService.getUserAccessTypeId(id, req.user.id);
+                console.log('ACCESS:', accessType);
+                if (accessType < 2 /* Teacher access */) {
+                    return res.render('task/no-access.pug', {id: id});
+                }
+                taskObj = await TaskService.getTaskObj(id);
+                console.log('TASK OBJECT', taskObj);
+                return res.render('task/view.pug', taskObj);
+            }
+            catch (err) {
                 console.error(err);
                 res.send(`Ошибка при обработке запроса на отображение задачи: ${err.message}`);
-            });
-        },
-        createPage: (req, res) => {
-            if(!req.user.isEditor && !req.user.isAdmin && !req.user.isTeacher){
-                res.render('task/no-access.pug');
-            }
-            else{
-                res.render('task/create.pug');
             }
         },
-        create: (req, res) => {
-            const taskInfo = getTaskInfoFromBody(req.body);
-            Models.materials.Task.create(taskInfo).then(task => {
+        createPage: async (req, res) => {
+            res.render('task/create.pug');
+        },
+        create: async (req, res) => {
+            try {
+                const task = await TaskService.createTask(req.body, req.user.id);
                 res.redirect(`./view?id=${task.id}`);
-            }).catch(err => {
+            }
+            catch (err) {
                 console.error(err);
                 res.send(`Ошибка при создании новой задачи: ${err}`);
-            });
-        },
-        editPage: (req, res) => {
-            if(!req.user.isEditor && !req.user.isAdmin){
-                res.render('task/no-access.pug');
-            }
-            else{
-                Models.materials.Task.findByPk(req.query.id).then(task => {
-                    res.render('task/edit.pug', {task: task});
-                }).catch(err => {
-                    res.send(`Ошибка при рендеринге страницы редактирования задачи: ${err}`);
-                    console.error(err);
-                });
             }
         },
-        edit: (req, res) => {
-            const updatedTask = getTaskInfoFromBody(req.body);
-            updatedTask.id = req.query.id;
-            Models.materials.Task.update({
-                statement: updatedTask.statement,
-                answer: updatedTask.answer,
-                solution: updatedTask.solution,
-                grade: updatedTask.graed
-            }, {where: {id: req.query.id}}).then( result => {
-                    res.redirect(`./view?id=${req.query.id}`);
+        editPage: async (req, res) => {
+            try {
+                const id = req.query.id;
+                if (!id) {
+                    throw {message: "в запросе не указан id задачи"};
                 }
-            ).catch(err => {
+                const accessType = TaskServices.getUserAccessTypeId(id, req.user.id);
+                if (accessType < 2 /* Teacher access */) {
+                    res.render('task/no-access.pug', {id: id});
+                }
+                taskObj = await TaskService.getTaskObj(id);
+                res.render('task/edit.pug', taskObj);
+            }
+            catch (err) {
+                console.error(err);
+                res.send(`Ошибка при рендеринге страницы редактирования задачи: ${err}`);
+            }
+        },
+        edit: async (req, res) => {
+            try {
+                const id = req.query.id;
+                if (!id) {
+                    throw {message: "в запросе не указан id задачи"};
+                }
+                const accessType = TaskService.getUserAccessTypeId(id, req.user.id);
+                if (accessType < 2 /* Teacher access */) {
+                    res.render('task/no-access.pug', {id: id});
+                }
+                taskChange = await TaskService.addChange(req.body, id, req.user.id);
+                res.redirect(`./view?id=${taskChange.id}`);
+            }
+            catch (err) {
                 console.error(err);
                 res.send(`Ошибка при обновлении задачи: ${err}`);
-            });
+            }
         }
     };
 };

@@ -61,17 +61,9 @@ const POST = {
 module.exports = async (Models) => {
   const TaskService = require('../modules/services/task-service')(Models);
 
-  console.log('ИСХОДНЫЙ ОБЪЕКТ (POST)', POST);
+  console.log('ИСХОДНЫЙ ОБЪЕКТ (POST)', 
+    util.inspect(POST, {compact: false, depth: null, colors: true}));
   const task = await TaskService.createTask(POST, 1);
-  console.log('ЗАПИСЬ В БД', task.get({plain: true}));
-  console.log('ЗАПИСЬ С INCLUDE', (await Models.materials.Task.findByPk(task.id, {
-    include: [
-      {
-        model: Models.materials.Material,
-        as: 'material'
-      }
-    ]
-  })).get({plain: true}));
   const taskObj = await TaskService.getTaskObj(task.id);
   console.log('ПОЛУЧЕННЫЙ ОБЪЕКТ', 
     util.inspect(taskObj, {compact: false, depth: null, colors: true}));

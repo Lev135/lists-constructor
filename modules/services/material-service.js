@@ -116,7 +116,7 @@ module.exports = (Models) => {
   
   // ACCESS FUNCTIONS
 
-  async function _getUseraccessTypeId(materialId, userId) {
+  async function _getUserAccessTypeId(materialId, userId) {
     const personalAccess = await UserAccessRule.findOne({
       where : {
         materialId : materialId,
@@ -288,7 +288,7 @@ module.exports = (Models) => {
     addVersion : _addVersion,
     addChange : _addChange,
     // accesss functions
-    getUseraccessTypeId : _getUseraccessTypeId,
+    getUserAccessTypeId : _getUserAccessTypeId,
     getAccessRules : _getAccessRules,
     addAccessRules: _addAccessRules,
     setAccessRules: _setAccessRules,
