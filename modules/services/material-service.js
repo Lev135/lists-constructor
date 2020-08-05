@@ -9,10 +9,10 @@ module.exports = (Models) => {
   ];
   /// GET 
 
-  async function _getMaterialById(id) {
+  async function getMaterialById(id) {
     return await Material.findByPk(id);
   }
-  async function _getVersions(baseId) {
+  async function getVersions(baseId) {
     const query = {
       where: {
         baseId: baseId,
@@ -34,7 +34,7 @@ module.exports = (Models) => {
     }
     return (await Material.findAll(query)).map(data => data.get({plain: true}));
   }
-  async function _getChanges(baseId, versionId) {
+  async function getChanges(baseId, versionId) {
     const query = {
       where: {
         baseId: baseId,
@@ -56,31 +56,31 @@ module.exports = (Models) => {
     };
     return (await Material.findAll(query)).map(data => data.get({plain: true}));
   }
-  async function _getVersionTree(baseId) {
-    const versionTree = await _getVersions(baseId);
+  async function getVersionTree(baseId) {
+    const versionTree = await getVersions(baseId);
     for (versionObj of versionTree) {
-      versionObj.changes = await _getChanges(baseId, versionObj.versionId);
+      versionObj.changes = await getChanges(baseId, versionObj.versionId);
     }
     return versionTree;
   }
 
   /// CREATE
 
-  async function _createMaterial(authorId, changeComment) {
+  async function createMaterial(authorId, changeComment) {
     const lastId = await Material.max('baseId');
     const baseId = isNaN(lastId) ? 1 : lastId + 1;
-    return await _addVersion(baseId, authorId, changeComment);
+    return await addVersion(baseId, authorId, changeComment);
   }
-  async function _addVersion(baseId, authorId, changeComment) {
+  async function addVersion(baseId, authorId, changeComment) {
     const lastId = await Material.max('versionId', { 
       where : {
         baseId: baseId
       }
     });
     const versionId = isNaN(lastId) ? 1 : lastId + 1;
-    return _addChange(baseId, versionId, authorId, changeComment);
+    return addChange(baseId, versionId, authorId, changeComment);
   }
-  async function _addChange(baseId, versionId, authorId, changeComment) {
+  async function addChange(baseId, versionId, authorId, changeComment) {
     const lastId = await Material.max('changeId', {
       where : {
         baseId: baseId,
@@ -97,26 +97,9 @@ module.exports = (Models) => {
     return await Material.create(newMaterial);
   }
 
-  /// TO OBJECT
-
-  async function _toObjectById(id) {
-    return await Material.findByPk(id, {
-      attributes : [
-        'materialId', 'versionId', 'changeId', 'changeComment'
-      ],
-      include : [
-        {
-          model : Models.User,
-          as : 'author',
-          attributes : userAttributes
-        }
-      ]
-    });
-  }
-  
   // ACCESS FUNCTIONS
 
-  async function _getUserAccessTypeId(materialId, userId) {
+  async function getUserAccessTypeId(materialId, userId) {
     const personalAccess = await UserAccessRule.findOne({
       where : {
         materialId : materialId,
@@ -142,7 +125,7 @@ module.exports = (Models) => {
     return Math.max(personalAccessType, roleAccessType);
   }
 
-  async function _getRoleAccessRules(material) {
+  async function getRoleAccessRules(material) {
     const rolesAccessQuery = {
       attributes: [
         'roleId', 'typeId'
@@ -152,7 +135,7 @@ module.exports = (Models) => {
                             .map(tmp => tmp.get({plain: true}));
   }
 
-  async function _getUserAccessRoles(material) {
+  async function getUserAccessRoles(material) {
     const usersAccessQuery = {
       attributes: [
         'typeId'
@@ -169,18 +152,25 @@ module.exports = (Models) => {
                             .map(tmp => tmp.get({plain: true}));
   }
 
-  async function _getAccessRules(materialId) {
+  async function getAccessRules(materialId) {
     const material = await Material.findByPk(materialId);
     if (!material) {
       throw `Материал с id ${materialId} не найден`;
     }
+    const [
+      roles,
+      users
+    ] = await Promise.all([
+      getRoleAccessRules(material),
+      getUserAccessRoles(material)
+    ]);
     return {
-      roles: await _getRoleAccessRules(material),
-      users: await _getUserAccessRoles(material)
+      roles,
+      users 
     };
   }
 
-  async function _clearRoleAccessRules(materialId) {
+  async function clearRoleAccessRules(materialId) {
     await RoleAccessRule.destroy({
       where: {
         materialId: materialId
@@ -188,7 +178,7 @@ module.exports = (Models) => {
     });
   }
 
-  async function _clearUserAccessRules(materialId) {
+  async function clearUserAccessRules(materialId) {
     await UserAccessRule.destroy({
       where: {
         materialId: materialId
@@ -196,48 +186,58 @@ module.exports = (Models) => {
     });
   }
 
-  async function _clearAccessRules(materialId) {
-    await _clearRoleAccessRules(materialId);
-    await _clearUserAccessRules(materialId);
+  async function clearAccessRules(materialId) {
+    await Promise.all([
+      clearRoleAccessRules(materialId), 
+      clearUserAccessRules(materialId)
+    ]);
   }
 
-  async function _addRoleAccessRules(materialId, roleRulesObj) {
+  async function addRoleAccessRules(materialId, roleRulesObj) {
+    const promises = [];
     for (rule of roleRulesObj) {
-      await RoleAccessRule.create({
+      promises.push(RoleAccessRule.create({
         materialId: materialId,
         roleId: rule.roleId,
         typeId: rule.typeId
-      });
+      }));
     }
+    await Promise.all(promises);
   }
 
-  async function _addUserAccessRules(materialId, userRulesObj) {
+  async function addUserAccessRules(materialId, userRulesObj) {
+    const promises = [];
     for (rule of userRulesObj) {
-      await UserAccessRule.create({
+      promises.push(UserAccessRule.create({
         materialId: materialId,
         userId: rule.userId,
         typeId: rule.typeId
-      });
+      }));
     }
+    await Promise.all(promises);
   }
 
-  async function _addAccessRules(materialId, rulesObj) {
-    await _addRoleAccessRules(materialId, rulesObj.roles);
-    await _addUserAccessRules(materialId, rulesObj.users);
+  async function addAccessRules(materialId, rulesObj) {
+    await Promise.all([
+      addRoleAccessRules(materialId, rulesObj.roles),
+      addUserAccessRules(materialId, rulesObj.users)
+    ]);
   }
 
-  async function _setAccessRules(materialId, rulesObj) {
-    await _clearAccessRules(materialId);
-    await _addAccessRules(materialId, rulesObj);
+  async function setAccessRules(materialId, rulesObj) {
+    await Promise.all([
+      clearAccessRules(materialId),
+      addAccessRules(materialId, rulesObj)
+    ]);
   }
 
   // OTHER FUNCTIONS
 
-  async function _getcreationDate(materialId) {
+  async function getCreationDate(materialId) {
     return (await Material.findByPk(materialId)).createdAt;
   }
 
-  async function _getAuthor(materialId) {
+  async function getAuthor(materialId) {
     const query = {
       attributes: [],
       include: [
@@ -251,7 +251,7 @@ module.exports = (Models) => {
     return (await Material.findByPk(materialId, query)).get({plain: true}).author;
   }
 
-  async function _getComments(materialId) {
+  async function getComments(materialId) {
     const query = {
       attributes: [],
       include: [
@@ -279,23 +279,23 @@ module.exports = (Models) => {
 
   return {
     // version getters:
-    getMaterialById : _getMaterialById,
-    getVersions : _getVersions,
-    getChanges : _getChanges,
-    getVersionTree: _getVersionTree,
+    getMaterialById,
+    getVersions,
+    getChanges,
+    getVersionTree,
     // version create-functions
-    createMaterial : _createMaterial,
-    addVersion : _addVersion,
-    addChange : _addChange,
+    createMaterial,
+    addVersion,
+    addChange,
     // accesss functions
-    getUserAccessTypeId : _getUserAccessTypeId,
-    getAccessRules : _getAccessRules,
-    addAccessRules: _addAccessRules,
-    setAccessRules: _setAccessRules,
-    clearAccessRules: _clearAccessRules,
+    getUserAccessTypeId,
+    getAccessRules,
+    addAccessRules,
+    setAccessRules,
+    clearAccessRules,
     // other functions
-    getCreationDate: _getcreationDate,
-    getAuthor: _getAuthor,
-    getComments: _getComments
+    getCreationDate,
+    getAuthor,
+    getComments
   }
 };

@@ -1,19 +1,12 @@
 module.exports = (Models) => {
   const Task = Models.materials.Task;
-  const Solution = Models.materials.taskFields.Solution;
   const Theme = Models.tags.Theme;
-  const Note = Models.materials.taskFields.Note;
-  const User = Models.User;
 
   const MaterialService = require('./material-service')(Models);
 
-  async function _getTaskById(id) {
-    return await Task.findByPk(id);
-  }
-
   // GET
 
-  async function _getSolutionObj(solution) {
+  async function getSolutionObj(solution) {
     const obj = {
       body: solution.body,
       grade: solution.grade,
@@ -32,20 +25,20 @@ module.exports = (Models) => {
     return obj;
   }
 
-  async function _getSolutionsObjArr(task) {
+  async function getSolutionsObjArr(task) {
     const solutions = await task.getSolutions({
       order: [
         ['index', 'ASC']
       ]
     });
-    const arr = [];
+    const promises = [];
     for (const solution of solutions) {
-      arr.push(await _getSolutionObj(solution));
+      promises.push(getSolutionObj(solution));
     }
-    return arr;
+    return await Promise.all(promises);
   }
 
-  async function _getNotesObjArr(task) {
+  async function getNotesObjArr(task) {
     return (await task.getNotes({
       attributes: [
         'type', 'label', 'body'
@@ -56,28 +49,45 @@ module.exports = (Models) => {
     })).map(tmp => tmp.get({plain: true}));
   }
 
-  async function _getTaskObj(id) {
+  async function getTaskObj(id) {
     const task = await Task.findByPk(id);
     const materialId = task.materialId;
     const material = await task.getMaterial();
+    const [
+      solutions,
+      notes,
+      access,
+      creationDate,
+      author,
+      comments,
+      versions,
+    ] = await Promise.all([
+      getSolutionsObjArr(task),
+      getNotesObjArr(task),
+      MaterialService.getAccessRules(materialId),
+      MaterialService.getCreationDate(materialId),
+      MaterialService.getAuthor(materialId),
+      MaterialService.getComments(materialId),
+      MaterialService.getVersionTree(material.baseId),
+    ]);
     return {
       statement: task.statement,
       answer: task.answer,
-      solutions: await _getSolutionsObjArr(task),
-      notes: await _getNotesObjArr(task),
-      access: await MaterialService.getAccessRules(materialId),
-      creationDate: await MaterialService.getCreationDate(materialId),
-      author: await MaterialService.getAuthor(materialId),
-      comments: await MaterialService.getComments(materialId),
-      versions: await MaterialService.getVersionTree(material.baseId),
-      changeComment: material.changeComment,
-      usage: "TODO: usage"
+      solutions,
+      notes,
+      access,
+      creationDate,
+      author, 
+      comments,
+      versions, 
+      changeComment : material.changeComment,
+      usage : {TODO: "usage"}
     };
   }
 
   // CREATE
 
-  async function _addSolution(task, solutionObj, index) {
+  async function addSolution(task, solutionObj, index) {
     const solution = await task.createSolution({
       body: solutionObj.body,
       grade: solutionObj.grade,
@@ -89,7 +99,7 @@ module.exports = (Models) => {
     }
   }
 
-  async function _addNote(task, noteObj, index) {
+  async function addNote(task, noteObj, index) {
     await task.createNote({
       type: noteObj.type,
       label: noteObj.label,
@@ -99,7 +109,7 @@ module.exports = (Models) => {
     });
   }
 
-  async function _createTaskImpl(obj, authorId, materialId) {
+  async function createTaskImpl(obj, authorId, materialId) {
     const task = await Task.create({
       statement: obj.statement,
       answer: obj.answer,
@@ -107,45 +117,46 @@ module.exports = (Models) => {
       materialId: materialId,
       authorId: authorId
     });
+    const promises = [];
     for (solutionIndex in obj.solutions) {
-      await _addSolution(task, obj.solutions[solutionIndex], solutionIndex);
+      promises.push(addSolution(task, obj.solutions[solutionIndex], solutionIndex));
     }
     for (noteIndex in obj.notes) {
-      await _addNote(task, obj.notes[noteIndex], noteIndex);
+      promises.push(addNote(task, obj.notes[noteIndex], noteIndex));
     }
-    await MaterialService.addAccessRules(materialId, obj.access);
+    promises.push(MaterialService.addAccessRules(materialId, obj.access));
+    await Promise.all(promises);
     return task;
   }
 
-  async function _createTask(obj, authorId) {
+  async function createTask(obj, authorId) {
     const material = await MaterialService.createMaterial(authorId, obj.changeComment);
-    return await _createTaskImpl(obj, authorId, material.id);
+    return await createTaskImpl(obj, authorId, material.id);
   }
 
-  async function _addVersion(obj, baseId, authorId) {
+  async function addVersion(obj, baseId, authorId) {
     const material = await MaterialService.addVersion(baseId, authorId, obj.changeComment);
-    return await _createTaskImpl(obj, authorId, material.id);
+    return await createTaskImpl(obj, authorId, material.id);
   }
 
-  async function _addChange(obj, taskId, authorId) {
+  async function addChange(obj, taskId, authorId) {
     const task = await Task.findByPk(taskId);
     const material = await task.getMaterial();
     const updatedMaterial = await MaterialService.addChange(
         material.baseId, material.versionId, authorId, obj.changeComment);
-    return await _createTaskImpl(obj, authorId, updatedMaterial.id);
+    return await createTaskImpl(obj, authorId, updatedMaterial.id);
   }
 
   return {
-    getTaskById: _getTaskById,
-    getTaskObj: _getTaskObj,
+    getTaskObj,
     getUserAccessTypeId: async (taskId, userId) => {
       const task = await Task.findByPk(taskId);
       return await MaterialService.getUserAccessTypeId(task.materialId, userId);
     },
 
     // CREATE
-    createTask: _createTask,
-    addVersion: _addVersion,
-    addChange: _addChange
+    createTask,
+    addVersion,
+    addChange
   }
 };
