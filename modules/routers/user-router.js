@@ -15,5 +15,7 @@ module.exports = (Controllers) => {
 
   userRouter.get('/profile', userController.profilePage);
 
+  userRouter.post('/find-users', userController.findUsers);
+  
   return userRouter;
 };

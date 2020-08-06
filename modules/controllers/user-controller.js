@@ -28,6 +28,8 @@ const getAllInfo = user => ({
 });
 
 module.exports = (Models, passport) => {
+  const UserService = require("../services/user-service")(Models);
+
   const User = Models.User;
   return {
     loginPage: (req, res) => {
@@ -100,5 +102,14 @@ module.exports = (Models, passport) => {
         res.send(`Ошибка при открытии страницы пользователя: ${err}`);
       });
     },
+
+    findUsers: async (req, res) => {
+      if (!req.body) {
+        return res.sendStatus(400);
+      }
+      const body = req.body;
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify(await UserService.findUsers(req.body.searchString)));
+    }
   };
 };

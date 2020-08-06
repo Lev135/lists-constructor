@@ -4,9 +4,8 @@ module.exports = (Models) => {
   const RoleAccessRule = Models.access.RoleAccessRule;
   const User = Models.User;
 
-  const userAttributes = [
-    'id', 'name', 'surname', 'patronymic', 'email', 'roleId'
-  ];
+  const UserService = require('./user-service')(Models);
+  const userAttributes = UserService.userAttributes;
   /// GET 
 
   async function getMaterialById(id) {
