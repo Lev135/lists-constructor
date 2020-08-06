@@ -14,7 +14,9 @@ module.exports = (Models) => {
                     return res.render('task/no-access.pug', {id: id});
                 }
                 taskObj = await TaskService.getTaskObj(id);
-                console.log('TASK OBJECT', taskObj);
+                const util = require('util');
+                console.log('TASK OBJECT', util.inspect(taskObj,
+                    {compact: false, depth: null, colors: true}));
                 return res.render('task/view.pug', taskObj);
             }
             catch (err) {
@@ -27,6 +29,9 @@ module.exports = (Models) => {
         },
         create: async (req, res) => {
             try {
+                const util = require('util');
+                console.log('CONTROLLER::CREATE', util.inspect(req.body, 
+                  {compact: false, depth: null, colors: true}));            
                 const task = await TaskService.createTask(req.body, req.user.id);
                 res.redirect(`./view?id=${task.id}`);
             }

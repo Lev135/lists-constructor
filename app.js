@@ -111,6 +111,7 @@ function startExpress(sequelize, Models) {
   app.set("view engine", "pug");
   // json parser для передачи данных на север
   const bodyParser = require('body-parser');
+  app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   // директория для статический файлов
   app.use(express.static("public"));

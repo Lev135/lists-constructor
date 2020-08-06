@@ -63,5 +63,5 @@ const POST = {
   "access" : {
     // Смотри includes/access-rules.js -> POST
   },
-  changeMessage: "Комментарий к изменению (коммиту)"
+  changeComment: "Комментарий к изменению (коммиту)"
 };
