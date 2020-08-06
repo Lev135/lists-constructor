@@ -1,4 +1,4 @@
-const themes = [
+const themeObjects = [
   {
     id: 1,
     name: "Theme 1",
@@ -25,17 +25,12 @@ const themes = [
   }
 ];
 
-module.exports = (Models) => {
-  const ThemeWrapper = require('../modules/models-wrappers/tag-wrapper')
+module.exports = async (Models) => {
+  const ThemeService = require('../modules/services/tag-service')
                                 (Models.tags.Theme);
-  ThemeWrapper.insertAllFromObjects(themes)
-    .then(() => {
-      return Models.tags.Theme.findAll({raw: true});
-    })
-    .then((themes) => {
-      /*console.log("THEMES", themes);*/
-      return ThemeWrapper.allToObjects();
-    })
-    .then(arr => null /*console.log("THEMES", JSON.stringify(arr, null, 2))*/)
-    .catch(err => console.error("ERROR", err));
+  await ThemeService.insertAllFromObjects(themeObjects);
+  const themes = await Models.tags.Theme.findAll({raw: true});
+  console.log("THEMES", themes);
+  const arr = await ThemeService.allToObjects();
+  console.log("THEMES", JSON.stringify(arr, null, 2));
 };

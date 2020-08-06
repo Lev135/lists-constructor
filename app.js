@@ -175,6 +175,7 @@ function startExpress(sequelize, Models) {
   const Routers = require('./modules/routers/routers')(Controllers);
   app.use('/user', Routers.UserRouter);
   app.use('/task', Routers.TaskRouter);
+  app.use('/tag', Routers.TagRouter);
 
   // обработка ошибки 404тщ
   app.use(function (req, res, next) {
