@@ -49,6 +49,14 @@ module.exports = (Models) => {
     })).map(tmp => tmp.get({plain: true}));
   }
 
+  
+  async function getImplementedChanges(material) {
+    if (material.changeId != 0) {
+      return [];
+    }
+    return await MaterialService.getImplementedChanges(material.baseId, material.versionId);
+  }
+
   async function getTaskObj(id) {
     const task = await Task.findByPk(id);
     const materialId = task.materialId;
@@ -61,6 +69,8 @@ module.exports = (Models) => {
       author,
       comments,
       versions,
+      implementedChanges,
+      implementedInVersion
     ] = await Promise.all([
       getSolutionsObjArr(task),
       getNotesObjArr(task),
@@ -69,6 +79,8 @@ module.exports = (Models) => {
       MaterialService.getAuthor(materialId),
       MaterialService.getComments(materialId),
       MaterialService.getVersionTree(material.baseId),
+      getImplementedChanges(material),
+      MaterialService.getImplementedInVersion(material.baseId, material.versionId, material.changeId)
     ]);
     return {
       statement: task.statement,
@@ -80,6 +92,8 @@ module.exports = (Models) => {
       author, 
       comments,
       versions, 
+      implementedChanges,
+      implementedInVersion,
       changeComment : material.changeComment,
       usage : {TODO: "usage"}
     };
@@ -134,9 +148,17 @@ module.exports = (Models) => {
     return await createTaskImpl(obj, authorId, material.id);
   }
 
-  async function addVersion(obj, baseId, authorId) {
-    const material = await MaterialService.addVersion(baseId, authorId, obj.changeComment);
-    return await createTaskImpl(obj, authorId, material.id);
+  async function addVersion(obj, taskId, authorId, implementedChangesTaskIds = []) {
+    const promises = [];
+    for (const changeTaskId of implementedChangesTaskIds) {
+      promises.push(Task.findByPk(changeTaskId));
+    }
+    const materialIds = (await Promise.all(promises)).map(material => material.materialId);
+    const task = await Task.findByPk(taskId);
+    const material = await task.getMaterial(); 
+    const updatedMaterial = await MaterialService.addVersion(
+        material.baseId, authorId, obj.changeComment, materialIds);
+    return await createTaskImpl(obj, authorId, updatedMaterial.id);
   }
 
   async function addChange(obj, taskId, authorId) {

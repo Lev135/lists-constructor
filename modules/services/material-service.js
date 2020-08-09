@@ -1,3 +1,5 @@
+const Op = require('sequelize').Op;
+
 module.exports = (Models) => {
   const Material = Models.materials.Material;
   const UserAccessRule = Models.access.UserAccessRule;
@@ -37,7 +39,12 @@ module.exports = (Models) => {
     const query = {
       where: {
         baseId: baseId,
-        versionId: versionId
+        versionId: versionId,
+        [Op.not]: [
+          {
+            changeId: 0
+          }
+        ]
       },
       attributes: [
         'id', 'changeId', 'changeComment'
@@ -70,14 +77,20 @@ module.exports = (Models) => {
     const baseId = isNaN(lastId) ? 1 : lastId + 1;
     return await addVersion(baseId, authorId, changeComment);
   }
-  async function addVersion(baseId, authorId, changeComment) {
+  async function addVersion(baseId, authorId, changeComment, implementedChangesIds = []) {
     const lastId = await Material.max('versionId', { 
       where : {
         baseId: baseId
       }
     });
     const versionId = isNaN(lastId) ? 1 : lastId + 1;
-    return addChange(baseId, versionId, authorId, changeComment);
+    const material = await addChange(baseId, versionId, authorId, changeComment);
+    const promises = [];
+    for (changeId of implementedChangesIds) {
+      promises.push(Material.findByPk(changeId));
+    }
+    material.addImplementedChanges(await Promise.all(promises));
+    return material;
   }
   async function addChange(baseId, versionId, authorId, changeComment) {
     const lastId = await Material.max('changeId', {
@@ -276,6 +289,60 @@ module.exports = (Models) => {
     return (await Material.findByPk(materialId, query)).get({plain: true}).comments;
   }
 
+  async function getImplementedChanges(baseId, versionId) {
+    const query = {
+      where: {
+        baseId,
+        versionId,
+        changeId: 0
+      },
+      attributes: [],
+      include: [
+        {
+          model: Material,
+          as: 'implementedChanges',
+          attributes: [
+            'changeId', 'changeComment'
+          ],
+          include: [
+            {
+              model: User,
+              as: 'author',
+              attributes: userAttributes
+            }
+          ]
+        }
+      ]
+    }
+    return (await Material.findOne(query)).get({plain: true}).implementedChanges;
+  }
+
+  async function getImplementedInVersion(baseId, versionId, changeId) {
+    const query = {
+      where: {
+        baseId, versionId, changeId
+      },
+      attributes:   [],
+      include: [
+        {
+          model: Material,
+          as: 'implementedIn',
+          attributes: [
+            'changeId', 'changeComment'
+          ],
+          include: [
+            {
+              model: User,
+              as: 'author',
+              attributes: userAttributes
+            }
+          ]
+        }
+      ]
+    }
+    return (await Material.findOne(query)).get({plain: true}).implementedIn
+  }
+
   return {
     // version getters:
     getMaterialById,
@@ -295,6 +362,8 @@ module.exports = (Models) => {
     // other functions
     getCreationDate,
     getAuthor,
-    getComments
+    getComments,
+    getImplementedChanges,
+    getImplementedInVersion
   }
 };

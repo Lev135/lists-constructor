@@ -21,19 +21,6 @@ const GET = [
     },
     changes: [
       {
-        id: 1,
-        changeId: 0,
-        changeComment: 'Материал от пользователя №1',
-        author: {
-          id: 1,
-          name: 'Иван',
-          surname: 'Иванович',
-          patronymic: 'Иванов',
-          email: 'Иванов@test.ru',
-          roleId: 1
-        }
-      },
-      {
         id: 5,
         changeId: 1,
         changeComment: 'Прекрасная фича от 2 пользователя',
@@ -61,19 +48,6 @@ const GET = [
       roleId: 1
     },
     changes: [
-      {
-        id: 6,
-        changeId: 0,
-        changeComment: 'Добавлена прекрасная фича от 2 пользователя (#1.1.1)',
-        author: {
-          id: 1,
-          name: 'Иван',
-          surname: 'Иванович',
-          patronymic: 'Иванов',
-          email: 'Иванов@test.ru',
-          roleId: 1
-        }
-      },
       {
         id: 7,
         changeId: 1,

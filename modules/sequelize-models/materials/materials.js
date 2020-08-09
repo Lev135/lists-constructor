@@ -70,6 +70,16 @@ module.exports = (sequelize, DataTypes) => {
   });
   // Other links
   
+  materials.Material.hasMany(materials.Material, {
+    as: 'implementedChanges',
+    foreignKey: {
+      name: 'implementedInId'
+    }
+  });
+
+  materials.Material.belongsTo(materials.Material, {
+    as: 'implementedIn'
+  });
   // materials.Folder.hasMany(materials.Material, {constraints: false});
 
   return materials;

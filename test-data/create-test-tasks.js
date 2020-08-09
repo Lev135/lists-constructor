@@ -67,4 +67,22 @@ module.exports = async (Models) => {
   const taskObj = await TaskService.getTaskObj(task.id);
   console.log('ПОЛУЧЕННЫЙ ОБЪЕКТ', 
     util.inspect(taskObj, {compact: false, depth: null, colors: true}));
+
+  console.log('ИСХОДНЫЙ ОБЪЕКТ изменения (POST)', 
+    util.inspect(POST, {compact: false, depth: null, colors: true}));
+  const taskChange = await TaskService.addChange(POST, task.id, 1);
+  const taskChangeObj = await TaskService.getTaskObj(taskChange.id);
+  console.log('ПОЛУЧЕННЫЙ ОБЪЕКТ', 
+    util.inspect(taskChangeObj, {compact: false, depth: null, colors: true}));
+    
+  console.log('ИСХОДНЫЙ ОБЪЕКТ второй версии (реализует изменение первой) (POST)', 
+    util.inspect(POST, {compact: false, depth: null, colors: true}));
+  const taskVersion = await TaskService.addVersion(POST, task.id, 1, [ taskChange.id ]);
+  const taskVersionObj = await TaskService.getTaskObj(taskVersion.id);
+  console.log('ПОЛУЧЕННЫЙ ОБЪЕКТ', 
+    util.inspect(taskVersionObj, {compact: false, depth: null, colors: true}));
+
+  console.log('СНОВА ПОЛУЧЕННЫЙ ОБЪЕКТ изменения (POST)',
+    util.inspect(await TaskService.getTaskObj(taskChange.id),
+      {compact: false, depth: null, colors: true} ));
 };

@@ -12,7 +12,8 @@ module.exports = async (Models) => {
     materials.push(await MaterialService.addChange(1, 1, 2, 
         "Прекрасная фича от 2 пользователя"));
     materials.push(await MaterialService.addVersion(1, 1,
-        "Добавлена прекрасная фича от 2 пользователя (#1.1.1)"));
+        "Добавлена прекрасная фича от 2 пользователя (#1.1.1)"), 
+        [ materials[materials.length - 1].materialId ]);
     materials.push(await MaterialService.addChange(1, 2, 2,
         "Новая прекрасная фича от 2 пользователя"));
  //   console.log('MATERIALS: ', materials);
@@ -36,7 +37,7 @@ module.exports = async (Models) => {
     
     for (user of users) {
         console.log(`USER #${user.id}, ACCESS TO MATERIAL 1 #${
-            await MaterialService.getUseraccessTypeId(1, user.id)}`);
+            await MaterialService.getUserAccessTypeId(1, user.id)}`);
     }
     console.log('ACCESS RULES OBJECT', 
         util.inspect(await MaterialService.getAccessRules(1), 
@@ -57,7 +58,7 @@ module.exports = async (Models) => {
     });
     for (user of users) {
         console.log(`USER #${user.id}, NEW ACCESS TO MATERIAL 1 #${
-            await MaterialService.getUseraccessTypeId(1, user.id)}`);
+            await MaterialService.getUserAccessTypeId(1, user.id)}`);
     }
     console.log('NEW ACCESS RULES OBJECT', 
         util.inspect(await MaterialService.getAccessRules(1), 
