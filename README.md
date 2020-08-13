@@ -22,3 +22,7 @@
 Проверка сервера
 
 8. После этого конструктор будет доступен по адресу ```http://localhost:3000```.
+
+
+Если появится ошибка ```Error: ER_NOT_SUPPORTED_AUTH_MODE: Client does not support authentication protocol requested by server; consider upgrading MySQL client```, измените параметры сервера MySql:
+https://stackoverflow.com/questions/50149307/error-er-not-supported-auth-mode-client-does-not-support-authentication-protoc
