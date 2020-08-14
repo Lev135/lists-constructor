@@ -117,6 +117,23 @@ function getLoggingFile(): string | undefined {
 }
 
 import * as TypeOrm from 'typeorm';
+import * as Test from './test';
+import { User } from './entities/user';
+import { MaterialBase } from './entities/material/material-base';
+import { MaterialVersion } from './entities/material/material-version';
+import { MaterialChange } from './entities/material/material-change';
+import { Group } from './entities/group';
+import { AccessType } from './entities/access/access-type';
+import { MaterialGroupAccess } from './entities/access/material-group-access';
+import { MaterialUserAccess } from './entities/access/material-user-access';
+import { Task } from './entities/task/task';
+import { TaskNote } from './entities/task/task-note';
+import { TaskSolution } from './entities/task/task-solution';
+import { List } from './entities/list/list';
+import { ListBlock } from './entities/list/list-block';
+import { ListBlockComment } from './entities/list/list-block-comment';
+import { ListBlockTasks } from './entities/list/list-block-tasks';
+import { ListBlockTaskItem } from './entities/list/list-block-task-item';
 
 async function startTypeOrm() {
   console.log("Подключение к БД через TypeORM...");
@@ -129,9 +146,19 @@ async function startTypeOrm() {
       password: options.dataBase.password,
       database: options.dataBase.name,
       logging: true,
-      entities: ["entities/*.js"]
+      synchronize: true,
+      entities: [
+        // "dist/entities/**/*{.ts,.js}",
+        // "src/entities/**/*{.ts,.js}"
+        User, Group,
+        AccessType, MaterialGroupAccess, MaterialUserAccess,
+        MaterialBase, MaterialChange, MaterialVersion,
+        Task, TaskNote, TaskSolution,
+        List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem
+      ]
     });
     console.log(`TypeORM успешно подключён к БД`);
+    Test.run();
   }
  catch (err) {
   console.error(`Ошика при подключении к БД через typeORM: `, err);
