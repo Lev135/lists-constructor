@@ -16,13 +16,14 @@ a{
   color:black;
   font-size:16px;
 }
-hr {
-  border: 0;
-  background: #000000;
-  height: 1px;
-}
+input {
+  width:370px;
+  height:20px;
+  margin-bottom: 15px;
+  }
 li{
   list-style-type: none;
+  font-size: 19px;
 }
 ul{
   margin-left: 0; 
@@ -30,8 +31,33 @@ ul{
 }
 i {
   border: solid black;
-  border-width: 0 1.5px 1.5px 0;
+  border-width: 0 1.8px 1.8px 0;
   display: inline-block;
   padding: 2.5px;
 }
-
+.typical_btn{
+  width:200px;
+  height:30px;
+  margin:0 auto;
+  text-align: center;
+  margin-top:5px;
+  font-size:1em;
+  border:1px #C4D2F9 solid;
+  border-radius:2px;
+  background:white;
+  outline:none;
+  cursor: pointer;
+}
+.content{
+  height: 100%;
+  width: 100%;
+  display: flex;
+}
+.hidden{
+  display: none;
+}
+.btn_place{
+  width:92%;
+  display:flex;
+  justify-content: center;
+}

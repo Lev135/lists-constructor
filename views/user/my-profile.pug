@@ -4,13 +4,13 @@ block title
   | Мой профиль
   
 block content
-    .my_profile_content
+    .content
         include ../../public/includes/leftside-menu.pug
         .my_profile
             h1(class="my_profile_title") Личная информация
             .my_profile_box                        
                 h2 Профиль
-                a(class="edit_profile_link" href="../views/user/edit-profile") Редактировать
+                a(class="edit_profile_link" href="/user/edit-profile") Редактировать
                 label Фотография
                 //label(class="my_profile_photo") #{mainInfo.photo}
                 label Photo

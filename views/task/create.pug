@@ -1,17 +1,50 @@
-<!doctype html>
-<head>
-</head>
-<body>
-    <form action="" method="POST">
-        <h3>Statement</h3>
-        <input name="statement">
-        <h3>Answer</h3>
-        <input name="answer">
-        <h3>Solution</h3>
-        <input name="solution">
-        <h3>Grade</h3>
-        <input name="grade">
-        <br>
-        <input type="submit" value="Create">
-    </form>
-</body>
+extends ../../views/template.pug
+
+block title 
+  | Создание задачи
+
+block content  
+    .content
+        include ../../public/includes/leftside-menu.pug
+        .create_task_block
+          h1 Создание задачи
+          form.create_task_form(action="" method="POST")
+              h2 Введите условие
+              textarea(class="create_area" name="statement")
+              h2 Введите ответ
+              textarea(class="create_area" name="answer")
+              h2 Решение
+              textarea(class="create_area" name="solution")
+              h2 Выберете класс
+              select(class ="grade_select" type="number" name="grade")
+                option(class = "hidden" selected value="choose_theme")  -Выберите класс-
+                option(value="5") 5
+                option(value="6") 6
+                option(value="7") 7
+                option(value="8") 8
+                option(value="9") 9
+                option(value="10") 10
+                option(value="11") 11
+              h2 Выберите темы задачи
+              div(class="theme_select")
+                select(class="main_theme" type="text" name="main_theme" onchange="theme_1()")
+                  option(class = "hidden" selected value="choose_theme")  -Выберите тему-
+                  option(value="Геометрия") Геометрия
+                  option(value="Алгебра") Алгебра
+                select(class="first_theme" type="text" name="first_theme" onchange="theme_2()")
+                  option(class = "hidden" selected value="choose_theme")  -Выберите тему-
+                  option(value="Геометрия") nhnhn
+                  option(value="Алгебра") nhnhdf
+                select(class="second_theme" type="text" name="second_theme" onchange="theme_3()")
+                  option(class = "hidden" selected value="choose_theme")  -Выберите тему-
+                  option(value="Геометрия") Геометрия
+                  option(value="Алгебра") Алгебра
+                select(class="third_theme" type="text" name="third_theme" onchange="theme_4()")
+                  option(class = "hidden" selected value="choose_theme")  -Выберите тему-
+                  option(value="Геометрия") Геометрия
+                  option(value="Алгебра") Алгебра  
+              br
+              div(class="btn_place")
+                input(class="create_btn" type="submit" value="Создать")
+    script
+      include /scripts/themes.js

@@ -1,0 +1,44 @@
+.my_profile{
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    min-width: 40%;
+    margin:0 18%;
+}
+
+.my_profile_box{
+    background: #e1e8fc;
+    height: min-content;
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: 1fr min-content;
+    grid-template-rows: 60px 40px 40px 40px 40px 40px 40px;   
+}
+.my_profile_title{
+    text-align: center;
+}
+.my_profile_info{
+    float: right;
+    margin-right: 100px;
+}
+.edit_profile_link{
+    text-align: end;
+    margin:10px 20px;
+}
+.users_list{
+    width:min-content;
+    min-width: 40%;
+    height: min-content;
+    border-radius: 10px;
+    margin: 20px 17%;
+}
+.users_list_table{
+    background: #e1e8fc;
+    display: grid;
+    grid-template-columns: 1fr min-content;
+    grid-template-rows: 60px 40px 40px 40px 40px 40px 40px;  
+    border-radius: 10px; 
+}
+.users_title{
+    text-align: center;
+}

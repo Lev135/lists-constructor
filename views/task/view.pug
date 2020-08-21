@@ -1,21 +1,32 @@
-<!doctype html>
-<head>
+extends ../../views/template.pug
 
-</head>
-<body>
-    <h1>Task #{task.id}</h1>
-    <h3>Statement</h3>
-    <p>#{task.statement}</p>
-    <h3>Answer</h3>
-    if(!user.isTeacher && !user.isAdmin && !user.isEditor)
-        <p>You have no access to this field</p>
-    else
-        <p>#{task.answer}</p>
-    <h3>Solution</h3>
-    if(!user.isTeacher && !user.isAdmin && !user.isEditor)
-        <p>You have no access to this field</p>
-    else
-        <p>#{task.solution}</p>
-    <h3>Grade</h3>
-    <p>#{task.grade}</p>
-</body>
+block title 
+  | Просмотр задачи
+
+block content  
+    .content
+        include ../../public/includes/leftside-menu.pug
+        .view_task_block
+            .view_task_block_header
+                //h1 Задача #{task.id} 
+                //a.edit_href(href="edit.pug") Редактировать
+
+            h3 Условие
+            p #{task.statement}
+            h3 Ответ
+            if(!user.isTeacher && !user.isAdmin && !user.isEditor)
+                p You have no access to this field
+            else
+                p #{task.answer}
+            h3 Решение
+            if(!user.isTeacher && !user.isAdmin && !user.isEditor)
+                p You have no access to this field
+            else
+                .main_solution_block
+                    .themes
+                        label Темы
+                        input(type="text")
+                        label Класс:
+                        p #{task.grade}
+                    .solution_block
+                         p #{task.solution}

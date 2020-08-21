@@ -1,12 +1,9 @@
 .main_leftside_block{
-    margin: 20px 20px;
-    background-color: #e1e8fc;
-    width: min-content;
-    height:min-content;
-    border-radius: 10px;
-    padding: 10px 5% 10px 15px;
+    /*background:#d1ddfd;*/
+    width: 120px;
+    height:100%;
+    padding: 20px 5% 10px 25px;
     list-style: none;
-    position: relative;
 }
 .downfall1, .downfall2, .downfall3{
     display: flex;
@@ -15,7 +12,7 @@
     border: none;
     outline:none;
     cursor:pointer;
-    font-size: 16px;
+    font-size: 19px;
     margin-left: -7px;
     margin-top: 20px;
 }
@@ -23,9 +20,18 @@
     transform: rotate(-45deg);
     -webkit-transform: rotate(-45deg);
     margin-left: 5px;
-    margin-top: 8px;
+    margin-top: 10px;
     margin-bottom: 1px;
 }
-.downfall_li_1, .downfall_li_2, .downfall_li_3{
-    display:none !important;
+#downfall_li_1, #downfall_li_2, #downfall_li_3{
+    display:none;
+}
+li a{
+    font-size: 18px;
+  }
+.main_leftside_block li{
+    margin-top: 10px;
+}
+.profile_title_link{
+    font-size: 19px;
 }

@@ -14,6 +14,6 @@ module.exports = (Models) => {
                     fs.readFileSync(`${__dirname}\\..\\..\\test-data\\test-jsons\\task.json`, 'utf-8')
                 );
             res.render('task/view.pug', task);
-        }
+        },
     };
 };

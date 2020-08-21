@@ -1,18 +1,16 @@
-doctype html
-html
-    head
-        title Регистрация
-        meta(charset = "utf8")
-        meta(name = 'descripton' content = 'Описание страницы')
-        mets(name = 'viewport' content = 'width = device-width, initial-scale = 1.0')
-        meta(http-equiv = 'X-UA-Compatible' content = 'IE=Edge')
-        link(rel="stylesheet" href="/assets/css/style.css")
-        link(rel="stylesheet" href="/assets/css/register.css")
-        link(rel="stylesheet" href="/assets/css/navbar-footer.css")
-    body
-        include ../../public/includes/navbar.pug
-        h1 Список пользователей
-        table
-            tr <th> Имя <th> Почта
-            each user in users
-                <tr><td>#{user.name}</td><td>#{user.email}</td></tr>
+extends ../../views/template.pug
+
+block title 
+  | Список пользователей
+  
+block content
+    .content
+        include ../../public/includes/leftside-menu.pug
+        .users_list
+            h1.users_title Список пользователей
+            .users_list_table    
+                h3 Имя
+                h3 Почта
+                each user in users
+                    p #{user.name}
+                    p #{user.email}
