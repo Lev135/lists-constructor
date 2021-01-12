@@ -1,15 +1,15 @@
 import { Entity, OneToOne, Column, OneToMany, PrimaryColumn } from "typeorm";
 import { TaskSolution } from "./task-solution";
 import { TaskNote } from "./task-note";
-import { MaterialChange } from "../material/material-change";
+import { Material } from "../material/material";
 
 @Entity()
 export class Task {
   @PrimaryColumn()
   materialId!: number;
 
-  @OneToOne(type => MaterialChange, {primary: true})
-  material!: MaterialChange;
+  @OneToOne(type => Material, {primary: true})
+  material!: Material;
 
   @Column()
   statement!: string;

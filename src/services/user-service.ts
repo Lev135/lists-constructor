@@ -1,5 +1,3 @@
-import { GroupGetNameModel  } from "./group-service";
-
 export interface UserGetMinModel {
   id: number;
   name: string,
@@ -8,11 +6,7 @@ export interface UserGetMinModel {
   email: string
 }
 
-export interface UserGetWithGroupsModel extends UserGetMinModel {
-  groups: GroupGetNameModel;
-}
-
-export interface UserGetProfileModel extends UserGetWithGroupsModel {
+export interface UserGetProfileModel extends UserGetMinModel {
   // Ещё разная информация об активности User'a
 }
 

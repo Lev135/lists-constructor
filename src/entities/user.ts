@@ -1,7 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, ManyToMany, OneToMany } from 'typeorm';
-import { MaterialBase } from './material/material-base';
-import { Group } from './group';
-import { MaterialUserAccess } from './access/material-user-access';
+import { Material } from './material/material';
 
 @Entity()
 export class User extends BaseEntity {
@@ -30,12 +28,6 @@ export class User extends BaseEntity {
   @CreateDateColumn()
   registrationDate!: Date;
 
-  @OneToMany(type => MaterialBase, materialBase => materialBase.author)
-  createdMaterials!: MaterialBase[];
-  
-  @ManyToMany(type => Group, group => group.users)
-  groups!: Group[];
-
-  @OneToMany(type => MaterialUserAccess, rule => rule.user)
-  rules!: MaterialUserAccess[];
+  @OneToMany(type => Material, material => material.author)
+  createdMaterials!: Material[];
 }

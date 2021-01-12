@@ -138,13 +138,7 @@ async function closeConnection(connection : MySql.Connection) {
 import * as TypeOrm from 'typeorm';
 import * as Test from './test';
 import { User } from './entities/user';
-import { MaterialBase } from './entities/material/material-base';
-import { MaterialVersion } from './entities/material/material-version';
-import { MaterialChange } from './entities/material/material-change';
-import { Group } from './entities/group';
-import { AccessType } from './entities/access/access-type';
-import { MaterialGroupAccess } from './entities/access/material-group-access';
-import { MaterialUserAccess } from './entities/access/material-user-access';
+import { Material } from './entities/material/material';
 import { Task } from './entities/task/task';
 import { TaskNote } from './entities/task/task-note';
 import { TaskSolution } from './entities/task/task-solution';
@@ -171,9 +165,8 @@ async function startTypeOrm() {
       entities: [
         // "dist/entities/**/*{.ts,.js}",
         // "src/entities/**/*{.ts,.js}"
-        User, Group,
-        AccessType, MaterialGroupAccess, MaterialUserAccess,
-        MaterialBase, MaterialChange, MaterialVersion,
+        User,
+        Material,
         Task, TaskNote, TaskSolution,
         List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem
       ]
