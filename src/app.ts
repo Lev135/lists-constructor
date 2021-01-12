@@ -18,30 +18,64 @@ interface IPersonalOptions {
     password: string,
     host: string,
     port: number,
-    logDir?: string,
+    logging?: LoggerOptions,
+    logger?: "advanced-console" | "simple-console" | "file" | "debug",
     doNotClean?: boolean
   },
   site : {
-    port: string
+    port: number
   }
 }
-const options: IPersonalOptions =
-  FileStream.readFileSync('./personal-options.json', 'utf8')
-      .toString().split(/(?={")/).map(x => JSON.parse(x))[0];
 
+const optionsPath = './personal-options.json';
+
+function readOptions() : IPersonalOptions {
+  const optionsStr = FileStream.readFileSync(optionsPath, 'utf8').toString();  
+  return optionsStr.split(/(?={")/).map(x => JSON.parse(x))[0];
+}
+
+function createOptionsFile() : void {
+  const obj : IPersonalOptions = {
+    dataBase : {
+      name : "constructorDb",
+      user : "root",
+      password : "password",
+      host : "localhost",
+      port : 3306,
+      logging: ["error", "warn", "info", "migration", "query", "schema"],
+      logger: "simple-console",
+      doNotClean : false
+    },
+    site : {
+      port : 3000
+    }
+  }
+  FileStream.writeFileSync(optionsPath, JSON.stringify(obj, null, 2));
+}
+
+console.log(1);
+if (!FileStream.existsSync(optionsPath)) {
+  console.log(2);
+  createOptionsFile();
+  console.log("Файл настроек 'personal-options.json' создан в корневой директории");
+}
+console.log("Считывание настроек...");
+const options : IPersonalOptions = readOptions();
+console.log(3);
 main();
 
 async function main() {
-  if (!options.dataBase.doNotClean) {
-    if (await cleanDataBase()) {
-      await startTypeOrm();
-    }
+  if (options.dataBase.doNotClean) {
+    await startTypeOrm();
+  }
+  else if (await cleanDataBase()) {
+    await startTypeOrm();
   }
 }
 
 
 async function execQuery(connection: MySql.Connection, query: string) {
-  return new Promise((res, rej) => {
+  return new Promise<void>((res, rej) => {
     connection.query(query, (err: MySql.MysqlError | null) => {
       if (err) {
         rej(err);
@@ -85,7 +119,7 @@ async function cleanDataBase(): Promise<boolean> {
 
 async function closeConnection(connection : MySql.Connection) {
   try {
-    await new Promise((res, rej) => {
+    await new Promise<void>((res, rej) => {
       connection.end((err?: MySql.MysqlError) => {
         if (err)
           rej(err);
@@ -100,21 +134,6 @@ async function closeConnection(connection : MySql.Connection) {
   };
 }
 
-function getLoggingFile(): string | undefined {
-  if (!options.dataBase.logDir) {
-    console.log("Добавьте папку для логов sequelize в personal-options.json:\n" +
-                "(dataBase.\"logDir\" : \"\\\\logs\\\\\")");
-    return;
-  }
-  const now: Date = new Date();
-  const dir: string = options.dataBase.logDir +
-              `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-  const fileName: string = `/${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}.txt`;
-  const shell = require('shelljs');
-  shell.mkdir('-p', __dirname + dir);
-  FileStream.writeFileSync(__dirname + dir + fileName, "Sequelize logs\n");
-  return __dirname + dir + fileName;
-}
 
 import * as TypeOrm from 'typeorm';
 import * as Test from './test';
@@ -134,6 +153,7 @@ import { ListBlock } from './entities/list/list-block';
 import { ListBlockComment } from './entities/list/list-block-comment';
 import { ListBlockTasks } from './entities/list/list-block-tasks';
 import { ListBlockTaskItem } from './entities/list/list-block-task-item';
+import { LoggerOptions } from 'typeorm/logger/LoggerOptions';
 
 async function startTypeOrm() {
   console.log("Подключение к БД через TypeORM...");
@@ -145,7 +165,8 @@ async function startTypeOrm() {
       username: options.dataBase.user,
       password: options.dataBase.password,
       database: options.dataBase.name,
-      logging: true,
+      logging: options.dataBase.logging,
+      logger: options.dataBase.logger,
       synchronize: true,
       entities: [
         // "dist/entities/**/*{.ts,.js}",

@@ -10,20 +10,14 @@
 3. Откройте консоль в папке проекта и введите ```npm install```.
   Установятся все необходимые модули Node.js
 4. Запустите базу данных MySQL
-5. Если надо поменяйте пароль/порт БД в файле *app.js*
-6. Для компиляции кода TypeScript введите ```npm run tsc```
+5. Для компиляции кода TypeScript введите ```npm run tsc```
 6. Для запуска сервера введите ```npm start```.
 
-Проверка базы данных
+7. Если появится ошибка ```Error: ER_NOT_SUPPORTED_AUTH_MODE: Client does not support authentication protocol requested by server; consider upgrading MySQL client```, измените параметры сервера MySql:
+  - Запустите консоль MySql
+  - введите ```ALTER USER 'root' IDENTIFIED WITH mysql_native_password BY 'password';```
 
-7. Если всё прошло корректно, то в консоль должны вывестись 2 сообщения:
-  - Подключение к серверу MySQL успешно установлено
-  - Подключение закрыто
+  https://stackoverflow.com/questions/50149307/error-er-not-supported-auth-mode-client-does-not-support-authentication-protoc
 
-Проверка сервера
-
-8. После этого конструктор будет доступен по адресу ```http://localhost:3000```.
-
-
-Если появится ошибка ```Error: ER_NOT_SUPPORTED_AUTH_MODE: Client does not support authentication protocol requested by server; consider upgrading MySQL client```, измените параметры сервера MySql:
-https://stackoverflow.com/questions/50149307/error-er-not-supported-auth-mode-client-does-not-support-authentication-protoc
+8. При первом запуске в корневой папке проекта будет автоматически создан файл 'personal-options.json'.
+  Измените, если необходимо, настройки под свой компьютер.
