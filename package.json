@@ -4,6 +4,8 @@
   "dependencies": {
     "@types/express": "^4.17.7",
     "@types/mysql": "^2.15.15",
+    "@types/passport": "^1.0.5",
+    "@types/passport-local": "^1.0.33",
     "cookie-parser": "^1.4.5",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
@@ -17,7 +19,7 @@
     "sequelize": "^6.3.3",
     "shelljs": "^0.8.4",
     "tsc": "^1.20150623.0",
-    "typeorm": "^0.2.25",
+    "typeorm": "^0.2.29",
     "typescript": "^3.9.7"
   },
   "scripts": {
