@@ -19,10 +19,14 @@ interface IPersonalOptions {
     port: number,
     logging?: LoggerOptions,
     logger?: "advanced-console" | "simple-console" | "file" | "debug",
-    doNotClean?: boolean
+    doNotClean?: boolean,
+    doNotSync?: boolean
   },
   site : {
     port: number
+  }
+  debug?: {
+    runTests?: boolean
   }
 }
 
@@ -43,10 +47,14 @@ function createOptionsFile() : void {
       port : 3306,
       logging: ["error", "warn", "info", "migration", "query", "schema"],
       logger: "simple-console",
-      doNotClean : false
+      doNotClean : false,
+      doNotSync : false
     },
     site : {
       port : 3000
+    },
+    debug: {
+      runTests : false
     }
   }
   FileStream.writeFileSync(optionsPath, JSON.stringify(obj, null, 2));
@@ -64,11 +72,51 @@ console.log(3);
 main();
 
 async function main() {
-  if (options.dataBase.doNotClean) {
-    await startTypeOrm();
+  try {
+    const connection = await connectToDatabase();
+    if (!options.dataBase.doNotClean) {
+      try {
+        await cleanDatabase(connection);
+      }
+      catch (err) {
+        console.error("Ошибка при очистке базы данных: " + err.message);
+        await closeConnection(connection);
+        return;
+      }
+    }
+    console.log(`Создание базы данных "${options.dataBase.name}"`);
+    try {
+      await createDatabaseIfNotExists(connection);
+    }
+    catch (err) {
+      console.error("Ошибка при создании базы данных: " + err.message);
+      await closeConnection(connection);
+      return;
+    }
+    try {
+      await startTypeOrm();
+    }
+    catch(err) {
+      console.error("Ошибка при запуске TypeORM: " + err.message);
+      await closeConnection(connection);
+      return;
+    }
+    if (options.debug?.runTests) {
+      try {
+        await Test.run();
+      }
+      catch (err) {
+        console.error("Ошибка во время тестирования: " + err.message);
+        await closeConnection(connection);
+        return;
+      }
+    }
+    await closeConnection(connection);
+    return;
   }
-  else if (await cleanDataBase()) {
-    await startTypeOrm();
+  catch (err) {
+    console.error("Ошибка при подключении к базе данных: " + err.message);
+    return;
   }
 }
 
@@ -85,8 +133,7 @@ async function execQuery(connection: MySql.Connection, query: string) {
   });
 }
 
-// Creating dataBase if not exists
-async function cleanDataBase(): Promise<boolean> {
+async function connectToDatabase() {
   console.log("Подключение к базе данных MySql...");
   try {
     const connection = MySql.createConnection({
@@ -96,50 +143,40 @@ async function cleanDataBase(): Promise<boolean> {
       password: options.dataBase.password
     });
     console.log(`Подключение к базе данных прошло успешно`);
-
-    
-    try {
-      await execQuery(connection, `DROP DATABASE IF EXISTS ${options.dataBase.name};`);
-      await execQuery(connection, `CREATE DATABASE IF NOT EXISTS ${options.dataBase.name};`);
-      return true;
-    }
-    catch (err) {
-      console.error(`Ошибка при отчистке базы данных: ${err.message}`);
-    }
-    finally {
-      await closeConnection(connection);
-    }
+    return connection;
   }
   catch (err) {
-    console.log(`Ошибка при подключении к базе данных: ${err.message}`);
+    throw new Error(`Ошибка при подключении к базе данных: ${err.message}`);
   }
-  return false;
+}
+
+async function cleanDatabase(connection : MySql.Connection) {
+  await execQuery(connection, `DROP DATABASE IF EXISTS ${options.dataBase.name};`);
+}
+
+async function createDatabaseIfNotExists(connection : MySql.Connection) {
+  await execQuery(connection, `CREATE DATABASE IF NOT EXISTS ${options.dataBase.name};`);
 }
 
 async function closeConnection(connection : MySql.Connection) {
-  try {
-    await new Promise<void>((res, rej) => {
-      connection.end((err?: MySql.MysqlError) => {
-        if (err)
-          rej(err);
-        else
-          res();
-      });
+  await new Promise<void>((res, rej) => {
+    connection.end((err?: MySql.MysqlError) => {
+      if (err)
+        rej(err);
+      else
+        res();
     });
-    console.log("Подключение к серверу MySql успешно закрыто");
-  }
-  catch (err) {
-    console.log("Ошибка при закрытии подключении к серверу MySql: " + err.message);
-  };
+  });
 }
 
 
 import * as TypeOrm from 'typeorm';
-import * as Test from './test';
+import * as Test from './tests/test';
 import { User } from './entities/user';
 import { Material } from './entities/material/material';
+import { UserNote } from './entities/material/user-note';
 import { Task } from './entities/task/task';
-import { TaskNote } from './entities/task/task-note';
+import { TaskRemark } from './entities/task/task-remark';
 import { TaskSolution } from './entities/task/task-solution';
 import { List } from './entities/list/list';
 import { ListBlock } from './entities/list/list-block';
@@ -160,23 +197,22 @@ async function startTypeOrm() {
       database: options.dataBase.name,
       logging: options.dataBase.logging,
       logger: options.dataBase.logger,
-      synchronize: true,
+      synchronize: !options.dataBase.doNotSync,
       entities: [
         // "dist/entities/**/*{.ts,.js}",
         // "src/entities/**/*{.ts,.js}"
         User,
-        Material,
-        Task, TaskNote, TaskSolution,
+        Material, UserNote,
+        Task, TaskRemark, TaskSolution,
         List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem
       ]
     });
     console.log(`TypeORM успешно подключён к БД`);
-    Test.run();
     startExpress(connection);
   }
- catch (err) {
-  console.error(`Ошика при подключении к БД через typeORM: `, err);
- }
+  catch (err) {
+    console.error(`Ошика при подключении к БД через typeORM: `, err);
+  }
 }
 
 import passport from 'passport';

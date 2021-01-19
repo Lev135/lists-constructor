@@ -1,14 +1,15 @@
-import { Entity, OneToOne, Column, OneToMany, PrimaryColumn } from "typeorm";
+import { Entity, OneToOne, Column, OneToMany, PrimaryColumn, BaseEntity, JoinColumn } from "typeorm";
 import { TaskSolution } from "./task-solution";
-import { TaskNote } from "./task-note";
+import { TaskRemark } from "./task-remark";
 import { Material } from "../material/material";
 
 @Entity()
 export class Task {
   @PrimaryColumn()
-  materialId!: number;
+  id!: number;
 
   @OneToOne(type => Material, {primary: true})
+  @JoinColumn({name: 'id'})
   material!: Material;
 
   @Column()
@@ -20,6 +21,6 @@ export class Task {
   @OneToMany(type => TaskSolution, solution => solution.task)
   solutions!: TaskSolution[];
   
-  @OneToMany(type => TaskNote, note => note.task)
-  notes!: TaskNote[];
+  @OneToMany(type => TaskRemark, note => note.task)
+  remarks!: TaskRemark[];
 }

@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, CreateDateColumn } from "typeorm";
 import { User } from "../user";
+import { UserNote } from "./user-note";
 
 @Entity()
 export class Material {
@@ -11,4 +12,7 @@ export class Material {
 
   @CreateDateColumn()
   creationDate!: Date;
+
+  @OneToMany(type => UserNote, note => note.material)
+  userNotes!: UserNote[];
 }

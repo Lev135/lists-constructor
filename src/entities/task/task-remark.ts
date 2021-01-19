@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
 import { Task } from "./task";
 
 @Entity()
-export class TaskNote {
+export class TaskRemark {
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -18,6 +18,6 @@ export class TaskNote {
   @Column()
   body!: string;
 
-  @ManyToOne(type => Task, task => task.notes)
+  @ManyToOne(type => Task, task => task.remarks)
   task!: Task;
 }
