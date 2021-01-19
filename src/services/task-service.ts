@@ -37,46 +37,45 @@ export interface TaskPostCreateModel {
     statement: string,
     answer: string,
     solutions: TaskSolutionModel[],
-    notes: TaskRemarkModel[]
+    remarks: TaskRemarkModel[]
 }
 
-export async function createTask(authorId: number, obj: TaskPostCreateModel) : Promise<number> {
-    // Где должны быть Id'шники, а где объекты? Вот здесь, например, нужно получить объект
-    const author : User = await getRepository(User).findOneOrFail(authorId);
-    console.log(author);
-    const material : Material = getRepository(Material).create();
-    material.author = author;
-    await getRepository(Material).save(material);
-    console.log('Material saved');
-    console.log(material);
-
-
-    const task : Task = getRepository(Task).create();
-    task.material = material;
-    task.statement = obj.statement;
-    task.answer = obj.answer;
-    await getRepository(Task).save(task);
-
-    const promises : Promise<any>[] = [];
+function createSolutions(solutionsObj : TaskSolutionModel[], task : Task) : TaskSolution[] {
     const solutions : TaskSolution[] = [];
-    for (let i : number = 0; i < obj.solutions.length; ++i) {
-        const solutionObj : TaskSolutionModel = obj.solutions[i];
-        const solution : TaskSolution = getRepository(TaskSolution).create(solutionObj);
+    for (let i : number = 0; i < solutionsObj.length; ++i) {
+        const solution : TaskSolution = getRepository(TaskSolution).create(solutionsObj[i]);
         solution.task = task;
         solution.index = i;
         solutions.push(solution);
     }
-    promises.push(getRepository(TaskSolution).save(solutions));
+    return solutions;
+}
+
+function createRemarks(remarksObj : TaskRemarkModel[], task : Task) : TaskRemark[] {
     const remarks : TaskRemark[] = [];
-    for (let i : number = 0; i < obj.notes.length; ++i) {
-        const remarkObj : TaskRemarkModel = obj.notes[i];
-        const remark : TaskRemark = getRepository(TaskRemark).create(remarkObj);
+    for (let i : number = 0; i < remarksObj.length; ++i) {
+        const remark : TaskRemark = getRepository(TaskRemark).create(remarksObj[i]);
         remark.task = task;
         remark.index = i;
         remarks.push(remark);
     }
-    promises.push(getRepository(TaskRemark).save(remarks)); 
-    await Promise.all(promises);
+    return remarks;
+}
+
+export async function createTask(authorId: number, obj: TaskPostCreateModel) : Promise<number> {
+    const author : User = await getRepository(User).findOneOrFail(authorId);
+    const material : Material = getRepository(Material).create();
+    material.author = author;
+    await getRepository(Material).save(material);
+
+    const task : Task = getRepository(Task).create(obj);
+    task.material = material;
+    await getRepository(Task).save(task);
+
+    await Promise.all([
+        getRepository(TaskSolution).save(createSolutions(obj.solutions, task)),
+        getRepository(TaskRemark).save(createRemarks(obj.remarks, task))
+    ]);
     return task.id;
 }
 
@@ -103,7 +102,6 @@ export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
         .innerJoinAndSelect('task.material', 'material', 'material.id = :id', {id})
         .innerJoinAndSelect('material.author', 'author', 'author.id = material.authorId')
         .getOneOrFail();
-    console.log(task);
     return {
         materialId : task.id,
         author : pick(task.material.author, ['id', 'name', 'surname', 'patronymic', 'email']),
