@@ -2,18 +2,33 @@
   "name": "lists-constructor",
   "version": "1.0.0",
   "dependencies": {
+    "@types/express": "^4.17.7",
+    "@types/mysql": "^2.15.15",
+    "@types/passport": "^1.0.5",
+    "@types/passport-local": "^1.0.33",
     "cookie-parser": "^1.4.5",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
+    "mysql": "^2.18.1",
     "mysql2": "^2.1.0",
     "nodemon": "^2.0.4",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "pug": "^3.0.0",
+    "reflect-metadata": "^0.1.13",
     "sequelize": "^6.3.3",
-    "shelljs": "^0.8.4"
+    "shelljs": "^0.8.4",
+    "ts-transformer-keys": "^0.4.3",
+    "tsc": "^1.20150623.0",
+    "typeorm": "^0.2.29",
+    "typescript": "^3.9.7"
   },
   "scripts": {
-    "start": "node --unhandled-rejections=strict app.js"
+    "start": "node --unhandled-rejections=strict ./dist/app.js",
+    "tsc": "ttsc"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.27",
+    "ttypescript": "^1.5.12"
   }
 }

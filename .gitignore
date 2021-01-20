@@ -6,3 +6,5 @@ logs
 logs2
 web.config
 .vscode
+dist
+*.log
