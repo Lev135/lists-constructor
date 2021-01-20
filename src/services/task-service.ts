@@ -1,3 +1,4 @@
+import { keys } from "ts-transformer-keys";
 import { createQueryBuilder, getRepository } from "typeorm";
 import { Material } from "../entities/material/material";
 import { Task } from "../entities/task/task";
@@ -10,7 +11,8 @@ import { UserGetMinModel } from "./user-service";
 export interface TaskGetMinModel {
     materialId : number,
     author: UserGetMinModel,
-    statement : string
+    statement : string,
+    themeIds : number[]
 }
 
 export interface TaskSolutionModel {
@@ -37,7 +39,8 @@ export interface TaskPostCreateModel {
     statement: string,
     answer: string,
     solutions: TaskSolutionModel[],
-    remarks: TaskRemarkModel[]
+    remarks: TaskRemarkModel[],
+    themeIds : number[]
 }
 
 function createSolutions(solutionsObj : TaskSolutionModel[], task : Task) : TaskSolution[] {
@@ -74,7 +77,8 @@ export async function createTask(authorId: number, obj: TaskPostCreateModel) : P
 
     await Promise.all([
         getRepository(TaskSolution).save(createSolutions(obj.solutions, task)),
-        getRepository(TaskRemark).save(createRemarks(obj.remarks, task))
+        getRepository(TaskRemark).save(createRemarks(obj.remarks, task)),
+        createQueryBuilder(Material).relation('themes').of(material).add(obj.themeIds)
     ]);
     return task.id;
 }
@@ -97,33 +101,50 @@ function getRemarks(arr : TaskRemark[]) : TaskRemarkModel[] {
 }
 
 export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
-    const task : Task = await createQueryBuilder(Task, 'task')
-        .where('task.id = :id', {id})
-        .innerJoinAndSelect('task.material', 'material', 'material.id = :id', {id})
-        .innerJoinAndSelect('material.author', 'author', 'author.id = material.authorId')
-        .getOneOrFail();
-    return {
-        materialId : task.id,
-        author : pick(task.material.author, ['id', 'name', 'surname', 'patronymic', 'email']),
-        statement : task.statement
-    };
+    try {
+        const task : Task = await createQueryBuilder(Task, 'task')
+            .where('task.id = :id', {id})
+            .innerJoinAndSelect('task.material', 'material')
+            .innerJoin('material.author', 'author')
+                .addSelect(keys<UserGetMinModel>().map(key => 'author.' + key))
+            .leftJoin('material.themes', 'theme')
+                .addSelect('theme.id')
+            .getOneOrFail();
+        console.log(task);
+        return {
+            materialId : task.id,
+            author : pick(task.material.author, keys<UserGetMinModel>()),
+            statement : task.statement,
+            themeIds : task.material.themes.map(theme => theme.id)
+        };
+    }
+    catch (err) {
+        console.log("error");
+        throw err;
+    }
 }
 
 export async function getTaskMax(id: number) : Promise<TaskGetMaxModel> {
     const task : Task = await createQueryBuilder(Task, 'task')
         .where('task.id = :id', {id})
-        .innerJoinAndSelect('task.material', 'material', 'material.id = :id', {id})
-        .innerJoinAndSelect('material.author', 'author', 'author.id = material.authorId')
-        .leftJoinAndSelect('task.solutions', 'solution', 'solution.taskId = :id', {id})
-        .leftJoinAndSelect('task.remarks', 'remark', 'remark.taskId = :id', {id})
+        .innerJoinAndSelect('task.material', 'material')
+        .innerJoin('material.author', 'author')
+            .addSelect(keys<UserGetMinModel>().map(key => 'author.' + key))
+        .leftJoin('task.solutions', 'solution')
+            .addSelect(keys<TaskSolutionModel>().map(key => 'solution.' + key))
+        .leftJoin('task.remarks', 'remark')
+            .addSelect(keys<TaskRemarkModel>().map(key => 'remark.' + key))
+        .leftJoin('material.themes', 'theme')
+            .addSelect('theme.id')
         .getOneOrFail();
     return {
         materialId : task.id,
-        author : pick(task.material.author, ['id', 'name', 'surname', 'patronymic', 'email']),
+        author : pick(task.material.author, keys<UserGetMinModel>()),
         creationDate : task.material.creationDate,
         statement : task.statement,
         answer : task.answer,
         solutions : getSolutions(task.solutions),
-        remarks : getRemarks(task.remarks)
+        remarks : getRemarks(task.remarks),
+        themeIds : task.material.themes.map(theme => theme.id)
     };
 }

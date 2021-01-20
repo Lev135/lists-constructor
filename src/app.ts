@@ -175,6 +175,7 @@ import * as Test from './tests/test';
 import { User } from './entities/user';
 import { Material } from './entities/material/material';
 import { UserNote } from './entities/material/user-note';
+import { Theme} from './entities/material/theme';
 import { Task } from './entities/task/task';
 import { TaskRemark } from './entities/task/task-remark';
 import { TaskSolution } from './entities/task/task-solution';
@@ -202,7 +203,7 @@ async function startTypeOrm() {
         // "dist/entities/**/*{.ts,.js}",
         // "src/entities/**/*{.ts,.js}"
         User,
-        Material, UserNote,
+        Material, UserNote, Theme,
         Task, TaskRemark, TaskSolution,
         List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem
       ]

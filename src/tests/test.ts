@@ -1,5 +1,6 @@
 import { getManager } from "typeorm";
 import { User } from "../entities/user";
+import { testMLib } from "./test-mlib";
 import { testTaskService } from "./test-task-service";
 
 async function testTypeOrm() {
@@ -16,6 +17,7 @@ async function testTypeOrm() {
 export async function run() {
   try {
     await testTaskService();
+//    testMLib();
   }
   catch (err) {
     console.error("Ошибка при тестировании: " + err.message);

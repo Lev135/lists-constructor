@@ -1,6 +1,8 @@
-export function pick<T1 extends T2, T2, KT extends keyof T2> (obj : T1, keys : KT[]) : T2 {
+import { keys } from 'ts-transformer-keys'
+
+export function pick<T2 extends object, T1 extends T2> (obj : T1, keysArr : Array<keyof T2>) : T2 {
     let res : any = {};
-    keys.forEach(key => {
+    keysArr.forEach(key => {
         res[key] = obj[key];
     });
     return res;
