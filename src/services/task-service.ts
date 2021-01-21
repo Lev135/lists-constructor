@@ -9,7 +9,7 @@ import { pick, sortByField } from "../mlib";
 import { UserGetMinModel } from "./user-service";
 
 export interface TaskGetMinModel {
-    materialId : number,
+    id : number,
     author: UserGetMinModel,
     statement : string,
     themeIds : number[]
@@ -112,7 +112,7 @@ export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
             .getOneOrFail();
         console.log(task);
         return {
-            materialId : task.id,
+            id : task.id,
             author : pick(task.material.author, keys<UserGetMinModel>()),
             statement : task.statement,
             themeIds : task.material.themes.map(theme => theme.id)
@@ -138,7 +138,7 @@ export async function getTaskMax(id: number) : Promise<TaskGetMaxModel> {
             .addSelect('theme.id')
         .getOneOrFail();
     return {
-        materialId : task.id,
+        id : task.id,
         author : pick(task.material.author, keys<UserGetMinModel>()),
         creationDate : task.material.creationDate,
         statement : task.statement,

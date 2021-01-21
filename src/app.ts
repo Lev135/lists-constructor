@@ -218,6 +218,9 @@ async function startTypeOrm() {
 
 import passport from 'passport';
 import localStrategy from 'passport-local';
+import { userRouter } from './routes/user-router';
+import { pick } from './mlib';
+import { keys } from 'ts-transformer-keys';
 
 async function startExpress(connection : TypeOrm.Connection){
   const app = express();
@@ -229,7 +232,7 @@ async function startExpress(connection : TypeOrm.Connection){
   // директория для статический файлов
   app.use(express.static("public"));
 
-  startPassport(connection);
+  await startPassport(connection);
 
   const cookieParser = require('cookie-parser');
   app.use(cookieParser());
@@ -253,6 +256,7 @@ async function startExpress(connection : TypeOrm.Connection){
     }
   });
 
+  app.use('/user', userRouter);
   
   // обработка ошибки 404
   app.use(function (req, res, next) {
@@ -263,42 +267,52 @@ async function startExpress(connection : TypeOrm.Connection){
   console.log("Сервер запущен!")
 }
 
+async function verifyFunction(email : string, password : string, 
+      done : (error: any, user?: UserPassportInterface, options?: localStrategy.IVerifyOptions) => void) {
+  try {
+    const user : User | undefined = await TypeOrm.getRepository(User).findOne({email}) ;
+    if (!user) {
+      return done(null, undefined, {message: "Пользователь с такой почтой не найден"});
+    }
+    else if (user.password != password) {
+      return done(null, undefined, {message: "Неверный пароль"});
+    }
+    else {
+      return done(null, pick(user, keys<UserPassportInterface>()) as UserPassportInterface);
+    }
+  }
+  catch (err) {
+    console.error("Ошибка во время авторизации: " + err);
+  }
+}
+
+export interface UserPassportInterface extends Express.User {
+  id : number,
+  email : string,
+  password : string
+};
+
 async function startPassport(connection : TypeOrm.Connection) { 
   const userRep = connection.getRepository(User);
 
-  const myStrategy : localStrategy.Strategy = new localStrategy.Strategy({
-    usernameField: 'email',
-    passwordField: 'password'
-  },
-    async function(email : string, password : string, 
-            done : (error: any, user?: any, options?: localStrategy.IVerifyOptions) => void) {
-      try {
-        const user : User | undefined = await userRep.findOne({email}) ;
-        if (!user) {
-          return done(null, false, {message: "Пользователь с такой почтой не найден"});
-        }
-        else if (user.password != password) {
-          return done(null, false, {message: "Неверный пароль"});
-        }
-        else {
-          return done(null, user);
-        }
-      }
-      catch (err) {
-        console.error("Ошибка во время авторизации: " + err);
-      }
-    }
-  );
-  passport.serializeUser(function(user : any, done) {
-    done(null, user.id);
+  const myStrategy : localStrategy.Strategy 
+    = new localStrategy.Strategy({
+        usernameField: 'email',
+        passwordField: 'password'
+      },
+      verifyFunction
+    );
+  passport.serializeUser(function(user : Express.User, done : (err : any, id ?: number) => void) : void {
+    done(null, (user as UserPassportInterface).id);
   });
-  passport.deserializeUser(async function(id, done) {
+  passport.deserializeUser(async function(id : number, done : (err : any, user?: UserPassportInterface) => void) : Promise<void> {
     try {
-      const user : User = (await userRep.findByIds([id]))[0];
-      done(null, user);
+      const user : User = await userRep.findOneOrFail(id);
+      done(null, pick(user, keys<UserPassportInterface>()) as UserPassportInterface);
     }
     catch (err) {
       console.error("Ошибка во время авторизации: " + err);
+      done(err);
     }
   });
 
