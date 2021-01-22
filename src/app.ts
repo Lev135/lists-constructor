@@ -216,11 +216,8 @@ async function startTypeOrm() {
   }
 }
 
-import passport from 'passport';
-import localStrategy from 'passport-local';
 import { userRouter } from './routes/user-router';
-import { pick } from './mlib';
-import { keys } from 'ts-transformer-keys';
+import { authorizeMiddleware } from './authorize-middleware';
 
 async function startExpress(connection : TypeOrm.Connection){
   const app = express();
@@ -232,20 +229,9 @@ async function startExpress(connection : TypeOrm.Connection){
   // директория для статический файлов
   app.use(express.static("public"));
 
-  await startPassport(connection);
+  app.use(authorizeMiddleware);
 
-  const cookieParser = require('cookie-parser');
-  app.use(cookieParser());
-  const session = require('express-session');
-  app.use(session({
-    secret: 'SECRET',
-    resave: true,
-    saveUninitialized: true,
-  }));
-
-  app.use(passport.initialize());
-  app.use(passport.session());
-
+  /*
   // Перенаправление невошедших на user/login
   app.use((req, res, next) => {
     if (req.url == '/user/login' || req.url == '/user/register' || req.isAuthenticated()) {
@@ -255,7 +241,7 @@ async function startExpress(connection : TypeOrm.Connection){
       res.redirect('/user/login');
     }
   });
-
+*/
   app.use('/user', userRouter);
   
   // обработка ошибки 404
@@ -265,55 +251,4 @@ async function startExpress(connection : TypeOrm.Connection){
 
   app.listen(options.site.port);
   console.log("Сервер запущен!")
-}
-
-async function verifyFunction(email : string, password : string, 
-      done : (error: any, user?: UserPassportInterface, options?: localStrategy.IVerifyOptions) => void) {
-  try {
-    const user : User | undefined = await TypeOrm.getRepository(User).findOne({email}) ;
-    if (!user) {
-      return done(null, undefined, {message: "Пользователь с такой почтой не найден"});
-    }
-    else if (user.password != password) {
-      return done(null, undefined, {message: "Неверный пароль"});
-    }
-    else {
-      return done(null, pick(user, keys<UserPassportInterface>()) as UserPassportInterface);
-    }
-  }
-  catch (err) {
-    console.error("Ошибка во время авторизации: " + err);
-  }
-}
-
-export interface UserPassportInterface extends Express.User {
-  id : number,
-  email : string,
-  password : string
-};
-
-async function startPassport(connection : TypeOrm.Connection) { 
-  const userRep = connection.getRepository(User);
-
-  const myStrategy : localStrategy.Strategy 
-    = new localStrategy.Strategy({
-        usernameField: 'email',
-        passwordField: 'password'
-      },
-      verifyFunction
-    );
-  passport.serializeUser(function(user : Express.User, done : (err : any, id ?: number) => void) : void {
-    done(null, (user as UserPassportInterface).id);
-  });
-  passport.deserializeUser(async function(id : number, done : (err : any, user?: UserPassportInterface) => void) : Promise<void> {
-    try {
-      const user : User = await userRep.findOneOrFail(id);
-      done(null, pick(user, keys<UserPassportInterface>()) as UserPassportInterface);
-    }
-    catch (err) {
-      console.error("Ошибка во время авторизации: " + err);
-      done(err);
-    }
-  });
-
 }
