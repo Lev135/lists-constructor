@@ -216,8 +216,8 @@ async function startTypeOrm() {
   }
 }
 
-import passport from 'passport';
-import localStrategy from 'passport-local';
+import { userRouter } from './routes/user-router';
+import { authorizeMiddleware } from './authorize-middleware';
 
 async function startExpress(connection : TypeOrm.Connection){
   const app = express();
@@ -229,20 +229,9 @@ async function startExpress(connection : TypeOrm.Connection){
   // директория для статический файлов
   app.use(express.static("public"));
 
-  startPassport(connection);
+  app.use(authorizeMiddleware);
 
-  const cookieParser = require('cookie-parser');
-  app.use(cookieParser());
-  const session = require('express-session');
-  app.use(session({
-    secret: 'SECRET',
-    resave: true,
-    saveUninitialized: true,
-  }));
-
-  app.use(passport.initialize());
-  app.use(passport.session());
-
+  /*
   // Перенаправление невошедших на user/login
   app.use((req, res, next) => {
     if (req.url == '/user/login' || req.url == '/user/register' || req.isAuthenticated()) {
@@ -252,7 +241,8 @@ async function startExpress(connection : TypeOrm.Connection){
       res.redirect('/user/login');
     }
   });
-
+*/
+  app.use('/user', userRouter);
   
   // обработка ошибки 404
   app.use(function (req, res, next) {
@@ -261,45 +251,4 @@ async function startExpress(connection : TypeOrm.Connection){
 
   app.listen(options.site.port);
   console.log("Сервер запущен!")
-}
-
-async function startPassport(connection : TypeOrm.Connection) { 
-  const userRep = connection.getRepository(User);
-
-  const myStrategy : localStrategy.Strategy = new localStrategy.Strategy({
-    usernameField: 'email',
-    passwordField: 'password'
-  },
-    async function(email : string, password : string, 
-            done : (error: any, user?: any, options?: localStrategy.IVerifyOptions) => void) {
-      try {
-        const user : User | undefined = await userRep.findOne({email}) ;
-        if (!user) {
-          return done(null, false, {message: "Пользователь с такой почтой не найден"});
-        }
-        else if (user.password != password) {
-          return done(null, false, {message: "Неверный пароль"});
-        }
-        else {
-          return done(null, user);
-        }
-      }
-      catch (err) {
-        console.error("Ошибка во время авторизации: " + err);
-      }
-    }
-  );
-  passport.serializeUser(function(user : any, done) {
-    done(null, user.id);
-  });
-  passport.deserializeUser(async function(id, done) {
-    try {
-      const user : User = (await userRep.findByIds([id]))[0];
-      done(null, user);
-    }
-    catch (err) {
-      console.error("Ошибка во время авторизации: " + err);
-    }
-  });
-
 }
