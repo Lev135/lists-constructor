@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, Column, PrimaryColumn } from "typeorm";
+import { Entity, ManyToOne, Column, PrimaryColumn, JoinColumn } from "typeorm";
 import { ListBlock } from "./list-block";
 import { ListBlockTasks } from "./list-block-tasks";
 import { Task } from "../task/task";
@@ -6,9 +6,10 @@ import { Task } from "../task/task";
 @Entity()
 export class ListBlockTaskItem {
   @PrimaryColumn()
-  blockId!: number;
+  id!: number;
 
   @ManyToOne(type => ListBlockTasks, block => block.taskItems, {primary: true})
+  @JoinColumn({name: 'id'})
   block!: ListBlockTasks;
 
   @ManyToOne(type => Task)

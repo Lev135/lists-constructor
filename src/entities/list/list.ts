@@ -1,13 +1,14 @@
-import { Entity, OneToOne, Column, OneToMany, PrimaryColumn } from "typeorm";
+import { Entity, OneToOne, Column, OneToMany, PrimaryColumn, JoinColumn } from "typeorm";
 import { Material } from "../material/material";
 import { ListBlock } from "./list-block";
 
 @Entity()
 export class List {
   @PrimaryColumn()
-  materialId!: number;
+  id!: number;
 
   @OneToOne(type => Material, {primary: true})
+  @JoinColumn({ name: 'id' })
   material!: Material;
 
   @Column()

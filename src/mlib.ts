@@ -18,3 +18,7 @@ export function sortByField<T1, T2 extends keyof T1>(arr : T1[], key : T2) {
             return 1;
     });
 }
+
+export function keysForSelection<T>(name : string, keys : Array<keyof T>) : Array<string> {
+    return keys.map(key => name + '.' + key);
+}

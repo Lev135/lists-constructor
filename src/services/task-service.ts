@@ -5,11 +5,11 @@ import { Task } from "../entities/task/task";
 import { TaskRemark } from "../entities/task/task-remark";
 import { TaskSolution } from "../entities/task/task-solution";
 import { User } from "../entities/user";
-import { pick, sortByField } from "../mlib";
+import { keysForSelection, pick, sortByField } from "../mlib";
 import { UserGetMinModel } from "./user-service";
 
 export interface TaskGetMinModel {
-    materialId : number,
+    id : number,
     author: UserGetMinModel,
     statement : string,
     themeIds : number[]
@@ -43,7 +43,7 @@ export interface TaskPostCreateModel {
     themeIds : number[]
 }
 
-function createSolutions(solutionsObj : TaskSolutionModel[], task : Task) : TaskSolution[] {
+async function createSolutions(solutionsObj : TaskSolutionModel[], task : Task) : Promise<TaskSolution[]> {
     const solutions : TaskSolution[] = [];
     for (let i : number = 0; i < solutionsObj.length; ++i) {
         const solution : TaskSolution = getRepository(TaskSolution).create(solutionsObj[i]);
@@ -51,10 +51,10 @@ function createSolutions(solutionsObj : TaskSolutionModel[], task : Task) : Task
         solution.index = i;
         solutions.push(solution);
     }
-    return solutions;
+    return getRepository(TaskSolution).save(solutions);
 }
 
-function createRemarks(remarksObj : TaskRemarkModel[], task : Task) : TaskRemark[] {
+async function createRemarks(remarksObj : TaskRemarkModel[], task : Task) : Promise<TaskRemark[]> {
     const remarks : TaskRemark[] = [];
     for (let i : number = 0; i < remarksObj.length; ++i) {
         const remark : TaskRemark = getRepository(TaskRemark).create(remarksObj[i]);
@@ -62,7 +62,7 @@ function createRemarks(remarksObj : TaskRemarkModel[], task : Task) : TaskRemark
         remark.index = i;
         remarks.push(remark);
     }
-    return remarks;
+    return getRepository(TaskRemark).save(remarks);
 }
 
 export async function createTask(authorId: number, obj: TaskPostCreateModel) : Promise<number> {
@@ -76,8 +76,8 @@ export async function createTask(authorId: number, obj: TaskPostCreateModel) : P
     await getRepository(Task).save(task);
 
     await Promise.all([
-        getRepository(TaskSolution).save(createSolutions(obj.solutions, task)),
-        getRepository(TaskRemark).save(createRemarks(obj.remarks, task)),
+        createSolutions(obj.solutions, task),
+        createRemarks(obj.remarks, task),
         createQueryBuilder(Material).relation('themes').of(material).add(obj.themeIds)
     ]);
     return task.id;
@@ -104,15 +104,14 @@ export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
     try {
         const task : Task = await createQueryBuilder(Task, 'task')
             .where('task.id = :id', {id})
-            .innerJoinAndSelect('task.material', 'material')
+            .innerJoin('task.material', 'material')
             .innerJoin('material.author', 'author')
-                .addSelect(keys<UserGetMinModel>().map(key => 'author.' + key))
+                .addSelect(keysForSelection('author', keys<UserGetMinModel>()))
             .leftJoin('material.themes', 'theme')
                 .addSelect('theme.id')
             .getOneOrFail();
-        console.log(task);
         return {
-            materialId : task.id,
+            id : task.id,
             author : pick(task.material.author, keys<UserGetMinModel>()),
             statement : task.statement,
             themeIds : task.material.themes.map(theme => theme.id)
@@ -127,18 +126,19 @@ export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
 export async function getTaskMax(id: number) : Promise<TaskGetMaxModel> {
     const task : Task = await createQueryBuilder(Task, 'task')
         .where('task.id = :id', {id})
-        .innerJoinAndSelect('task.material', 'material')
+        .innerJoin('task.material', 'material')
+            .addSelect(keysForSelection<Material>('material', ['creationDate']))
         .innerJoin('material.author', 'author')
-            .addSelect(keys<UserGetMinModel>().map(key => 'author.' + key))
+            .addSelect(keysForSelection<UserGetMinModel>('author', keys<UserGetMinModel>()))
         .leftJoin('task.solutions', 'solution')
-            .addSelect(keys<TaskSolutionModel>().map(key => 'solution.' + key))
+            .addSelect(keysForSelection<TaskSolution>('solution', [...keys<TaskSolutionModel>(), 'index']))
         .leftJoin('task.remarks', 'remark')
-            .addSelect(keys<TaskRemarkModel>().map(key => 'remark.' + key))
+            .addSelect(keysForSelection<TaskRemark>('remark', [...keys<TaskRemarkModel>(), 'index']))
         .leftJoin('material.themes', 'theme')
             .addSelect('theme.id')
         .getOneOrFail();
     return {
-        materialId : task.id,
+        id : task.id,
         author : pick(task.material.author, keys<UserGetMinModel>()),
         creationDate : task.material.creationDate,
         statement : task.statement,
