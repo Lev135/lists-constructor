@@ -1,5 +1,6 @@
 import * as listService from '../services/list-service'
 import { testTaskIds, testThemeIds, testUserIds } from './create-test-data'
+import { inspect } from 'util'
 
 export async function testListService() {
     const listId : number = await listService.createList(testUserIds[0], {
@@ -23,5 +24,7 @@ export async function testListService() {
     
     console.log(listId);
     const listMinObj : listService.ListGetMinModel = await listService.getListMin(listId);
-    console.log('listMinObj', listMinObj);   
+    console.log('listMinObj', inspect(listMinObj, false, null, true));
+    const listMaxObj : listService.ListGetMaxModel = await listService.getListMax(listId);
+    console.log('listMaxObj', inspect(listMaxObj, false, null, true));
 }

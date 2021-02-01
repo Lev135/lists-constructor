@@ -105,6 +105,7 @@ export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
         const task : Task = await createQueryBuilder(Task, 'task')
             .where('task.id = :id', {id})
             .innerJoin('task.material', 'material')
+                .addSelect(keysForSelection<Material>('material', [ 'id' ]))
             .innerJoin('material.author', 'author')
                 .addSelect(keysForSelection('author', keys<UserGetMinModel>()))
             .leftJoin('material.themes', 'theme')

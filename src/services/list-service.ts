@@ -1,5 +1,6 @@
 import { keys } from "ts-transformer-keys";
 import { createQueryBuilder, getRepository } from "typeorm";
+import { addSyntheticLeadingComment, sortAndDeduplicateDiagnostics } from "typescript";
 import { List } from "../entities/list/list";
 import { ListBlock } from "../entities/list/list-block";
 import { ListBlockComment } from "../entities/list/list-block-comment";
@@ -8,8 +9,8 @@ import { ListBlockTasks } from "../entities/list/list-block-tasks";
 import { Material } from "../entities/material/material";
 import { Task } from "../entities/task/task";
 import { User } from "../entities/user";
-import { keysForSelection, pick } from "../mlib";
-import { TaskGetMinModel } from "./task-service";
+import { keysForSelection, pick, sortByField } from "../mlib";
+import { getTaskMin, TaskGetMinModel } from "./task-service";
 import { UserGetMinModel } from "./user-service";
 
 
@@ -88,11 +89,29 @@ export type ListBlockCommentGetModel = ListBlockCommentPostModel;
 export interface ListBlockTasksGetModel {
     tasks: TaskGetMinModel[]
 }
-export type ListBlockGetModel = ListBlockCommentPostModel | ListBlockTasksPostModel;
+export type ListBlockGetModel = ListBlockCommentGetModel | ListBlockTasksGetModel;
 
 export interface ListGetMaxModel extends ListGetMinModel{
     creationDate: Date,
     blocks: ListBlockGetModel[]
+}
+
+export async function getBlock(obj : ListBlock) : Promise<ListBlockGetModel> {
+    if (obj.blockComment) {
+        return {
+            body : obj.blockComment.body
+        }
+    }
+    else if (obj.blockTasks) {
+        return {
+            tasks : await Promise.all(
+                obj.blockTasks.taskItems.map(item => getTaskMin(item.task.id))
+            )
+        }
+    }
+    else {
+        throw new Error("Unknown block type");
+    }
 }
 
 export async function getListMin(id: number) : Promise<ListGetMinModel> {
@@ -116,6 +135,60 @@ export async function getListMin(id: number) : Promise<ListGetMinModel> {
     }
     catch (err) {
         console.log(`Error while getting list min (id: ${id})`);
+        throw err;
+    }
+}
+
+export async function getListMax(id : number) : Promise<ListGetMaxModel> {
+    try {
+        const list : List = await createQueryBuilder(List, 'list')
+            .where('list.id = :id', { id })
+            .innerJoin('list.material', 'material')
+                .addSelect('material.creationDate')
+            .innerJoin('material.author', 'author')
+                .addSelect(keysForSelection('author', keys<UserGetMinModel>()))
+            .leftJoin('material.themes', 'theme')
+                .addSelect('theme.id')
+            .leftJoin('list.blocks', 'block')
+                .addSelect(keysForSelection<ListBlock>('block', [ 'index' ]))
+            .leftJoin('block.blockComment', 'blockComment')
+                .addSelect(keysForSelection<ListBlockComment>('blockComment', keys<ListBlockCommentGetModel>()))
+            .leftJoin('block.blockTasks', 'blockTasks')
+                .addSelect(keysForSelection<ListBlockTasks>('blockTasks', [ 'id' ]))
+            .leftJoin('blockTasks.taskItems', 'item')
+                .addSelect(keysForSelection<ListBlockTaskItem>('item', [ 'index' ]))
+            .leftJoin('item.task', 'task')
+                .addSelect(keysForSelection<Task>('task', [ 'id' ]))
+            .getOneOrFail();
+        console.log('list', list);
+        console.log(list.material);
+        console.log(list.material.author);
+        try {
+            const authorModel : UserGetMinModel = pick(list.material.author, keys<UserGetMinModel>());
+            try {
+                return {
+                    id,
+                    name: list.name,
+                    themeIds : list.material.themes.map(theme => theme.id),
+    
+                    author: authorModel, // pick(list.material.author, keys<UserGetMinModel>()),
+                    creationDate : list.material.creationDate,
+                    blocks: await Promise.all(sortByField(list.blocks, 'index').map(block => getBlock(block)))
+                }
+            }
+            catch (err) {
+                console.log("err2", err);
+                throw err;
+            }
+        }
+        catch (err) {
+            console.log("err1", err);
+            throw err;
+        }
+        
+    }
+    catch (err) {
+        console.log(`Error while getting list max (id: ${id})`);
         throw err;
     }
 }
