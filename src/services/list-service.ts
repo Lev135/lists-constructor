@@ -161,31 +161,15 @@ export async function getListMax(id : number) : Promise<ListGetMaxModel> {
                 .addSelect(keysForSelection<Task>('task', [ 'id' ]))
             .getOneOrFail();
         console.log('list', list);
-        console.log(list.material);
-        console.log(list.material.author);
-        try {
-            const authorModel : UserGetMinModel = pick(list.material.author, keys<UserGetMinModel>());
-            try {
-                return {
-                    id,
-                    name: list.name,
-                    themeIds : list.material.themes.map(theme => theme.id),
-    
-                    author: authorModel, // pick(list.material.author, keys<UserGetMinModel>()),
-                    creationDate : list.material.creationDate,
-                    blocks: await Promise.all(sortByField(list.blocks, 'index').map(block => getBlock(block)))
-                }
-            }
-            catch (err) {
-                console.log("err2", err);
-                throw err;
-            }
+        return {
+            id,
+            name: list.name,
+            themeIds : list.material.themes.map(theme => theme.id),
+
+            author: pick(list.material.author, keys<UserGetMinModel>()),
+            creationDate : list.material.creationDate,
+            blocks: await Promise.all(sortByField(list.blocks, 'index').map(block => getBlock(block)))
         }
-        catch (err) {
-            console.log("err1", err);
-            throw err;
-        }
-        
     }
     catch (err) {
         console.log(`Error while getting list max (id: ${id})`);
