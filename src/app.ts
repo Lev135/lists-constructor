@@ -218,6 +218,8 @@ async function startTypeOrm() {
 
 import { userRouter } from './routes/user-router';
 import { authorizeMiddleware } from './authorize-middleware';
+import { taskRouter } from './routes/task-router';
+import { listRouter } from './routes/list-router';
 
 async function startExpress(connection : TypeOrm.Connection){
   const app = express();
@@ -243,6 +245,8 @@ async function startExpress(connection : TypeOrm.Connection){
   });
 */
   app.use('/user', userRouter);
+  app.use('/task', taskRouter);
+  app.use('/list', listRouter);
   
   // обработка ошибки 404
   app.use(function (req, res, next) {

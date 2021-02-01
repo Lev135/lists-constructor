@@ -1,6 +1,6 @@
 import { pick } from '../mlib';
-import * as userService from '../services/user-service'
-import jwt from 'jsonwebtoken'
+import * as userService from '../services/user-service';
+import jwt from 'jsonwebtoken';
 import { keys } from 'ts-transformer-keys';
 
 const SECRETKEY = 'SECRET_KEY'
