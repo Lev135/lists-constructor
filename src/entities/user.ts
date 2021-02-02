@@ -32,6 +32,6 @@ export class User extends BaseEntity {
   @OneToMany(type => Material, material => material.author)
   createdMaterials!: Material[];
 
-  @OneToMany(type => UserNote, note => note.author)
+  @OneToMany(type => UserNote, note => note.user)
   materialNotes!: UserNote[];
 }

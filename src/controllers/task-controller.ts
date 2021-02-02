@@ -1,11 +1,14 @@
-import { inspect } from "util";
-import { getTaskMax, TaskGetMaxModel, TaskPostCreateModel, createTask } from "../services/task-service";
+import * as taskService  from "../services/task-service";
+import * as materialService from "../services/material-service"
+import * as types from "../types/task-types"
 
 export async function create(req : any, res : any, _next : any) {
     try {
-        const taskObj : TaskPostCreateModel = req.body;
-        const id : number = await createTask(req.user.id, taskObj);           
-        res.send( { id } );
+        const body : types.PostCreate = req.body;
+        const id : number = await taskService.createTask(req.user.id, body.task);
+        if (body.userNote)
+            await materialService.setUserNote(id, req.user.id, body.userNote);
+        res.send( { id } as types.SendPostCreate );
     }
     catch (err) {
         console.log(err);
@@ -14,10 +17,13 @@ export async function create(req : any, res : any, _next : any) {
 }
 
 export async function viewPage(req : any, res : any) : Promise<void> {
-    console.log(inspect(req.body, false, null, true));
     try {
-        const task : TaskGetMaxModel = await getTaskMax(req.body.id);
-        res.send(task);
+        const body : types.GetViewPage = req.body;
+        const obj : types.RenderViewPage = {
+            task : await taskService.getTaskMax(body.id),
+            userNote : await materialService.getUserNote(body.id, req.user.id)
+        };
+        res.send(obj);
         //res.render('task/view-task.pug', task);
     }
     catch (err) {

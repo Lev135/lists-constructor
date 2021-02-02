@@ -4,16 +4,14 @@
   "dependencies": {
     "@types/express": "^4.17.7",
     "@types/mysql": "^2.15.15",
-    "@types/passport": "^1.0.5",
-    "@types/passport-local": "^1.0.33",
     "cookie-parser": "^1.4.5",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
     "jsonwebtoken": "^8.5.1",
     "mysql": "^2.18.1",
     "mysql2": "^2.1.0",
+    "node-getopt": "^0.3.2",
     "nodemon": "^2.0.4",
-    "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "pug": "^3.0.0",
     "reflect-metadata": "^0.1.13",
@@ -27,11 +25,13 @@
   },
   "scripts": {
     "start": "node --unhandled-rejections=strict ./dist/app.js",
-    "tsc": "ttsc"
+    "tsc": "ttsc",
+    "a": "npm run tsc && npm start"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^8.5.0",
     "@types/node": "^14.0.27",
+    "@types/node-getopt": "^0.2.31",
     "ttypescript": "^1.5.12"
   }
 }

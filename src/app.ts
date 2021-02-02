@@ -60,6 +60,17 @@ function createOptionsFile() : void {
   FileStream.writeFileSync(optionsPath, JSON.stringify(obj, null, 2));
 }
 
+import Getopt from 'node-getopt'
+
+const getOpt = new Getopt([
+  ['', 'sync'],
+  ['', 'clean'],
+  ['', 'test']
+]).bindHelp();
+const opt = getOpt.parse(process.argv.slice(2));
+if (opt)
+  console.log(opt);
+
 console.log(1);
 if (!FileStream.existsSync(optionsPath)) {
   console.log(2);
@@ -68,6 +79,18 @@ if (!FileStream.existsSync(optionsPath)) {
 }
 console.log("Считывание настроек...");
 const options : IPersonalOptions = readOptions();
+if (opt.options.sync) {
+  options.dataBase.doNotSync = false;
+}
+if (opt.options.clean) {
+  options.dataBase.doNotClean = false;
+}
+if (opt.options.test) {
+  if (options.debug)
+    options.debug.runTests = true;
+  else
+    options.debug = { runTests : true };
+}
 console.log(3);
 main();
 

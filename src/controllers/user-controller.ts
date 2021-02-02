@@ -2,6 +2,7 @@ import { pick } from '../mlib';
 import * as userService from '../services/user-service';
 import jwt from 'jsonwebtoken';
 import { keys } from 'ts-transformer-keys';
+import * as types from '../types/user-types';
 
 const SECRETKEY = 'SECRET_KEY'
 
@@ -36,13 +37,15 @@ function produceToken(user: UserTokenInfo): string {
 export async function loginPage(req : any, res : any) {
     res.render("user/login.pug");
 }
-export async function login(req : any, res : any, next : any) {
+export async function login(req : any, res : any, _next : any) {
     try {
-        const email : string = req.body.email,
-              password : string = req.body.password;
-        const id : number = await userService.login(email, password);
-        const token = produceToken({ id });
-        res.send({ id, token });
+        const body : types.PostLogin = req.body;
+        const id : number = await userService.login(body.email, body.password);
+        const token = produceToken( { id } );
+        const obj : types.SendPostLogin = {
+            id, token
+        }
+        res.send(obj);
     }
     catch (err) {
         console.log(err);
@@ -55,11 +58,13 @@ export async function registrationPage(req : any, res : any) {
 }
 export async function register (req : any, res : any, next : any) {
     try {
-        const userRegistrationInfo
-                 : userService.UserPostRegistrationModel = req.body;
-        const id = await userService.registerUser(userRegistrationInfo);
-        const token = produceToken({ id });
-        res.send({ id, token });
+        const body : types.PostRegister = req.body;
+        const id = await userService.registerUser( body );
+        const token = produceToken( { id } );
+        const obj : types.SendPostRegister = {
+            id, token
+        }
+        res.send( obj );
     }
     catch (err) {
         console.log(err);
@@ -74,12 +79,14 @@ export async function usersPage(req : any, res : any) {
 }
 export async function profilePage(req : any, res : any)  {
     try {
-        const profile = await userService.getUserProfile(req.query.id);
+        const query : types.GetProfilePage = req.query;
+        const profile = await userService.getUserProfile(query.id);
+        const obj : types.RenderProfilePage = { profile }
         if (req.query.id == req.user.id) {
-            res.render('user/my-profile.pug', { profile });
+            res.render('user/my-profile.pug', obj);
         }
         else {
-            res.render('user/profile.pug', { profile });
+            res.render('user/profile.pug', obj);
         }
     }
     catch (err) {

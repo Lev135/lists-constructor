@@ -14,5 +14,5 @@ export class UserNote {
   material!: Material;
 
   @ManyToOne(type => User, user => user.materialNotes)
-  author!: User;
+  user!: User;
 }
