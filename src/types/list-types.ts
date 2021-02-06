@@ -1,6 +1,6 @@
 import { ListGetMaxModel, ListPostCreateModel } from "../services/list-service";
 
-export interface PostCreate {
+export interface PostCreateBody {
     list : ListPostCreateModel,
     userNote ?: string
 }
@@ -9,7 +9,7 @@ export interface SendPostCreate {
     id : number
 }
 
-export interface GetViewPage {
+export interface GetViewPageQuery {
     id : number
 }
 

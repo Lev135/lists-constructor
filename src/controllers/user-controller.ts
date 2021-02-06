@@ -39,7 +39,7 @@ export async function loginPage(req : any, res : any) {
 }
 export async function login(req : any, res : any, _next : any) {
     try {
-        const body : types.PostLogin = req.body;
+        const body : types.PostLoginBody = req.body;
         const id : number = await userService.login(body.email, body.password);
         const token = produceToken( { id } );
         const obj : types.SendPostLogin = {
@@ -58,7 +58,7 @@ export async function registrationPage(req : any, res : any) {
 }
 export async function register (req : any, res : any, next : any) {
     try {
-        const body : types.PostRegister = req.body;
+        const body : types.PostRegisterBody = req.body;
         const id = await userService.registerUser( body );
         const token = produceToken( { id } );
         const obj : types.SendPostRegister = {
@@ -79,7 +79,7 @@ export async function usersPage(req : any, res : any) {
 }
 export async function profilePage(req : any, res : any)  {
     try {
-        const query : types.GetProfilePage = req.query;
+        const query : types.GetProfilePageQuery = req.query;
         const profile = await userService.getUserProfile(query.id);
         const obj : types.RenderProfilePage = { profile }
         if (req.query.id == req.user.id) {

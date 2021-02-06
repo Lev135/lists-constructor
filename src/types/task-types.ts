@@ -1,6 +1,6 @@
 import { TaskGetMaxModel, TaskPostCreateModel } from "../services/task-service";
 
-export interface PostCreate {
+export interface PostCreateBody {
     task : TaskPostCreateModel,
     userNote? : string
 }
@@ -9,7 +9,7 @@ export interface SendPostCreate {
     id : number
 }
 
-export interface GetViewPage {
+export interface GetViewPageQuery {
     id : number
 }
 
