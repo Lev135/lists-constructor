@@ -12,7 +12,7 @@ export class Task {
   @JoinColumn({name: 'id'})
   material!: Material;
 
-  @Column()
+  @Column({length : 1000})
   statement!: string;
 
   @Column()
