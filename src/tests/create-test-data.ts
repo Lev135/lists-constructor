@@ -81,6 +81,18 @@ const testTaskModels : taskService.TaskPostCreateModel[] = [
         solutions: [],
         remarks: [],
         themeIds: []
+    },
+    {
+        statement: "Как набрать $\\frac{2 + 3}{5}$?",
+        answer: " Привет, \\LaTeX!",
+        solutions: [
+            {
+                body: "Набираешь \\verb|$\\frac{2 + 3}{5}$|",
+                grade: 0
+            }
+        ],
+        remarks: [],
+        themeIds: []
     }
 ];
 export let testTaskIds : number[] = [];

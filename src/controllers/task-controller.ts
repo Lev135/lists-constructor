@@ -1,6 +1,9 @@
 import * as taskService  from "../services/task-service";
 import * as materialService from "../services/material-service"
 import * as types from "../types/task-types"
+import { rootDir } from "../app";
+import { getPdfPath } from "../latex";
+import { Interface } from "readline";
 
 export async function create(req : any, res : any, _next : any) {
     try {
@@ -29,5 +32,23 @@ export async function viewPage(req : any, res : any) : Promise<void> {
     catch (err) {
         console.log(err);
         res.send(`Ошибка при обработке запроса (id = ${req.query.id}): ` + err.message);
+    }
+}
+
+export async function viewPdf(req : any, res : any) {
+    try {
+        const query = req.query;
+        res.sendFile(
+            await getPdfPath(
+                query.id, 
+                'task-template', 
+                {}, 
+                await taskService.getTaskMax(query.id)
+            )
+        );
+    }
+    catch (err) {
+        console.log(err);
+        res.send(`Ошибка при обработке запроса: ` + err.message);
     }
 }

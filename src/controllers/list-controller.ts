@@ -1,3 +1,4 @@
+import { getPdfPath } from "../latex";
 import * as listService from "../services/list-service";
 import * as materialService from '../services/material-service';
 import * as types from '../types/list-types';
@@ -29,5 +30,23 @@ export async function viewPage(req : any, res : any) : Promise<void> {
     catch (err) {
         console.log(err);
         res.send(`Ошибка при обработке запроса (id = ${req.query.id}): ` + err.message);
+    }
+}
+
+export async function viewPdf(req : any, res : any) {
+    try {
+        const query = req.query;
+        res.sendFile(
+            await getPdfPath(
+                query.id, 
+                'list-template', 
+                {}, 
+                await listService.getListMax(query.id)
+            )
+        );
+    }
+    catch (err) {
+        console.log(err);
+        res.send(`Ошибка при обработке запроса: ` + err.message);
     }
 }

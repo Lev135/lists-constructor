@@ -8,6 +8,10 @@ import * as MySql from 'mysql';
 // For files
 import * as FileStream from 'fs';
 
+import { resolve } from 'path'
+
+export const rootDir = resolve(__dirname + "\\..");
+
 // Reading options user options
 
 interface IPersonalOptions {
@@ -228,7 +232,8 @@ async function startTypeOrm() {
         User,
         Material, UserNote, Theme,
         Task, TaskRemark, TaskSolution,
-        List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem
+        List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem,
+        PdfIndex
       ]
     });
     console.log(`TypeORM успешно подключён к БД`);
@@ -244,6 +249,7 @@ import { authorizeMiddleware } from './authorize-middleware';
 import { taskRouter } from './routes/task-router';
 import { listRouter } from './routes/list-router';
 import { materialRouter } from './routes/material-router';
+import { PdfIndex } from './entities/pdf-intex';
 
 async function startExpress(connection : TypeOrm.Connection){
   const app = express();

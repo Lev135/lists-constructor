@@ -1,0 +1,17 @@
+\documentclass{article}
+\usepackage[russian]{babel}
+
+\begin{document}
+    <! #obj.blocks !>
+        <! #body !>     <! !comment-block !>
+            <! body !>
+        <! /body !>
+        <! #tasks !>    <! !tasks-block !>
+            \subsubsection*{Задача \textnumero <! id !>}
+            <! statement !>
+
+        <! /tasks !>
+        
+        \noindent\rule{\textwidth}{0.2pt}
+    <! /obj.blocks !>
+\end{document}

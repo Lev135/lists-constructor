@@ -8,3 +8,4 @@ taskRouter.get('/create', express.static(__dirname + '/public/pages' + '/task/cr
 taskRouter.post('/create', taskController.create);
 
 taskRouter.get('/view', taskController.viewPage);
+taskRouter.get('/viewPdf', taskController.viewPdf);

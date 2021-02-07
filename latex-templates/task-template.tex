@@ -1,0 +1,23 @@
+\documentclass{article}
+\usepackage[russian]{babel}
+
+\newcommand{\tmp}[1]{\noindent\par\textit{#1: }\nopagebreak\par}
+
+\begin{document}
+    \section{Задача \textnumero <! obj.id !>}
+    \tmp{Условие}
+    <! obj.statement !>
+    \tmp{Ответ}
+    <! obj.answer !>
+
+    <! #obj.solutions !>
+        \tmp{Решение}
+        <! body !>
+        \tmp{Класс}
+        <! grade !>
+    <! /obj.solutions !>
+    
+    \noindent\rule{\textwidth}{0.2pt}
+    Created by <! obj.author.name !>
+
+\end{document}

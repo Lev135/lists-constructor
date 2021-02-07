@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "dependencies": {
     "@types/express": "^4.17.7",
+    "@types/mustache": "^4.1.1",
     "@types/mysql": "^2.15.15",
     "cookie-parser": "^1.4.5",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
     "jsonwebtoken": "^8.5.1",
+    "mustache": "^4.1.0",
     "mysql": "^2.18.1",
     "mysql2": "^2.1.0",
     "node-getopt": "^0.3.2",
@@ -15,7 +17,6 @@
     "passport-local": "^1.0.0",
     "pug": "^3.0.0",
     "reflect-metadata": "^0.1.13",
-    "sequelize": "^6.3.3",
     "shelljs": "^0.8.4",
     "ts-transformer-keys": "^0.4.3",
     "tsc": "^1.20150623.0",
@@ -25,8 +26,10 @@
   },
   "scripts": {
     "start": "node --unhandled-rejections=strict ./dist/app.js",
+    "sync": "node --unhandled-rejections=strict ./dist/app.js --sync",
     "tsc": "ttsc",
-    "a": "npm run tsc && npm start"
+    "a": "npm run tsc && npm start",
+    "as": "npm run tsc && npm run sync"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^8.5.0",
