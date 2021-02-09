@@ -4,7 +4,7 @@ import { Material } from "./material/material";
 @Entity()
 export class PdfIndex {
     @PrimaryGeneratedColumn('uuid')
-    id!: string;
+    uuid!: string;
 
     @ManyToOne(type => Material)
     compilable!: Material;
@@ -12,6 +12,6 @@ export class PdfIndex {
     @Column()
     templateName!: string;
 
-    @Column()
+    @Column({ length : 1000 })
     templateParsJSON!: string;
 }

@@ -1,17 +1,30 @@
-\documentclass{article}
+\documentclass[<!= f.stringifyArr(f.documentClassOptions(pars)) !>]{article}
+\usepackage[utf8]{inputenc}
 \usepackage[russian]{babel}
+\usepackage[<!= f.stringifyArr(f.geometryOptions(pars)) !>]{geometry}
+
+<!~ f.lengthVars(pars) : lengthVar !>
+    \setlength{<!= "\\" + lengthVar.name !>}{<!= f.stringify(lengthVar.value) !>}
+<!~!> 
+\pagestyle{empty}
 
 \begin{document}
-    <! #obj.blocks !>
-        <!# body !>     <!! comment-block !>
-            <!{ body }!>
-        <!/ body !>
-        <!# tasks !>    <!! tasks-block !>
-            \subsubsection*{Задача \textnumero <! id !>}
-            <!{ statement }!>
+    <!? obj.name && obj.name != "" !>
+        \section*{<!= obj.name !>}
+    <!?!>
+    <! let taskIndex = 0; !>
+    <!~ obj.blocks :block !>
+        <!? block.body !>
+            <!= block.body !>\nopagebreak
+        <!?!>
+        <!? block.tasks !>
+            <! /* taskIndex = 0;*/ !>
+            <!~ block.tasks :task !>
+                \subsubsection*{Задача \textnumero <!= ++taskIndex !> (id: <!= task.id !>)}
+                <!= task.statement !>
+            <!~!>
 
-        <!/ tasks !>
+        <!?!>
         
-        \noindent\rule{\textwidth}{0.2pt}
-    <!/ obj.blocks !>
+    <!~!>
 \end{document}

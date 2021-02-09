@@ -4,20 +4,20 @@
 \newcommand{\tmp}[1]{\noindent\par\textit{#1: }\nopagebreak\par}
 
 \begin{document}
-    \section{Задача \textnumero <! obj.id !>}
+    \section{Задача \textnumero <!= obj.id !>}
     \tmp{Условие}
-    <!{ obj.statement }!>
+    <!= obj.statement !>
     \tmp{Ответ}
-    <!{ obj.answer }!>
+    <!= obj.answer !>
 
-    <!# obj.solutions !>
+    <!~ obj.solutions :s !>
         \tmp{Решение}
-        <!{ body }!>
+        <!= s.body !>
         \tmp{Класс}
-        <!{ grade }!>
-    <!/ obj.solutions !>
-    
+        <!= s.grade !>
+    <!~!>
+
     \noindent\rule{\textwidth}{0.2pt}
-    Created by <! obj.author.name !>
+    Created by <!= obj.author.name !>
 
 \end{document}

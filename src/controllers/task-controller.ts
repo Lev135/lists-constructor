@@ -2,7 +2,7 @@ import * as taskService  from "../services/task-service";
 import * as materialService from "../services/material-service"
 import * as types from "../types/task-types"
 import { rootDir } from "../app";
-import { getPdfPath } from "../latex";
+import { getPdfPath } from "../compilation/index";
 import { Interface } from "readline";
 
 export async function create(req : any, res : any, _next : any) {

@@ -1,4 +1,6 @@
-import { getPdfPath } from "../latex";
+import { getPdfPath } from "../compilation/index";
+import { GlobalOptions } from "../compilation/options/global-options";
+import { Length } from "../compilation/options/tex-types";
 import * as listService from "../services/list-service";
 import * as materialService from '../services/material-service';
 import * as types from '../types/list-types';
@@ -36,11 +38,32 @@ export async function viewPage(req : any, res : any) : Promise<void> {
 export async function viewPdf(req : any, res : any) {
     try {
         const query = req.query;
+        const body : GlobalOptions = {
+            page : {
+                format : 'a4paper',
+                margins : {
+                    left : new Length(1, 'cm'),
+                    right : new Length(1, 'cm'),
+                    top : new Length(1, 'cm'),
+                    bottom : new Length(1, 'cm'),
+                    bindingoffset : new Length(0, 'pt')
+                },
+                orientation : "landscape",
+                twoColumn : {
+                    columnSep : new Length(1, 'cm'),
+                    columnSepRule : new Length(2, 'pt')
+                },
+                pageNumbering : "Asbuk"
+            },
+            text : {
+                mainTypeSize : "12pt"
+            }
+        }
         res.sendFile(
             await getPdfPath(
                 query.id, 
                 'list-template', 
-                {}, 
+                body, 
                 await listService.getListMax(query.id)
             )
         );

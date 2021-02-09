@@ -237,6 +237,8 @@ async function startTypeOrm() {
       ]
     });
     console.log(`TypeORM успешно подключён к БД`);
+    initTemplates().catch(err => console.log("ERROR with templates initialization", err));
+    
     startExpress(connection);
   }
   catch (err) {
@@ -250,6 +252,8 @@ import { taskRouter } from './routes/task-router';
 import { listRouter } from './routes/list-router';
 import { materialRouter } from './routes/material-router';
 import { PdfIndex } from './entities/pdf-intex';
+import { initTemplates } from './compilation/process-tamplates';
+import { manageRouter } from './routes/manage-router';
 
 async function startExpress(connection : TypeOrm.Connection){
   const app = express();
@@ -278,6 +282,7 @@ async function startExpress(connection : TypeOrm.Connection){
   app.use('/task', taskRouter);
   app.use('/list', listRouter);
   app.use('/material', materialRouter);
+  app.use('/manage', manageRouter);
   
   // обработка ошибки 404
   app.use(function (req, res, next) {
