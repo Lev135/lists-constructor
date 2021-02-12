@@ -7,11 +7,10 @@ import { testTaskService } from "./test-task-service";
 export async function run() {
   try {
     await createTestData();
-    await createLatexTestData();
-    testStringify();
-    //    await createTestData();
-//    await testListService();
-    // await testTaskService();
+    // await createLatexTestData();
+    // testStringify();
+    await testTaskService();
+    await testListService();
 //    testMLib();
   }
   catch (err) {

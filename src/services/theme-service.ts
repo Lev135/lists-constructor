@@ -44,3 +44,7 @@ export async function createThemeTrees(trees : ThemePostCreateTreeModel[]) {
 export async function clearThemes() {
     await getRepository(Theme).delete({});
 }
+
+export function getTheme(id : number) : Promise<Theme> {
+    return getRepository(Theme).findOneOrFail(id);
+}

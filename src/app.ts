@@ -233,7 +233,8 @@ async function startTypeOrm() {
         Material, UserNote, Theme,
         Task, TaskRemark, TaskSolution,
         List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem,
-        PdfIndex
+        PdfIndex,
+        LatexField, LatexPackage
       ]
     });
     console.log(`TypeORM успешно подключён к БД`);
@@ -254,6 +255,8 @@ import { materialRouter } from './routes/material-router';
 import { PdfIndex } from './entities/pdf-intex';
 import { initTemplates } from './compilation/process-tamplates';
 import { manageRouter } from './routes/manage-router';
+import { LatexField } from './entities/latex/latex-field';
+import { LatexPackage } from './entities/latex/latex-package';
 
 async function startExpress(connection : TypeOrm.Connection){
   const app = express();

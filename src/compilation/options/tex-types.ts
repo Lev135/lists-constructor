@@ -78,3 +78,5 @@ export interface LengthVar {
 }
 
 export type Numbering = 'arabic' | 'roman' | 'Roman' | 'alph' | 'Alph' | 'asbuk' | 'Asbuk';
+
+export type PackageName = string

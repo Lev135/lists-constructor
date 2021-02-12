@@ -1,4 +1,5 @@
 import { Entity, OneToOne, Column, PrimaryColumn, JoinColumn } from "typeorm";
+import { LatexField } from "../latex/latex-field";
 import { ListBlock } from "./list-block";
 
 @Entity()
@@ -10,6 +11,7 @@ export class ListBlockComment {
   @JoinColumn({name: 'id'})
   listBlock!: ListBlock;
 
-  @Column()
-  body!: string;
+  @OneToOne(type => LatexField, { nullable : false })
+  @JoinColumn()
+  body!: LatexField;
 }

@@ -7,13 +7,19 @@ export async function testListService() {
         name: 'list 1',
         blocks: [
             {
-                body: "first text block"
+                body: {
+                    body : "first text block",
+                    packageUUids : []
+                }
             },
             {
                 taskIds: [ testTaskIds[0], testTaskIds[1] ]
             },
             {
-                body: "second text block"
+                body: {
+                    body : "second text block",
+                    packageUUids : []
+                }
             },
             {
                 taskIds: [ testTaskIds[1], testTaskIds[0] ]

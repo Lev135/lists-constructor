@@ -1,6 +1,6 @@
 import { keys } from "ts-transformer-keys";
 import { createQueryBuilder, getRepository } from "typeorm";
-import { addSyntheticLeadingComment, sortAndDeduplicateDiagnostics } from "typescript";
+import { LatexField } from "../entities/latex/latex-field";
 import { List } from "../entities/list/list";
 import { ListBlock } from "../entities/list/list-block";
 import { ListBlockComment } from "../entities/list/list-block-comment";
@@ -10,6 +10,8 @@ import { Material } from "../entities/material/material";
 import { Task } from "../entities/task/task";
 import { User } from "../entities/user";
 import { keysForSelection, pick, sortByField } from "../mlib";
+import { addPackages, createLatexField, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
+import { createMaterial, getMaterial } from "./material-service";
 import { getTaskMin, TaskGetMinModel } from "./task-service";
 import { UserGetMinModel } from "./user-service";
 
@@ -18,7 +20,7 @@ import { UserGetMinModel } from "./user-service";
 // POST models:
 
 export interface ListBlockCommentPostModel {
-    body : string
+    body : LatexFieldPostModel
 }
 export interface ListBlockTasksPostModel {
     taskIds : number[]
@@ -32,16 +34,14 @@ export interface ListPostCreateModel {
 
 async function createBlockTasksItem(taskId : number, index : number, blockTasks : ListBlockTasks) {
     const task : Task = await getRepository(Task).findOneOrFail(taskId);
-    const blockTaskItem = getRepository(ListBlockTaskItem).create({ block : blockTasks, index, task });
-    await getRepository(ListBlockTaskItem).save(blockTaskItem);
+    await getRepository(ListBlockTaskItem).save({ block : blockTasks, index, task });
 }
 
 async function createBlock(blockObj : ListBlockPostModel, index : number, list : List) {
     const block = getRepository(ListBlock).create({ index, list });
     await getRepository(ListBlock).save(block);
     if ('taskIds' in blockObj) {
-        const blockTasks = getRepository(ListBlockTasks).create({ listBlock : block });
-        await getRepository(ListBlockTasks).save(blockTasks);
+        const blockTasks = await getRepository(ListBlockTasks).save({ listBlock : block });
         const promises = [];
         for (let i = 0; i < blockObj.taskIds.length; ++i) {
             promises.push(createBlockTasksItem(blockObj.taskIds[i], i, blockTasks));
@@ -49,8 +49,12 @@ async function createBlock(blockObj : ListBlockPostModel, index : number, list :
         await Promise.all(promises);
     }
     else {
-        const commentBlock = getRepository(ListBlockComment).create({ listBlock : block, body : blockObj.body});
+        const commentBlock = getRepository(ListBlockComment).create({
+            listBlock : block, 
+            body : await createLatexField(blockObj.body) 
+        });
         await getRepository(ListBlockComment).save(commentBlock);
+        await addPackages(commentBlock.body.id, blockObj.body.packageUUids)
     }
 }
 
@@ -62,20 +66,19 @@ async function createBlocks(blocksObj : ListBlockPostModel[], list : List) {
     await Promise.all(promises);
 }
 
-export async function createList(authorId : number, obj : ListPostCreateModel) : Promise<number> {
-    const author : User = await getRepository(User).findOneOrFail(authorId);
-    const material : Material = getRepository(Material).create();
-    material.author = author;
-    await getRepository(Material).save(material);
-
-    const list : List = getRepository(List).create({ name: obj.name, material });
-    await getRepository(List).save(list);
+async function createListImpl(materialId : number, obj : ListPostCreateModel) : Promise<number> {
+    const material : Material = await getMaterial(materialId);
+    const list : List = await getRepository(List).save({ name: obj.name, material });
     await Promise.all([
         createBlocks(obj.blocks, list),
-        createQueryBuilder(Material).relation('themes').of(material).add(obj.themeIds)
     ]);
 
     return list.id;
+}
+
+export async function createList(authorId : number, obj : ListPostCreateModel) : Promise<number> {
+    const materialId : number = await createMaterial(authorId, obj.themeIds);
+    return createListImpl(materialId, obj);
 }
 
 export interface ListGetMinModel {
@@ -85,7 +88,10 @@ export interface ListGetMinModel {
     themeIds: number[]
 }
 
-export type ListBlockCommentGetModel = ListBlockCommentPostModel;
+export interface ListBlockCommentGetModel {
+    body : LatexFieldGetModel
+}
+
 export interface ListBlockTasksGetModel {
     tasks: TaskGetMinModel[]
 }
@@ -152,11 +158,14 @@ export async function getListMax(id : number) : Promise<ListGetMaxModel> {
             .leftJoin('list.blocks', 'block')
                 .addSelect(keysForSelection<ListBlock>('block', [ 'index' ]))
             .leftJoin('block.blockComment', 'blockComment')
-                .addSelect(keysForSelection<ListBlockComment>('blockComment', keys<ListBlockCommentGetModel>()))
+                .addSelect('blockComment.id')
+            .leftJoin('blockComment.body', 'comment_body')
+                .addSelect(keysForSelection<LatexField>('comment_body', keys<LatexFieldGetModel>()))
             .leftJoin('block.blockTasks', 'blockTasks')
                 .addSelect(keysForSelection<ListBlockTasks>('blockTasks', [ 'id' ]))
             .leftJoin('blockTasks.taskItems', 'item')
                 .addSelect(keysForSelection<ListBlockTaskItem>('item', [ 'index' ]))
+                .addOrderBy('item.index')
             .leftJoin('item.task', 'task')
                 .addSelect(keysForSelection<Task>('task', [ 'id' ]))
             .getOneOrFail();

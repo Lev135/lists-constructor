@@ -12,7 +12,10 @@ async function createLatexTasks() : Promise<number[]> {
         const statement : string = readFileSync(taskStatementsDir + "/" + fileName).toString();
         console.log('statement', statement);
         promises.push(createTask(1, {
-            statement,
+            statement : {
+                body : statement,
+                packageUUids : [],
+            },
             answer : "",
             remarks : [],
             solutions : [],
@@ -31,28 +34,28 @@ export async function createLatexTestData() {
         themeIds : [],
         blocks : [
             {
-                body : `Все задачи по порядку: ${firstBlockIds.toString()}\\ldots`
+                body : {
+                    body : `Все задачи по порядку: ${firstBlockIds.toString()}\\ldots`,
+                    packageUUids : []
+                }
             },
             {
                 taskIds : firstBlockIds
             },
             {
-                body : `А теперь в обратном порядке: $${secondBlockIds.toString()}$`
+                body : {
+                    body : `А теперь в обратном порядке: $${secondBlockIds.toString()}$`,
+                    packageUUids : []
+                }
             },
             {
                 taskIds : secondBlockIds
             },
             {
-                body : `\\texttt{Да мы ещё и одну задачу где-то посеяли!}`
-            },
-            {
-                body : `А теперь два комментария подряд.`
-            },
-            {
-                body : `\\textit{Бывает же такое!!!}`
-            },
-            {
-                body : `Пока, \\LaTeX!`
+                body : {
+                    body : `\\texttt{Да мы ещё и одну задачу где-то посеяли!}`,
+                    packageUUids : []
+                }
             }
         ]
     });

@@ -1,8 +1,20 @@
-import { assert } from "console";
 import { createQueryBuilder, getRepository } from "typeorm";
 import { Material } from "../entities/material/material";
+import { Theme } from "../entities/material/theme";
 import { UserNote } from "../entities/material/user-note";
 import { User } from "../entities/user";
+import { getTheme } from "./theme-service";
+import { getUser } from "./user-service";
+
+export async function createMaterial(authorId : number, themeIds : number[]) : Promise<number> {
+    const author : User = await getUser(authorId);
+    const themes : Theme[] = await Promise.all(themeIds.map(id => getTheme(id)));
+    return (await getRepository(Material).save({ author, themes })).id;
+}
+
+export function getMaterial(id : number) : Promise<Material> {
+    return getRepository(Material).findOneOrFail(id);
+}
 
 export async function setUserNote(materialId : number, userId : number, note : string) {
     const material = await getRepository(Material).findOneOrFail(materialId);
