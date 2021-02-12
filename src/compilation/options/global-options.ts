@@ -1,4 +1,4 @@
-import { dco, Length, Numbering } from './tex-types';
+import { dco, Length, Numbering } from './latex-language-types';
 
 export interface GlobalOptions {
     text : {

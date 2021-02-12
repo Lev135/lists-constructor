@@ -1,6 +1,8 @@
+import { getListPackages, ListCompileModel } from "../compilation/compilation-types";
 import { getPdfPath } from "../compilation/index";
 import { GlobalOptions } from "../compilation/options/global-options";
-import { Length } from "../compilation/options/tex-types";
+import { Length } from "../compilation/options/latex-language-types";
+import { getPackageName } from "../services/latex-service";
 import * as listService from "../services/list-service";
 import * as materialService from '../services/material-service';
 import * as types from '../types/list-types';
@@ -68,12 +70,23 @@ export async function viewPdf(req : any, res : any) {
                 mainTypeSize : "12pt"
             }
         }
+        const material : materialService.MaterialGetMinModel 
+            = await materialService.getMaterialMin(query.id);
+        const list : listService.ListCompModel 
+            = await listService.getListCompile(query.id);
+        const compObj : ListCompileModel = {
+            ...list,
+            author : material.author
+        }
         res.sendFile(
             await getPdfPath(
                 query.id, 
                 'list-template', 
                 body, 
-                await listService.getListMax(query.id)
+                {
+                    ...compObj,
+                    packages : await Promise.all(getListPackages(compObj).map(uuid => getPackageName(uuid)))
+                }
             )
         );
     }

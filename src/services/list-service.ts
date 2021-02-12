@@ -10,9 +10,9 @@ import { Material } from "../entities/material/material";
 import { Task } from "../entities/task/task";
 import { User } from "../entities/user";
 import { keysForSelection, pick, sortByField } from "../mlib";
-import { addPackages, createLatexField, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
+import { addPackages, createLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
 import { createMaterial, getMaterial } from "./material-service";
-import { getTaskMin, TaskGetMinModel } from "./task-service";
+import { getTaskComp, getTaskMin, TaskCompModel, TaskGetMinModel } from "./task-service";
 import { UserGetMinModel } from "./user-service";
 
 
@@ -93,6 +93,21 @@ export interface ListGetMaxModel extends ListGetMinModel{
     blocks: ListBlockGetModel[]
 }
 
+
+export interface ListBlockTasksCompModel {
+    tasks: TaskCompModel[]
+}
+
+export interface ListBlockCommentCompModel {
+    body : LatexFieldCompModel
+}
+
+export type ListBlockCompModel = ListBlockCommentCompModel | ListBlockTasksCompModel;
+
+export interface ListCompModel extends ListGetMinModel {
+    blocks: ListBlockCompModel[]
+}
+
 export async function getBlock(obj : ListBlock) : Promise<ListBlockGetModel> {
     if (obj.blockComment) {
         return {
@@ -157,4 +172,49 @@ export async function getListMax(id : number) : Promise<ListGetMaxModel> {
         console.log(`Error while getting list max (id: ${id})`);
         throw err;
     }
+}
+
+async function getBlockComp(blockId : number) : Promise<ListBlockCompModel> {
+    console.log("Getting block comp...", blockId);
+    const commentBlock : ListBlockComment | undefined = await createQueryBuilder(ListBlockComment, 'comment')
+        .where({id : blockId})
+        .leftJoin('comment.body', 'body')
+            .addSelect(keysForSelection<LatexField>('body', ['id']))
+        .getOne();
+    console.log(commentBlock);
+    const tasksBlock : ListBlockTasks | undefined = await createQueryBuilder(ListBlockTasks, 'blockTasks')
+        .where({id : blockId})
+        .leftJoin('blockTasks.taskItems', 'item')
+            .addSelect(keysForSelection<ListBlockTaskItem>('item', ['index']))
+        .leftJoin('item.task', 'task')
+            .addSelect(keysForSelection<Task>('task', ['id']))
+        .getOne();
+    console.log(tasksBlock);
+    if (commentBlock) {
+        return {
+            body : await getLatexFieldComp(commentBlock.body.id)
+        }
+    }
+    if (tasksBlock) {
+        sortByField(tasksBlock.taskItems, 'index');
+        return {
+            tasks : await Promise.all(tasksBlock.taskItems.map(item => getTaskComp(item.task.id)))
+        }
+    }
+    throw new Error("Unknown block type");
+}
+
+export async function getListCompile(id : number) : Promise<ListCompModel> {
+    console.log("getting list comp...", id);
+    const list : List = await createQueryBuilder(List, 'list')
+        .where('list.id = :id', { id })
+        .leftJoin('list.blocks', 'block')
+            .addSelect(keysForSelection<ListBlock>('block', [ 'id', 'index' ]))
+        .getOneOrFail();
+    console.log('list', list);
+    return {
+        id,
+        name: list.name,
+        blocks: await Promise.all(sortByField(list.blocks, 'index').map(block => getBlockComp(block.id)))
+    }   
 }

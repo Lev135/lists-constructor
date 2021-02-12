@@ -1,4 +1,4 @@
-import { GeometryOption, Length, stringify } from "../../compilation/options/tex-types";
+import { GeometryOption, Length, stringify } from "../../compilation/options/latex-language-types";
 
 export function testStringify() {
     console.log(stringify({

@@ -20,7 +20,7 @@ export interface MaterialPostCreateModel {
 }
 
 export async function getMaterialMin(id : number) : Promise<MaterialGetMinModel> {
-    const material = await createQueryBuilder(Material, 'user')
+    const material = await createQueryBuilder(Material, 'material')
         .where({id})
         .innerJoin('material.author', 'author')
             .addSelect(keysForSelection<User>('author', keys<UserGetMinModel>()))

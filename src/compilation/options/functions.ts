@@ -1,6 +1,5 @@
-import { manageRouter } from "../../routes/manage-router";
 import { GlobalOptions } from "./global-options";
-import { stringify, stringifyArr, DocumentClassOption, GeometryOption, ValueOption, Length, LengthVar } from "./tex-types";
+import { stringify, stringifyArr, DocumentClassOption, GeometryOption, ValueOption, Length, LengthVar } from "./latex-language-types";
 
 export const f = {
     stringify,

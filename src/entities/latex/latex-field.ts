@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
 import { LatexPackage } from "./latex-package";
 
 @Entity()
@@ -10,5 +10,6 @@ export class LatexField {
     body!: string;
 
     @ManyToMany(type => LatexPackage)
+    @JoinTable()
     packages!: LatexPackage[];
 }

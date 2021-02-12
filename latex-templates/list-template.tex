@@ -2,6 +2,9 @@
 \usepackage[utf8]{inputenc}
 \usepackage[russian]{babel}
 \usepackage[<!= f.stringifyArr(f.geometryOptions(pars)) !>]{geometry}
+<!~ obj.packages : package !>
+    \usepackage{<!= package !>}
+<!~!>
 
 <!~ f.lengthVars(pars) : lengthVar !>
     \setlength{<!= "\\" + lengthVar.name !>}{<!= f.stringify(lengthVar.value) !>}
