@@ -29,7 +29,6 @@ export type  ListBlockPostModel = ListBlockCommentPostModel | ListBlockTasksPost
 export interface ListPostCreateModel {
     name : string,
     blocks : ListBlockPostModel[],
-    themeIds : number[]
 };
 
 async function createBlockTasksItem(taskId : number, index : number, blockTasks : ListBlockTasks) {
@@ -54,7 +53,7 @@ async function createBlock(blockObj : ListBlockPostModel, index : number, list :
             body : await createLatexField(blockObj.body) 
         });
         await getRepository(ListBlockComment).save(commentBlock);
-        await addPackages(commentBlock.body.id, blockObj.body.packageUUids)
+        await addPackages(commentBlock.body.id, blockObj.body.packageUuids)
     }
 }
 
@@ -66,7 +65,7 @@ async function createBlocks(blocksObj : ListBlockPostModel[], list : List) {
     await Promise.all(promises);
 }
 
-async function createListImpl(materialId : number, obj : ListPostCreateModel) : Promise<number> {
+export async function createList(materialId : number, obj : ListPostCreateModel) : Promise<number> {
     const material : Material = await getMaterial(materialId);
     const list : List = await getRepository(List).save({ name: obj.name, material });
     await Promise.all([
@@ -76,16 +75,9 @@ async function createListImpl(materialId : number, obj : ListPostCreateModel) : 
     return list.id;
 }
 
-export async function createList(authorId : number, obj : ListPostCreateModel) : Promise<number> {
-    const materialId : number = await createMaterial(authorId, obj.themeIds);
-    return createListImpl(materialId, obj);
-}
-
 export interface ListGetMinModel {
     id: number,
-    author: UserGetMinModel,
     name: string,
-    themeIds: number[]
 }
 
 export interface ListBlockCommentGetModel {
@@ -98,7 +90,6 @@ export interface ListBlockTasksGetModel {
 export type ListBlockGetModel = ListBlockCommentGetModel | ListBlockTasksGetModel;
 
 export interface ListGetMaxModel extends ListGetMinModel{
-    creationDate: Date,
     blocks: ListBlockGetModel[]
 }
 
@@ -124,19 +115,11 @@ export async function getListMin(id: number) : Promise<ListGetMinModel> {
     try {
         const list : List = await createQueryBuilder(List, 'list')
             .where('list.id = :id', { id })
-            .innerJoin('list.material', 'material')
-                .addSelect('material.id')
-            .innerJoin('material.author', 'author')
-                .addSelect(keysForSelection('author', keys<UserGetMinModel>()))
-            .leftJoin('material.themes', 'theme')
-                .addSelect('theme.id')
             .getOneOrFail();
         console.log('list', list);
         return {
             id : list.id,
-            author : pick(list.material.author, keys<UserGetMinModel>()),
             name : list.name,
-            themeIds : list.material.themes.map(theme => theme.id)
         }
     }
     catch (err) {
@@ -149,12 +132,6 @@ export async function getListMax(id : number) : Promise<ListGetMaxModel> {
     try {
         const list : List = await createQueryBuilder(List, 'list')
             .where('list.id = :id', { id })
-            .innerJoin('list.material', 'material')
-                .addSelect('material.creationDate')
-            .innerJoin('material.author', 'author')
-                .addSelect(keysForSelection('author', keys<UserGetMinModel>()))
-            .leftJoin('material.themes', 'theme')
-                .addSelect('theme.id')
             .leftJoin('list.blocks', 'block')
                 .addSelect(keysForSelection<ListBlock>('block', [ 'index' ]))
             .leftJoin('block.blockComment', 'blockComment')
@@ -173,10 +150,6 @@ export async function getListMax(id : number) : Promise<ListGetMaxModel> {
         return {
             id,
             name: list.name,
-            themeIds : list.material.themes.map(theme => theme.id),
-
-            author: pick(list.material.author, keys<UserGetMinModel>()),
-            creationDate : list.material.creationDate,
             blocks: await Promise.all(sortByField(list.blocks, 'index').map(block => getBlock(block)))
         }
     }

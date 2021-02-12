@@ -12,16 +12,7 @@ import { UserGetMinModel } from "./user-service";
 
 export interface TaskGetMinModel {
     id : number,
-    author: UserGetMinModel,
-    statement : LatexFieldGetModel,
-    themeIds : number[]
-}
-
-export interface TaskSolutionGetModel {
-    body: LatexFieldGetModel,
-}
-export interface TaskSolutionPostModel {
-    body : LatexFieldPostModel
+    statement : LatexFieldGetModel
 }
 
 export interface TaskRemarkModel {
@@ -31,27 +22,23 @@ export interface TaskRemarkModel {
 }
 
 export interface TaskGetMaxModel extends TaskGetMinModel {
-    creationDate: Date,
     answer: string,
-    solutions: TaskSolutionGetModel[],
+    solutions: LatexFieldGetModel[],
     remarks: TaskRemarkModel[]  
 }
 
 export interface TaskPostCreateModel {
-    // authorId не добавляем, так как автора будем добавлять в controller'e отдельно,
-    // а всё остальное будет приходить JSON'ом с front end'a
     statement: LatexFieldPostModel,
     answer: string,
-    solutions: TaskSolutionPostModel[],
+    solutions: LatexFieldPostModel[],
     remarks: TaskRemarkModel[],
-    themeIds : number[]
 }
 
-async function addSolutions(solutionsObj : TaskSolutionPostModel[], task : Task) : Promise<TaskSolution[]> {
+async function addSolutions(solutionsObj : LatexFieldPostModel[], task : Task) : Promise<TaskSolution[]> {
     const promises : Promise<TaskSolution>[] = [];
     for (let i : number = 0; i < solutionsObj.length; ++i) {
         promises.push(getRepository(TaskSolution).save({
-            body : await createLatexField(solutionsObj[i].body),
+            body : await createLatexField(solutionsObj[i]),
             index : i,
             task
         }));
@@ -72,7 +59,7 @@ async function addRemarks(remarksObj : TaskRemarkModel[], task : Task) : Promise
     return Promise.all(promises);
 }
 
-async function createTaskImpl(materialId: number, obj: TaskPostCreateModel) : Promise<number> {
+export async function createTask(materialId: number, obj: TaskPostCreateModel) : Promise<number> {
     const task : Task = await getRepository(Task).save({
         material : await getMaterial(materialId),
         statement : await createLatexField(obj.statement),
@@ -86,31 +73,17 @@ async function createTaskImpl(materialId: number, obj: TaskPostCreateModel) : Pr
     return task.id;
 }
 
-export async function createTask(authorId : number, obj : TaskPostCreateModel) : Promise<number> {
-    const materialId : number = await createMaterial(authorId, obj.themeIds);
-    return createTaskImpl(materialId, obj);
-}
-
-
 export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
     try {
         const task : Task = await createQueryBuilder(Task, 'task')
             .where('task.id = :id', {id})
-            .innerJoin('task.material', 'material')
-                .addSelect('material.id') // Only for joining author (without it doesn't work)
             .innerJoin('task.statement', 'statement')
                 .addSelect('statement.body')
-            .innerJoin('material.author', 'author')
-                .addSelect(keysForSelection('author', keys<UserGetMinModel>()))
-            .leftJoin('material.themes', 'theme')
-                .addSelect('theme.id')
             .getOneOrFail();
         console.log(task);
         return {
             id : task.id,
-            author : task.material.author,
-            statement : task.statement,
-            themeIds : task.material.themes.map(theme => theme.id)
+            statement : task.statement
         };
     }
     catch (err) {
@@ -124,29 +97,20 @@ export async function getTaskMax(id: number) : Promise<TaskGetMaxModel> {
         .where('task.id = :id', {id})
         .innerJoin('task.statement', 'statement')
             .addSelect('statement.body')
-        .innerJoin('task.material', 'material')
-            .addSelect(keysForSelection<Material>('material', ['creationDate']))
-        .innerJoin('material.author', 'author')
-            .addSelect(keysForSelection<UserGetMinModel>('author', keys<UserGetMinModel>()))
         .leftJoin('task.solutions', 'solution')
-            .addSelect(keysForSelection<TaskSolution>('solution', keys<TaskSolutionGetModel>()))
+            .addSelect(keysForSelection<TaskSolution>('solution', ['body', 'index']))
             .addOrderBy('solution.index')
         .leftJoin('solution.body', 'solution_body')
             .addSelect('solution_body.body')
         .leftJoin('task.remarks', 'remark')
             .addSelect(keysForSelection<TaskRemark>('remark', keys<TaskRemarkModel>()))
             .addOrderBy('remark.index')
-        .leftJoin('material.themes', 'theme')
-            .addSelect('theme.id')
         .getOneOrFail();
     return {
         id : task.id,
-        author : task.material.author,
-        creationDate : task.material.creationDate,
         statement : task.statement,
         answer : task.answer,
-        solutions : task.solutions,
+        solutions : sortByField(task.solutions, 'index').map(solution => solution.body),
         remarks : task.remarks,
-        themeIds : task.material.themes.map(theme => theme.id)
     };
 }

@@ -1,7 +1,13 @@
-import { TaskGetMaxModel, TaskPostCreateModel } from "../services/task-service";
+import { LatexFieldGetModel, LatexFieldPostModel } from "../services/latex-service";
+import { TaskGetMaxModel, TaskPostCreateModel, TaskRemarkModel } from "../services/task-service";
+import { UserGetMinModel } from "../services/user-service";
 
 export interface PostCreateBody {
-    task : TaskPostCreateModel,
+    statement: LatexFieldPostModel,
+    answer: string,
+    solutions: LatexFieldPostModel[],
+    remarks: TaskRemarkModel[],
+    themeIds : number[],
     userNote? : string
 }
 
@@ -14,7 +20,14 @@ export interface GetViewPageQuery {
 }
 
 export interface RenderViewPage {
-    task : TaskGetMaxModel,
+    id : number,
+    author: UserGetMinModel,
+    statement : LatexFieldGetModel,
+    themeIds : number[],
+    creationDate: Date,
+    answer: string,
+    solutions: LatexFieldGetModel[],
+    remarks: TaskRemarkModel[]
     userNote ?: string
 }
 

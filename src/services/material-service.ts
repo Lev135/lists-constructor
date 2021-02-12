@@ -1,14 +1,42 @@
+import { keys } from "ts-transformer-keys";
 import { createQueryBuilder, getRepository } from "typeorm";
 import { Material } from "../entities/material/material";
 import { Theme } from "../entities/material/theme";
 import { UserNote } from "../entities/material/user-note";
 import { User } from "../entities/user";
+import { keysForSelection } from "../mlib";
 import { getTheme } from "./theme-service";
-import { getUser } from "./user-service";
+import { getUser, getUserMin, UserGetMinModel } from "./user-service";
 
-export async function createMaterial(authorId : number, themeIds : number[]) : Promise<number> {
-    const author : User = await getUser(authorId);
-    const themes : Theme[] = await Promise.all(themeIds.map(id => getTheme(id)));
+export interface MaterialGetMinModel {
+    author : UserGetMinModel,
+    themeIds : number[],
+    creationDate : Date
+}
+
+export interface MaterialPostCreateModel {
+    authorId : number,
+    themeIds : number[]
+}
+
+export async function getMaterialMin(id : number) : Promise<MaterialGetMinModel> {
+    const material = await createQueryBuilder(Material, 'user')
+        .where({id})
+        .innerJoin('material.author', 'author')
+            .addSelect(keysForSelection<User>('author', keys<UserGetMinModel>()))
+        .leftJoin('material.themes', 'theme')
+            .addSelect(keysForSelection<Theme>('theme', ['id']))
+        .getOneOrFail();
+    return {
+        author : material.author,
+        themeIds : material.themes.map(theme => theme.id),
+        creationDate : material.creationDate
+    }
+}
+
+export async function createMaterial(obj : MaterialPostCreateModel) : Promise<number> {
+    const author : User = await getUser(obj.authorId);
+    const themes : Theme[] = await Promise.all(obj.themeIds.map(id => getTheme(id)));
     return (await getRepository(Material).save({ author, themes })).id;
 }
 

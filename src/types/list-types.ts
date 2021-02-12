@@ -1,7 +1,10 @@
-import { ListGetMaxModel, ListPostCreateModel } from "../services/list-service";
+import { ListBlockPostModel, ListBlockGetModel } from "../services/list-service";
+import { UserGetMinModel } from "../services/user-service";
 
 export interface PostCreateBody {
-    list : ListPostCreateModel,
+    name : string,
+    blocks : ListBlockPostModel[],
+    themeIds : number[],
     userNote ?: string
 }
 
@@ -14,6 +17,11 @@ export interface GetViewPageQuery {
 }
 
 export interface RenderViewPage {
-    list : ListGetMaxModel,
+    id: number,
+    author: UserGetMinModel,
+    name: string,
+    themeIds: number[],
+    creationDate: Date,
+    blocks: ListBlockGetModel[]
     userNote ?: string
 }

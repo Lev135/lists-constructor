@@ -8,10 +8,15 @@ import * as types from '../types/list-types';
 export async function create(req : any, res : any, _next : any) {
     try {
         const body : types.PostCreateBody = req.body;
-        const id : number = await listService.createList(req.user.id, body.list);
+        const id : number = await materialService.createMaterial({
+            authorId : req.user.id,
+            themeIds : body.themeIds
+        })
         if (body.userNote)
             await materialService.setUserNote(id, req.user.id, body.userNote);
-        res.send( { id } as types.SendPostCreate);
+        await listService.createList(id, body);
+        const resObj : types.SendPostCreate = { id };
+        res.send(resObj);
     }
     catch (err) {
         console.log(err);
@@ -22,9 +27,13 @@ export async function create(req : any, res : any, _next : any) {
 export async function viewPage(req : any, res : any) : Promise<void> {
     try {
         const query : types.GetViewPageQuery = req.query;
+        const material = await materialService.getMaterialMin(query.id);
+        const list = await listService.getListMax(query.id);
+        const userNote = await materialService.getUserNote(query.id, req.user.id);
         const obj : types.RenderViewPage = {
-            list : await listService.getListMax(query.id),
-            userNote : await materialService.getUserNote(query.id, req.user.id)
+            ...material,
+            ...list,
+            userNote
         };
         res.send(obj);
         //res.render('task/view-task.pug', task);

@@ -1,6 +1,7 @@
 import * as userService from '../services/user-service'
 import * as themeService from '../services/theme-service'
 import * as taskService from '../services/task-service' 
+import * as materialService from '../services/material-service'
 import { getRepository } from 'typeorm';
 import { User } from '../entities/user';
 
@@ -57,19 +58,17 @@ const testTaskModels : taskService.TaskPostCreateModel[] = [
     {
         statement: {
             body : "test statement",
-            packageUUids : []
+            packageUuids : []
         },
         answer: "test answer",
-        solutions: [ {
-                body: {
-                    body : "first solution",
-                    packageUUids : []
-                }
-            }, {
-                body: {
-                    body : "second solution",
-                    packageUUids : []
-                }
+        solutions: [
+            {
+                body : "first solution",
+                packageUuids : []
+            }, 
+            {
+                body : "second solution",
+                packageUuids : []
             }
         ],
         remarks: [ {
@@ -81,35 +80,30 @@ const testTaskModels : taskService.TaskPostCreateModel[] = [
                 label: "2 note",
                 body: "second note"
             }
-        ],
-        themeIds : []
+        ]
     },
     {
         statement: {
             body : "2 statement",
-            packageUUids : []
+            packageUuids : []
         },
         answer: "2 answer",
         solutions: [],
-        remarks: [],
-        themeIds: []
+        remarks: []
     },
     {
         statement: {
             body : "Как набрать $\\frac{2 + 3}{5}$?",
-            packageUUids : []
+            packageUuids : []
         },
         answer: " Привет, \\LaTeX!",
         solutions: [
             {
-                body: {
-                    body : "Набираешь \\verb|$\\frac{2 + 3}{5}$|",
-                    packageUUids : []
-                }
+                body : "Набираешь \\verb|$\\frac{2 + 3}{5}$|",
+                packageUuids : []
             }
         ],
         remarks: [],
-        themeIds: []
     }
 ];
 export let testTaskIds : number[] = [];
@@ -140,8 +134,11 @@ async function createTestTasks() {
     console.log("Creating tasks...");
     for (const model of testTaskModels) {
         const authorId : number = testUserIds[model.answer.length % testUserIds.length];
-        model.themeIds.push(testThemeIds[model.statement.body.length % testThemeIds.length]);
-        testTaskIds.push(await taskService.createTask(authorId, model));
+        const materialId : number = await materialService.createMaterial({
+            authorId,
+            themeIds : [ testThemeIds[model.statement.body.length % testThemeIds.length] ]
+        })
+        testTaskIds.push(await taskService.createTask(materialId, model));
     }
     console.log("tasks were created successfuly");
 }
