@@ -16,7 +16,7 @@ const pdfFilePath = (recordUuid : string) => `${pdfFolder(recordUuid)}\\${record
 async function createPdfFile(compilableId : number,
                              templateName : string,
                              templatePars : any,
-                             obj : any) {
+                             obj : any) : Promise<string> {
     const templateParsJSON : string = JSON.stringify(templatePars);
     const newRecord : PdfIndex = await getRepository(PdfIndex).save({
         compilable : await getRepository(Material).findOneOrFail(compilableId),
@@ -30,13 +30,13 @@ async function createPdfFile(compilableId : number,
     if (exitCode != 0) {
         throw new Error(`Компиляция завершилась с кодом ${exitCode}`);
     }
-    return pdfFilePath(newRecord.uuid);
+    return newRecord.uuid;
 }
 
-export async function getPdfPath(compilableId : number,
-                                 templateName : string,
-                                 templatePars : any,
-                                 obj : any) : Promise<string> {
+export async function compilePdf(compilableId : number,
+                                templateName : string,
+                                templatePars : any,
+                                obj : any) : Promise<string> {
     const templateParsJSON : string = JSON.stringify(templatePars);
     const record : PdfIndex | undefined = await createQueryBuilder(PdfIndex, 'pdf_index')
         .where('pdf_index.compilableId = :compilableId', { compilableId })
@@ -44,9 +44,15 @@ export async function getPdfPath(compilableId : number,
         .andWhere('pdf_index.templateParsJSON = :templateParsJSON', { templateParsJSON })
         .getOne(); 
     if (record) {
-        return pdfFilePath(record.uuid); 
+        return record.uuid; 
     }
     else {
         return createPdfFile(compilableId, templateName, templatePars, obj);
     }
+}
+
+export async function getPdfPath(uuid : string) : Promise<string> {
+    // Проверка на существование:
+    const record : PdfIndex = await getRepository(PdfIndex).findOneOrFail(uuid);
+    return pdfFilePath(uuid);
 }

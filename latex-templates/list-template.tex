@@ -1,13 +1,13 @@
-\documentclass[<!= f.stringifyArr(f.documentClassOptions(pars)) !>]{article}
+\documentclass[<!= f.optionsToString(f.documentClassOptions(pars)) !>]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[russian]{babel}
-\usepackage[<!= f.stringifyArr(f.geometryOptions(pars)) !>]{geometry}
+\usepackage[<!= f.optionsToString(f.geometryOptions(pars)) !>]{geometry}
 <!~ obj.packages : package !>
     \usepackage{<!= package !>}
 <!~!>
 
 <!~ f.lengthVars(pars) : lengthVar !>
-    \setlength{<!= "\\" + lengthVar.name !>}{<!= f.stringify(lengthVar.value) !>}
+    \setlength{<!= "\\" + lengthVar.name !>}{<!= f.lengthToString(lengthVar.value) !>}
 <!~!> 
 \pagestyle{empty}
 

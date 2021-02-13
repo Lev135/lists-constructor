@@ -1,5 +1,5 @@
 import { getListPackages, ListCompileModel } from "../compilation/compilation-types";
-import { getPdfPath } from "../compilation/index";
+import { compilePdf, getPdfPath } from "../compilation/index";
 import { GlobalOptions } from "../compilation/options/global-options";
 import { Length } from "../compilation/options/latex-language-types";
 import { getPackageName } from "../services/latex-service";
@@ -46,30 +46,11 @@ export async function viewPage(req : any, res : any) : Promise<void> {
     }
 }
 
-export async function viewPdf(req : any, res : any) {
+export async function compile(req : any, res : any) {
     try {
-        const query = req.query;
-        const body : GlobalOptions = {
-            page : {
-                format : 'a4paper',
-                margins : {
-                    left : new Length(1, 'cm'),
-                    right : new Length(1, 'cm'),
-                    top : new Length(1, 'cm'),
-                    bottom : new Length(1, 'cm'),
-                    bindingoffset : new Length(0, 'pt')
-                },
-                orientation : "landscape",
-                twoColumn : {
-                    columnSep : new Length(1, 'cm'),
-                    columnSepRule : new Length(2, 'pt')
-                },
-                pageNumbering : "Asbuk"
-            },
-            text : {
-                mainTypeSize : "12pt"
-            }
-        }
+        const query : types.PostCompileQuery = req.query;
+        const body : types.PostCompileBody = req.body;
+        
         const material : materialService.MaterialGetMinModel 
             = await materialService.getMaterialMin(query.id);
         const list : listService.ListCompModel 
@@ -78,8 +59,8 @@ export async function viewPdf(req : any, res : any) {
             ...list,
             author : material.author
         }
-        res.sendFile(
-            await getPdfPath(
+        const resObj : types.SendPostCompile = {
+            uuid : await compilePdf(
                 query.id, 
                 'list-template', 
                 body, 
@@ -88,7 +69,19 @@ export async function viewPdf(req : any, res : any) {
                     packages : await Promise.all(getListPackages(compObj).map(uuid => getPackageName(uuid)))
                 }
             )
-        );
+        }
+        res.send(resObj);
+    }
+    catch (err) {
+        console.log(err);
+        res.send(`Ошибка при обработке запроса компиляции (id = ${req.query.id}): ` + err.message);    
+    }
+}
+
+export async function viewPdf(req : any, res : any) {
+    try {
+        const query : types.GetViewPdfQuery = req.query;
+        res.sendFile(await getPdfPath(query.uuid));
     }
     catch (err) {
         console.log(err);

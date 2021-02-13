@@ -30,45 +30,35 @@ export type PageStyle = 'plain' | 'headings' | 'empty';
 
 export type LengthUnit = 'cm' | 'mm' | 'pt';
 
-interface Stringable {
-    toTexString() : string;
-}
+export type Length = [ number, LengthUnit ]
 
-export class Length implements Stringable {
-    val : number;
-    unit : LengthUnit;
-    constructor (_val : number, _unit : LengthUnit) {
-        this.val = _val;
-        this.unit = _unit;
-    }
-    toTexString() : string {
-        return this.val.toString() + this.unit;
-    }
-}
+export function lengthToString(length : Length) {
+    return length[0].toString() + length[1];
+} 
 
-export function stringify<Type extends Stringable>(obj : Type | string) : string {
-    return typeof obj === "string" ? obj : obj.toTexString();
-}
+// export function stringify<Type extends Stringable>(obj : Type | string) : string {
+//     return typeof obj === "string" ? obj : obj.toTexString();
+// }
 
-export function stringifyArr<Type extends Stringable | string>(arr : Type[]) : string {
-    return arr.map(el => stringify(el)).join(',');
-}
-
-export class ValueOption<Name extends string, Type extends Stringable | string> implements Stringable {
-    name : Name;
-    value : Type;
-    constructor (_name : Name, _val : Type) {
-        this.name = _name;
-        this.value = _val;
-    }
-    toTexString() : string {
-        return this.name + "=" + stringify(this.value);
-    }
-}
+// export function stringifyArr<Type extends Stringable | string>(arr : Type[]) : string {
+//     return arr.map(el => stringify(el)).join(',');
+// }
 
 export type MarginName = 'left' | 'right' | 'top' | 'bottom' | 'bindingoffset';
 
-export type GeometryOption = ValueOption<MarginName, Length>;
+export type GeometryOption = [MarginName, Length]
+
+export function optionToString<T extends string>(option : T) {
+    if (typeof(option) === "string") {
+        return option;
+    }
+    else {
+        return option[0] + "=" + lengthToString(option[1]);
+    }
+}
+export function optionsToString<T extends string>(options : T[]) {
+    return options.map(option => optionToString(option)).join(',');
+}
 
 export type LengthVarName = 'columnsep' | 'columnseprule';
 

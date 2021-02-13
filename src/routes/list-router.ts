@@ -8,4 +8,5 @@ listRouter.get('/create', express.static(__dirname + 'public/pages' + 'list/crea
 listRouter.post('/create', listController.create);
 
 listRouter.get('/view', listController.viewPage);
+listRouter.post('/compilePdf', listController.compile);
 listRouter.get('/viewPdf', listController.viewPdf);

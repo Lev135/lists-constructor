@@ -46,14 +46,15 @@ export async function viewPage(req : any, res : any) : Promise<void> {
 export async function viewPdf(req : any, res : any) {
     try {
         const query = req.query;
-        res.sendFile(
+        throw new Error("Unrealized");
+/*        res.sendFile(
             await getPdfPath(
                 query.id, 
                 'task-template', 
                 {}, 
                 await taskService.getTaskMax(query.id)
             )
-        );
+        );*/
     }
     catch (err) {
         console.log(err);
