@@ -10,7 +10,7 @@ import { Material } from "../entities/material/material";
 import { Task } from "../entities/task/task";
 import { User } from "../entities/user";
 import { keysForSelection, pick, sortByField } from "../mlib";
-import { addPackages, createLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
+import { createLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
 import { createMaterial, getMaterial } from "./material-service";
 import { getTaskComp, getTaskMin, TaskCompModel, TaskGetMinModel } from "./task-service";
 import { UserGetMinModel } from "./user-service";
@@ -53,7 +53,6 @@ async function createBlock(blockObj : ListBlockPostModel, index : number, list :
             body : await createLatexField(blockObj.body) 
         });
         await getRepository(ListBlockComment).save(commentBlock);
-        await addPackages(commentBlock.body.id, blockObj.body.packageUuids)
     }
 }
 

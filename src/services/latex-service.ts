@@ -31,7 +31,7 @@ export async function getLatexFieldComp(id : number) : Promise<LatexFieldCompMod
         .leftJoin('field.packages', 'package')
             .addSelect(keysForSelection<LatexPackage>('package', ['uuid']))
         .getOneOrFail();
-    
+    console.log("Field", field);
     return {
         body : field.body,
         packageUuids : field.packages.map(pack => pack.uuid)

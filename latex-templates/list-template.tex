@@ -18,13 +18,13 @@
     <! let taskIndex = 0; !>
     <!~ obj.blocks :block !>
         <!? block.body !>
-            <!= block.body !>\nopagebreak
+            <!= block.body.body !>\nopagebreak
         <!?!>
         <!? block.tasks !>
             <! /* taskIndex = 0;*/ !>
             <!~ block.tasks :task !>
                 \subsubsection*{Задача \textnumero <!= ++taskIndex !> (id: <!= task.id !>)}
-                <!= task.statement !>
+                <!= task.statement.body !>
             <!~!>
 
         <!?!>

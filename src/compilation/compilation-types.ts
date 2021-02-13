@@ -12,13 +12,13 @@ export function getListPackages(obj : ListCompileModel) : string[] {
     let packageIds : string[] = [];
     obj.blocks.forEach(block => {
         if ('body' in block) {
-            packageIds.concat(block.body.packageUuids);
+            packageIds.push(...block.body.packageUuids);
         }
         else {
             block.tasks.forEach(task => {
-                packageIds.concat(task.statement.packageUuids);
+                packageIds.push(...task.statement.packageUuids);
                 task.solutions.forEach(solution => {
-                    packageIds.concat(solution.packageUuids);
+                    packageIds.push(...solution.packageUuids);
                 }) 
             })
         }
