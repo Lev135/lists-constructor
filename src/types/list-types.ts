@@ -1,7 +1,11 @@
-import { ListGetMaxModel, ListPostCreateModel } from "../services/list-service";
+import { GlobalOptions } from "../compilation/options/global-options";
+import { ListBlockPostModel, ListBlockGetModel } from "../services/list-service";
+import { UserGetMinModel } from "../services/user-service";
 
 export interface PostCreateBody {
-    list : ListPostCreateModel,
+    name : string,
+    blocks : ListBlockPostModel[],
+    themeIds : number[],
     userNote ?: string
 }
 
@@ -14,6 +18,27 @@ export interface GetViewPageQuery {
 }
 
 export interface RenderViewPage {
-    list : ListGetMaxModel,
+    id: number,
+    author: UserGetMinModel,
+    name: string,
+    themeIds: number[],
+    creationDate: Date,
+    blocks: ListBlockGetModel[]
     userNote ?: string
 }
+
+export interface PostCompileQuery {
+    id : number
+}
+
+export type PostCompileBody = GlobalOptions;
+
+export interface SendPostCompile {
+    uuid : string
+}
+
+export interface GetViewPdfQuery {
+    uuid : string
+}
+
+// SendViewPdf : .pdf file

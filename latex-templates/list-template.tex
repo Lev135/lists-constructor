@@ -1,0 +1,38 @@
+\documentclass[<!= f.optionsToString(f.documentClassOptions(pars)) !>]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage[<!= f.optionsToString(f.geometryOptions(pars)) !>]{geometry}
+<!~ obj.packages : package !>
+    \usepackage{<!= package !>}
+<!~!>
+
+<!~ f.lengthVars(pars) : lengthVar !>
+    \setlength{<!= "\\" + lengthVar.name !>}{<!= f.lengthToString(lengthVar.value) !>}
+<!~!> 
+<!? pars.page.pageNumbering !>
+    \pagestyle{plain}
+<!?? true !>
+    \pagestyle{empty}
+<!?!>
+\pagenumbering{<!= pars.page.pageNumberType !>}
+
+\begin{document}
+    <!? obj.name && obj.name != "" !>
+        \section*{<!= obj.name !>}
+    <!?!>
+    <! let taskIndex = 0; !>
+    <!~ obj.blocks :block !>
+        <!? block.body !>
+            <!= block.body.body !>\nopagebreak
+        <!?!>
+        <!? block.tasks !>
+            <! /* taskIndex = 0;*/ !>
+            <!~ block.tasks :task !>
+                \subsubsection*{Задача \textnumero <!= ++taskIndex !> (id: <!= task.id !>)}
+                <!= task.statement.body !>
+            <!~!>
+
+        <!?!>
+        
+    <!~!>
+\end{document}

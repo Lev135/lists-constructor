@@ -1,23 +1,19 @@
 import { keys } from "ts-transformer-keys";
 import { createQueryBuilder, getRepository } from "typeorm";
+import { LatexField } from "../entities/latex/latex-field";
 import { Material } from "../entities/material/material";
 import { Task } from "../entities/task/task";
 import { TaskRemark } from "../entities/task/task-remark";
 import { TaskSolution } from "../entities/task/task-solution";
 import { User } from "../entities/user";
 import { keysForSelection, pick, sortByField } from "../mlib";
+import { addPackages, createLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
+import { createMaterial, getMaterial } from "./material-service";
 import { UserGetMinModel } from "./user-service";
 
 export interface TaskGetMinModel {
     id : number,
-    author: UserGetMinModel,
-    statement : string,
-    themeIds : number[]
-}
-
-export interface TaskSolutionModel {
-    body: string,
-    grade: number
+    statement : LatexFieldGetModel
 }
 
 export interface TaskRemarkModel {
@@ -27,99 +23,79 @@ export interface TaskRemarkModel {
 }
 
 export interface TaskGetMaxModel extends TaskGetMinModel {
-    creationDate: Date,
     answer: string,
-    solutions: TaskSolutionModel[],
+    solutions: LatexFieldGetModel[],
     remarks: TaskRemarkModel[]  
 }
 
 export interface TaskPostCreateModel {
-    // authorId не добавляем, так как автора будем добавлять в controller'e отдельно,
-    // а всё остальное будет приходить JSON'ом с front end'a
-    statement: string,
+    statement: LatexFieldPostModel,
     answer: string,
-    solutions: TaskSolutionModel[],
+    solutions: LatexFieldPostModel[],
     remarks: TaskRemarkModel[],
-    themeIds : number[]
 }
 
-async function createSolutions(solutionsObj : TaskSolutionModel[], task : Task) : Promise<TaskSolution[]> {
-    const solutions : TaskSolution[] = [];
+export interface TaskCompModel {
+    id : number,
+    statement : LatexFieldCompModel
+    answer: string,
+    solutions: LatexFieldCompModel[],
+    remarks: TaskRemarkModel[]  
+}
+
+async function addSolutions(solutionsObj : LatexFieldPostModel[], task : Task) : Promise<TaskSolution[]> {
+    const promises : Promise<TaskSolution>[] = [];
     for (let i : number = 0; i < solutionsObj.length; ++i) {
-        const solution : TaskSolution = getRepository(TaskSolution).create(solutionsObj[i]);
-        solution.task = task;
-        solution.index = i;
-        solutions.push(solution);
+        promises.push(getRepository(TaskSolution).save({
+            body : await createLatexField(solutionsObj[i]),
+            index : i,
+            task
+        }));
     }
-    return getRepository(TaskSolution).save(solutions);
+    return Promise.all(promises);
 }
 
-async function createRemarks(remarksObj : TaskRemarkModel[], task : Task) : Promise<TaskRemark[]> {
-    const remarks : TaskRemark[] = [];
+async function addRemarks(remarksObj : TaskRemarkModel[], task : Task) : Promise<TaskRemark[]> {
+    const promises : Promise<TaskRemark>[] = [];
+    const repo = getRepository(TaskRemark);
     for (let i : number = 0; i < remarksObj.length; ++i) {
-        const remark : TaskRemark = getRepository(TaskRemark).create(remarksObj[i]);
-        remark.task = task;
-        remark.index = i;
-        remarks.push(remark);
+        promises.push(repo.save({
+            ...remarksObj[i],
+            task,
+            index : i
+        }));
     }
-    return getRepository(TaskRemark).save(remarks);
+    return Promise.all(promises);
 }
 
-export async function createTask(authorId: number, obj: TaskPostCreateModel) : Promise<number> {
-    const author : User = await getRepository(User).findOneOrFail(authorId);
-    const material : Material = getRepository(Material).create();
-    material.author = author;
-    await getRepository(Material).save(material);
-
-    const task : Task = getRepository(Task).create(obj);
-    task.material = material;
-    await getRepository(Task).save(task);
+export async function createTask(materialId: number, obj: TaskPostCreateModel) : Promise<number> {
+    const task : Task = await getRepository(Task).save({
+        material : await getMaterial(materialId),
+        statement : await createLatexField(obj.statement),
+        answer : obj.answer
+    });
 
     await Promise.all([
-        createSolutions(obj.solutions, task),
-        createRemarks(obj.remarks, task),
-        createQueryBuilder(Material).relation('themes').of(material).add(obj.themeIds)
+        addSolutions(obj.solutions, task),
+        addRemarks(obj.remarks, task),
     ]);
     return task.id;
-}
-
-
-function getSolution(obj : TaskSolution) : TaskSolutionModel {
-    return pick(obj, ['body', 'grade']);
-}
-
-function getSolutions(arr : TaskSolution[]) : TaskSolutionModel[] {
-    return sortByField(arr, 'index').map(el => getSolution(el));
-}
-
-function getRemark(obj : TaskRemark) : TaskRemarkModel {
-    return pick(obj, ['type', 'label','body']);
-}
-
-function getRemarks(arr : TaskRemark[]) : TaskRemarkModel[] {
-    return sortByField(arr, 'index').map(el => getRemark(el));
 }
 
 export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
     try {
         const task : Task = await createQueryBuilder(Task, 'task')
             .where('task.id = :id', {id})
-            .innerJoin('task.material', 'material')
-                .addSelect(keysForSelection<Material>('material', [ 'id' ]))
-            .innerJoin('material.author', 'author')
-                .addSelect(keysForSelection('author', keys<UserGetMinModel>()))
-            .leftJoin('material.themes', 'theme')
-                .addSelect('theme.id')
+            .innerJoin('task.statement', 'statement')
+                .addSelect('statement.body')
             .getOneOrFail();
+        console.log(task);
         return {
             id : task.id,
-            author : pick(task.material.author, keys<UserGetMinModel>()),
-            statement : task.statement,
-            themeIds : task.material.themes.map(theme => theme.id)
+            statement : task.statement
         };
     }
     catch (err) {
-        console.log("error");
         throw err;
     }
 }
@@ -127,25 +103,48 @@ export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
 export async function getTaskMax(id: number) : Promise<TaskGetMaxModel> {
     const task : Task = await createQueryBuilder(Task, 'task')
         .where('task.id = :id', {id})
-        .innerJoin('task.material', 'material')
-            .addSelect(keysForSelection<Material>('material', ['creationDate']))
-        .innerJoin('material.author', 'author')
-            .addSelect(keysForSelection<UserGetMinModel>('author', keys<UserGetMinModel>()))
+        .innerJoin('task.statement', 'statement')
+            .addSelect('statement.body')
         .leftJoin('task.solutions', 'solution')
-            .addSelect(keysForSelection<TaskSolution>('solution', [...keys<TaskSolutionModel>(), 'index']))
+            .addSelect(keysForSelection<TaskSolution>('solution', ['index']))
+            .addOrderBy('solution.index')
+        .leftJoin('solution.body', 'solution_body')
+            .addSelect('solution_body.body')
         .leftJoin('task.remarks', 'remark')
-            .addSelect(keysForSelection<TaskRemark>('remark', [...keys<TaskRemarkModel>(), 'index']))
-        .leftJoin('material.themes', 'theme')
-            .addSelect('theme.id')
+            .addSelect(keysForSelection<TaskRemark>('remark', keys<TaskRemarkModel>()))
+            .addOrderBy('remark.index')
         .getOneOrFail();
     return {
         id : task.id,
-        author : pick(task.material.author, keys<UserGetMinModel>()),
-        creationDate : task.material.creationDate,
         statement : task.statement,
         answer : task.answer,
-        solutions : getSolutions(task.solutions),
-        remarks : getRemarks(task.remarks),
-        themeIds : task.material.themes.map(theme => theme.id)
+        solutions : sortByField(task.solutions, 'index').map(solution => solution.body),
+        remarks : task.remarks,
     };
+}
+
+
+export async function getTaskComp(id : number) : Promise<TaskCompModel> {
+    console.log('getting task comp...', id);
+    const task : Task = await createQueryBuilder(Task, 'task')
+        .where({ id })
+        .innerJoin('task.statement', 'statement')
+            .addSelect(keysForSelection<LatexField>('statement', ['id']))
+        .leftJoin('task.solutions', 'solution')
+            .addSelect(keysForSelection<TaskSolution>('solution', ['index']))
+        .leftJoin('solution.body', 'solution_body')
+            .addSelect('solution_body.id')
+        .leftJoin('task.remarks', 'remark')
+            .addSelect(keysForSelection<TaskRemark>('remark', [...keys<TaskRemarkModel>(), 'index']))
+        .getOneOrFail();
+    sortByField(task.solutions, 'index');
+    sortByField(task.remarks, 'index');
+    console.log(task);
+    return {
+        id,
+        statement : await getLatexFieldComp(task.statement.id),
+        answer : task.answer,
+        solutions : await Promise.all(task.solutions.map(solution => getLatexFieldComp(solution.body.id))),
+        remarks : task.remarks
+    }
 }

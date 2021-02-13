@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, OneToOne, JoinColumn } from "typeorm";
+import { LatexField } from "../latex/latex-field";
 import { Task } from "./task";
 
 @Entity()
@@ -9,11 +10,9 @@ export class TaskSolution {
   @Column()
   index!: number;
 
-  @Column()
-  body!: string;
-
-  @Column()
-  grade!: number;
+  @OneToOne(type => LatexField, { nullable : false })
+  @JoinColumn()
+  body!: LatexField;
 
   @ManyToOne(type => Task, task => task.solutions)
   task!: Task;

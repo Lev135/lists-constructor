@@ -8,6 +8,10 @@ import * as MySql from 'mysql';
 // For files
 import * as FileStream from 'fs';
 
+import { resolve } from 'path'
+
+export const rootDir = resolve(__dirname + "\\..");
+
 // Reading options user options
 
 interface IPersonalOptions {
@@ -228,10 +232,14 @@ async function startTypeOrm() {
         User,
         Material, UserNote, Theme,
         Task, TaskRemark, TaskSolution,
-        List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem
+        List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem,
+        PdfIndex,
+        LatexField, LatexPackage
       ]
     });
     console.log(`TypeORM успешно подключён к БД`);
+    initTemplates().catch(err => console.log("ERROR with templates initialization", err));
+    
     startExpress(connection);
   }
   catch (err) {
@@ -244,6 +252,12 @@ import { authorizeMiddleware } from './authorize-middleware';
 import { taskRouter } from './routes/task-router';
 import { listRouter } from './routes/list-router';
 import { materialRouter } from './routes/material-router';
+import { PdfIndex } from './entities/pdf-intex';
+import { initTemplates } from './compilation/process-tamplates';
+import { manageRouter } from './routes/manage-router';
+import { LatexField } from './entities/latex/latex-field';
+import { LatexPackage } from './entities/latex/latex-package';
+import { latexRouter } from './routes/latex-router';
 
 async function startExpress(connection : TypeOrm.Connection){
   const app = express();
@@ -272,6 +286,8 @@ async function startExpress(connection : TypeOrm.Connection){
   app.use('/task', taskRouter);
   app.use('/list', listRouter);
   app.use('/material', materialRouter);
+  app.use('/manage', manageRouter);
+  app.use('/latex', latexRouter);
   
   // обработка ошибки 404
   app.use(function (req, res, next) {

@@ -1,25 +1,35 @@
 import * as listService from '../services/list-service'
 import { testTaskIds, testThemeIds, testUserIds } from './create-test-data'
 import { inspect } from 'util'
+import { createMaterial } from '../services/material-service';
 
 export async function testListService() {
-    const listId : number = await listService.createList(testUserIds[0], {
+    const materialId : number = await createMaterial({
+        authorId : testUserIds[0],
+        themeIds : []
+    })
+    const listId : number = await listService.createList(materialId, {
         name: 'list 1',
         blocks: [
             {
-                body: "first text block"
+                body: {
+                    body : "first text block",
+                    packageUuids : []
+                }
             },
             {
                 taskIds: [ testTaskIds[0], testTaskIds[1] ]
             },
             {
-                body: "second text block"
+                body: {
+                    body : "second text block",
+                    packageUuids : []
+                }
             },
             {
                 taskIds: [ testTaskIds[1], testTaskIds[0] ]
             }
-        ],
-        themeIds: [ testThemeIds[1] ]
+        ]
     });
     
     console.log(listId);

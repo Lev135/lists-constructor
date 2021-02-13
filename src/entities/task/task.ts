@@ -1,7 +1,8 @@
-import { Entity, OneToOne, Column, OneToMany, PrimaryColumn, BaseEntity, JoinColumn } from "typeorm";
+import { Entity, OneToOne, Column, OneToMany, PrimaryColumn, BaseEntity, JoinColumn, ManyToMany } from "typeorm";
 import { TaskSolution } from "./task-solution";
 import { TaskRemark } from "./task-remark";
 import { Material } from "../material/material";
+import { LatexField } from "../latex/latex-field";
 
 @Entity()
 export class Task {
@@ -12,8 +13,9 @@ export class Task {
   @JoinColumn({name: 'id'})
   material!: Material;
 
-  @Column()
-  statement!: string;
+  @OneToOne(type => LatexField, { nullable : false })
+  @JoinColumn()
+  statement!: LatexField;
 
   @Column()
   answer!: string;

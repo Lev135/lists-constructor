@@ -20,7 +20,7 @@ export async function checkAuth(token: string): Promise<userService.UserGetMinMo
     try {
         if (jwt.verify(token, SECRETKEY)) {
             const obj = jwt.decode(token) as UserTokenInfo;
-            return userService.getUserMin(obj.id);
+            return await userService.getUserMin(obj.id);
         }
     }
     catch (err) {
