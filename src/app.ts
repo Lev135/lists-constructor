@@ -257,6 +257,7 @@ import { initTemplates } from './compilation/process-tamplates';
 import { manageRouter } from './routes/manage-router';
 import { LatexField } from './entities/latex/latex-field';
 import { LatexPackage } from './entities/latex/latex-package';
+import { latexRouter } from './routes/latex-router';
 
 async function startExpress(connection : TypeOrm.Connection){
   const app = express();
@@ -286,6 +287,7 @@ async function startExpress(connection : TypeOrm.Connection){
   app.use('/list', listRouter);
   app.use('/material', materialRouter);
   app.use('/manage', manageRouter);
+  app.use('/latex', latexRouter);
   
   // обработка ошибки 404
   app.use(function (req, res, next) {

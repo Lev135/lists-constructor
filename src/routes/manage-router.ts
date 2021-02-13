@@ -15,7 +15,7 @@ manageRouter.get('/it', async (req : any, res : any) => {
 });
 manageRouter.get('/ut', async (req : any, res : any) => {
     try {
-        updateTemplates(req.query && req.query.anyway);
+        await updateTemplates(req.query && req.query.anyway);
         res.send("Templates updated");
     }
     catch (err) {

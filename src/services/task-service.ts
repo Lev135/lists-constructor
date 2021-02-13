@@ -96,7 +96,6 @@ export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
         };
     }
     catch (err) {
-        console.log("error");
         throw err;
     }
 }

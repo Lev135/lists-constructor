@@ -67,6 +67,9 @@ export interface LengthVar {
     value : Length;
 }
 
-export type Numbering = 'arabic' | 'roman' | 'Roman' | 'alph' | 'Alph' | 'asbuk' | 'Asbuk';
+export type Numbering =   'arabic' 
+                        | 'roman' | 'Roman' 
+                        | 'alph' | 'Alph'; 
+//                        | 'asbuk' | 'Asbuk'; // Doesn't work
 
 export type PackageName = string

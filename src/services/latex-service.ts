@@ -31,7 +31,6 @@ export async function getLatexFieldComp(id : number) : Promise<LatexFieldCompMod
         .leftJoin('field.packages', 'package')
             .addSelect(keysForSelection<LatexPackage>('package', ['uuid']))
         .getOneOrFail();
-    console.log("Field", field);
     return {
         body : field.body,
         packageUuids : field.packages.map(pack => pack.uuid)
@@ -48,4 +47,13 @@ export function addPackages(latexFieldId : number, packageUuids : string[]) : Pr
 export async function getPackageName(packageUuid : string) : Promise<string> {
     const pack : LatexPackage = await getRepository(LatexPackage).findOneOrFail(packageUuid);
     return pack.name;
+}
+
+export interface PackageGetModel {
+    uuid : string,
+    name : string
+}
+
+export async function getPackages() : Promise<PackageGetModel[]> {
+    return await createQueryBuilder(LatexPackage).getMany();
 }

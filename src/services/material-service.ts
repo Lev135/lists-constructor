@@ -64,8 +64,6 @@ export async function setUserNote(materialId : number, userId : number, note : s
 }
 
 export async function getUserNote(materialId : number, userId : number) : Promise<string | undefined> {
-    console.log('materialId', materialId);
-    console.log('userId', userId);
     return (await createQueryBuilder(UserNote, 'note')
         .where('note.materialId = :materialId', { materialId })
         .andWhere('note.userId = :userId', { userId })

@@ -174,13 +174,11 @@ export async function getListMax(id : number) : Promise<ListGetMaxModel> {
 }
 
 async function getBlockComp(blockId : number) : Promise<ListBlockCompModel> {
-    console.log("Getting block comp...", blockId);
     const commentBlock : ListBlockComment | undefined = await createQueryBuilder(ListBlockComment, 'comment')
         .where({id : blockId})
         .leftJoin('comment.body', 'body')
             .addSelect(keysForSelection<LatexField>('body', ['id']))
         .getOne();
-    console.log(commentBlock);
     const tasksBlock : ListBlockTasks | undefined = await createQueryBuilder(ListBlockTasks, 'blockTasks')
         .where({id : blockId})
         .leftJoin('blockTasks.taskItems', 'item')
@@ -204,7 +202,6 @@ async function getBlockComp(blockId : number) : Promise<ListBlockCompModel> {
 }
 
 export async function getListCompile(id : number) : Promise<ListCompModel> {
-    console.log("getting list comp...", id);
     const list : List = await createQueryBuilder(List, 'list')
         .where('list.id = :id', { id })
         .leftJoin('list.blocks', 'block')
