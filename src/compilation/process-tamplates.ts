@@ -31,12 +31,12 @@ function hashFile(file : string) : Promise<string> {
 
 const templatePath = (fileName : string) => `${templateDir}\\${fileName}`;
 
-import {js_beautify} from 'js-beautify'
+// import {js_beautify} from 'js-beautify'
 
 async function updateTemplateFunction(templateName : string, filePath : string) : Promise<void> {
     const file = (await readFile(filePath)).toString();
     const func = dot.template(file, { argName : ['obj', 'pars', 'f'], strip : false });
-    console.log(js_beautify(func.toString()));
+    // console.log(js_beautify(func.toString()));
     templates[templateName] = {
         fileHash : await hashFile(filePath),
         func
@@ -55,9 +55,7 @@ async function updateTemplateIfNecessary(templateName : string, filePath : strin
 }
 
 export async function updateTemplates(anyway : boolean = false) : Promise<void> {
-    console.log('templateDir', templateDir);
     const filenames : string[] = await readdir(templateDir);
-    console.log('filenames', filenames);
 
     const promises = [];
     for (const filename of filenames) {
@@ -65,7 +63,6 @@ export async function updateTemplates(anyway : boolean = false) : Promise<void> 
         const templateName = filename.slice(0,  extension ? -(extension.length + 1) : undefined);
         if (!templateName) // skipping folders
             continue;
-        console.log(templateName + ' --- ' + extension);
         if (anyway)
             promises.push(updateTemplateFunction(templateName, templatePath(filename)));
         else
