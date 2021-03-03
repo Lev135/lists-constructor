@@ -19,7 +19,7 @@
     "node-getopt": "^0.3.2",
     "nodemon": "^2.0.4",
     "passport-local": "^1.0.0",
-    "pug": "^3.0.0",
+    "pug": "^3.0.1",
     "reflect-metadata": "^0.1.13",
     "shelljs": "^0.8.4",
     "ts-transformer-keys": "^0.4.3",
