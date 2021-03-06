@@ -54,6 +54,12 @@ export interface PackageGetModel {
     name : string
 }
 
+export async function addPackage(packageName : string) : Promise<string> {
+    return (await getRepository(LatexPackage).save({
+        name : packageName,
+    })).uuid;
+}
+
 export async function getPackages() : Promise<PackageGetModel[]> {
     return await createQueryBuilder(LatexPackage).getMany();
 }

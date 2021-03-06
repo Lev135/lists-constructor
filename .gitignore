@@ -1,7 +1,7 @@
 node_modules
 .jscsrc
 .jshintrc
-personal-options.json
+*personal-options.json
 logs
 logs2
 web.config
