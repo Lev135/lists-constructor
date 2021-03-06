@@ -4,6 +4,7 @@ import * as taskService from '../services/task-service'
 import * as materialService from '../services/material-service'
 import { getRepository } from 'typeorm';
 import { User } from '../entities/user';
+import { addPackage, addPackages, getPackages } from '../services/latex-service';
 
 const testUserModels : userService.UserPostRegistrationModel[] = [
     {
@@ -143,8 +144,20 @@ async function createTestTasks() {
     console.log("tasks were created successfuly");
 }
 
+const testPackages = [
+    'amssymb',
+    'some-package'
+]
+
+async function addTestPackages() {
+    console.log(testPackages);
+    if ((await getPackages()).length === 0)
+        return Promise.all(testPackages.map(addPackage));
+}
+
 export async function createTestData() {
     await registerTestUsers();
     await createTestThemes();
     await createTestTasks();
+    await addTestPackages();
 }

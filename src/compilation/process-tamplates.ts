@@ -36,7 +36,6 @@ const templatePath = (fileName : string) => `${templateDir}\\${fileName}`;
 async function updateTemplateFunction(templateName : string, filePath : string) : Promise<void> {
     const file = (await readFile(filePath)).toString();
     const func = dot.template(file, { argName : ['obj', 'pars', 'f'], strip : false });
-    // console.log(js_beautify(func.toString()));
     templates[templateName] = {
         fileHash : await hashFile(filePath),
         func

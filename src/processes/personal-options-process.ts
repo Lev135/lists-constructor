@@ -1,5 +1,4 @@
 import { existsSync, readFileSync, writeFileSync } from "fs";
-import Getopt from "node-getopt";
 import { LoggerOptions } from "typeorm";
 
 interface DatabaseOptions {
@@ -27,6 +26,7 @@ export interface PersonalOptionsModel {
 }
 
 export interface IPersonalOptions {
+  "options-version": number,
   run: {
     [Key in RunBlock]: boolean
   },
@@ -45,14 +45,16 @@ export interface IPersonalOptions {
 }
 
 const optionsPath = './personal-options.json';
+const genOptionsPath = './generated-personal-options.json';
 
 function readOptions(): IPersonalOptions {
   const optionsStr = readFileSync(optionsPath, 'utf8').toString();
   return optionsStr.split(/(?={")/).map(x => JSON.parse(x))[0];
 }
 
-function createOptionsFile(): void {
+function createOptionsFile(path : string): void {
   const obj: IPersonalOptions = {
+    "options-version" : 1,
     dataBase: {
       name: "constructorDb",
       user: "root",
@@ -74,32 +76,21 @@ function createOptionsFile(): void {
       startServer: true
     }
   }
-  writeFileSync(optionsPath, JSON.stringify(obj, null, 2));
+  writeFileSync(path, JSON.stringify(obj, null, 2));
 }
 
 export let options: IPersonalOptions;
 
-function updateOptionsByConsoleFlags() {
-  const getOpt = new Getopt([
-    ['', 'drop'],
-    ['', 'sync'],
-    ['', 'clear'],
-    ['', 'create'],
-    ['', 'test'],
-    ['', 'server']
-  ]).bindHelp();
-  const opt = getOpt.parse(process.argv.slice(2));
-  if (opt)
-    console.log(opt);
-
-}
-
 export function initOptions() {
   if (!existsSync(optionsPath)) {
-    createOptionsFile();
-    throw new Error("Файл настроек 'personal-options.json' создан в корневой директории. "
-      + "Внесите в него свои настройки и запустите сервер.");
+    createOptionsFile(optionsPath);
+    throw new Error("В корневой директории не найден файл настроен 'personal-options.json'. "
+      + "Он был создан автоматически. Отредактируйте его в соответствии с вашими настройками и перезапустите программу");
   }
   options = readOptions();
-  updateOptionsByConsoleFlags();
+  if (options['options-version'] !== 1) {
+    createOptionsFile(genOptionsPath);
+    throw new Error("Файл 'personal-options.json', находящийся в корневой директории, устарел"
+      + "Отредактируйте его в соответствии с автоматически созданным 'generated-personal-options.json' и перезапустите программу") 
+  }
 }

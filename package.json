@@ -30,10 +30,8 @@
   },
   "scripts": {
     "start": "node --unhandled-rejections=strict ./dist/app.js",
-    "sync": "node --unhandled-rejections=strict ./dist/app.js --sync",
     "tsc": "ttsc",
-    "a": "npm run tsc && npm start",
-    "as": "npm run tsc && npm run sync"
+    "a": "npm run tsc && npm start"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^8.5.0",

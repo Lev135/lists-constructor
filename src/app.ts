@@ -2,6 +2,7 @@ import { resolve } from 'path'
 export const rootDir = resolve(__dirname + "\\..");
 
 import { initTemplates } from './compilation/process-tamplates';
+import { createTestData } from './processes/create-test-data';
 import { startExpress } from './processes/express-process';
 import { connectToDatabase, createDatabaseIfNotExists, dropDatabase } from './processes/mysql-process';
 import { initOptions, options } from './processes/personal-options-process';
@@ -21,7 +22,7 @@ async function main() {
     const connection = await connectToDatabase();
     if (options.run.dropDataBase) {
       try {
-        console.log(`Создание базы данных "${options.dataBase.name}"...`)
+        console.log(`Удаление базы данных "${options.dataBase.name}"...`)
         await dropDatabase(connection);
         console.log("База данных успешно удалена");
       }
@@ -45,6 +46,16 @@ async function main() {
     catch(err) {
       return console.error("Ошибка при запуске TypeORM: " + err.message);
     }
+    if (options.run.createTestData) {
+      try {
+        console.log("Создание тестовых данных...");
+        await createTestData();
+        console.log("Тестовые данные успешно созданы");
+      }
+      catch (err) {
+        console.error("Ошибка при добавлении тестовых данных: " + err.message);
+      }
+    }
     if (options.run.runTests) {
       try {
         console.log("Запуск тестирования....");
@@ -59,7 +70,7 @@ async function main() {
       try {
         console.log("Запуск сервера....");
         await startExpress();
-        console.log(`Сервер успешно запущен на порту: ${options.site.port}`);
+        console.log(`Сервер успешно запущен на порту: ${options.server.port}`);
       }
       catch (err) {
         return console.error("Ошибка во время запуска сервера: " + err.message);

@@ -186,7 +186,6 @@ async function getBlockComp(blockId : number) : Promise<ListBlockCompModel> {
         .leftJoin('item.task', 'task')
             .addSelect(keysForSelection<Task>('task', ['id']))
         .getOne();
-    console.log(tasksBlock);
     if (commentBlock) {
         return {
             body : await getLatexFieldComp(commentBlock.body.id)

@@ -1,4 +1,3 @@
-
 import * as TypeOrm from 'typeorm';
 import { User } from '../entities/user';
 import { Material } from '../entities/material/material';
@@ -16,7 +15,6 @@ import { options } from './personal-options-process';
 import { PdfIndex } from '../entities/pdf-intex';
 import { LatexField } from '../entities/latex/latex-field';
 import { LatexPackage } from '../entities/latex/latex-package';
-import { initTemplates } from '../compilation/process-tamplates';
 
 export async function startTypeOrm() {
     const connection = await TypeOrm.createConnection({
