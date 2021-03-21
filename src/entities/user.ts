@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, ManyToMany, OneToMany } from 'typeorm';
 import { Material } from './material/material';
 import { UserNote } from './material/user-note';
+import { Draft } from './draft/draft';
 
 @Entity()
 export class User extends BaseEntity {
@@ -34,4 +35,7 @@ export class User extends BaseEntity {
 
   @OneToMany(type => UserNote, note => note.user)
   materialNotes!: UserNote[];
+
+  @OneToMany(type => Draft, draft => draft.owner)
+  drafts!: Draft[];
 }

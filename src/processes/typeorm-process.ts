@@ -15,6 +15,10 @@ import { options } from './personal-options-process';
 import { PdfIndex } from '../entities/pdf-intex';
 import { LatexField } from '../entities/latex/latex-field';
 import { LatexPackage } from '../entities/latex/latex-package';
+import { Draft } from '../entities/draft/draft';
+import { DraftBlock } from '../entities/draft/draft-block';
+import { DraftBlockComment } from '../entities/draft/draft-block-comment';
+import { DraftBlockTask } from '../entities/draft/draft-block-task';
 
 export async function startTypeOrm() {
     const connection = await TypeOrm.createConnection({
@@ -32,6 +36,7 @@ export async function startTypeOrm() {
             Material, UserNote, Theme,
             Task, TaskRemark, TaskSolution,
             List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem,
+            Draft, DraftBlock, DraftBlockComment, DraftBlockTask,
             PdfIndex,
             LatexField, LatexPackage
         ]
