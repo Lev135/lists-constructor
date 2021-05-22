@@ -1,7 +1,8 @@
 import { LatexFieldGetModel, LatexFieldPostModel } from "../services/latex-service";
-import { TaskGetMaxModel, TaskPostCreateModel, TaskRemarkModel } from "../services/task-service";
+import { TaskRemarkModel } from "../services/task-service";
 import { UserGetMinModel } from "../services/user-service";
 
+// task/create (_, body) => send
 export interface PostCreateBody {
     statement: LatexFieldPostModel,
     answer: string,
@@ -10,16 +11,15 @@ export interface PostCreateBody {
     themeIds : number[],
     userNote? : string
 }
-
-export interface SendPostCreate {
+export interface PostCreateSend {
     id : number
 }
 
-export interface GetViewPageQuery {
+// tasl/view (query, _) => send
+export interface GetViewQuery {
     id : number
 }
-
-export interface RenderViewPage {
+export interface GetViewSend {
     id : number,
     author: UserGetMinModel,
     statement : LatexFieldGetModel,
@@ -30,4 +30,3 @@ export interface RenderViewPage {
     remarks: TaskRemarkModel[]
     userNote ?: string
 }
-

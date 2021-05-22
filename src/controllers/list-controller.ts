@@ -1,24 +1,21 @@
 import { getListPackages, ListCompileModel } from "../compilation/compilation-types";
-import { compilePdf, getPdfPath } from "../compilation/index";
-import { GlobalOptions } from "../compilation/options/global-options";
-import { Length } from "../compilation/options/latex-language-types";
+import { compilePdf } from "../compilation/index";
+import { PackageName } from "../compilation/options/latex-language-types";
 import { getPackageName } from "../services/latex-service";
 import * as listService from "../services/list-service";
 import * as materialService from '../services/material-service';
 import * as types from '../types/list-types';
+import { ReqT, ResT } from "./mlib-controllers";
 
-export async function create(req : any, res : any, _next : any) {
+export async function create(req : ReqT<void, types.PostCreateBody>, res : ResT<types.PostCreateSend>, _next : any) {
     try {
-        const body : types.PostCreateBody = req.body;
         const id : number = await materialService.createMaterial({
             authorId : req.user.id,
-            themeIds : body.themeIds
+            themeIds : req.body.themeIds,
+            userNote : req.body.userNote
         })
-        if (body.userNote)
-            await materialService.setUserNote(id, req.user.id, body.userNote);
-        await listService.createList(id, body);
-        const resObj : types.SendPostCreate = { id };
-        res.send(resObj);
+        await listService.createList(id, req.body);
+        res.send({ id });
     }
     catch (err) {
         console.log(err);
@@ -26,19 +23,16 @@ export async function create(req : any, res : any, _next : any) {
     }
 }
 
-export async function viewPage(req : any, res : any) : Promise<void> {
+export async function view(req : ReqT<types.GetViewQuery, void>,
+                           res : ResT<types.GetViewSend>) : Promise<void> {
     try {
-        const query : types.GetViewPageQuery = req.query;
-        const material = await materialService.getMaterialMin(query.id);
-        const list = await listService.getListMax(query.id);
-        const userNote = await materialService.getUserNote(query.id, req.user.id);
-        const obj : types.RenderViewPage = {
+        const id : number = req.query.id;
+        const material = await materialService.getMaterialMin(id, req.user.id);
+        const list = await listService.getListMax(id);
+        res.send({
             ...material,
             ...list,
-            userNote
-        };
-        res.send(obj);
-        //res.render('task/view-task.pug', task);
+        });
     }
     catch (err) {
         console.log(err);
@@ -46,45 +40,32 @@ export async function viewPage(req : any, res : any) : Promise<void> {
     }
 }
 
-export async function compile(req : any, res : any) {
+export async function compile(req : ReqT<types.PostCompileQuery, types.PostCompileBody>,
+                              res : ResT<types.PostCompileSend>) {
     try {
-        const query : types.PostCompileQuery = req.query;
-        const body : types.PostCompileBody = req.body;
-        
+        const id : number = req.query.id;
         const material : materialService.MaterialGetMinModel 
-            = await materialService.getMaterialMin(query.id);
+            = await materialService.getMaterialMin(id);
         const list : listService.ListCompModel 
-            = await listService.getListCompile(query.id);
+            = await listService.getListCompile(id);
         const compObj : ListCompileModel = {
             ...list,
             author : material.author
         }
-        const resObj : types.SendPostCompile = {
+        const packages : PackageName[] = await Promise.all(
+            getListPackages(compObj).map(uuid => getPackageName(uuid))
+        );
+        res.send({
             uuid : await compilePdf(
-                query.id, 
+                id, 
                 'list-template', 
-                body, 
-                {
-                    ...compObj,
-                    packages : await Promise.all(getListPackages(compObj).map(uuid => getPackageName(uuid)))
-                }
+                req.body, 
+                { ...compObj, packages }
             )
-        }
-        res.send(resObj);
+        });
     }
     catch (err) {
         console.log(err);
         res.send(`Ошибка при обработке запроса компиляции (id = ${req.query.id}): ` + err.message);    
-    }
-}
-
-export async function viewPdf(req : any, res : any) {
-    try {
-        const query : types.GetViewPdfQuery = req.query;
-        res.sendFile(await getPdfPath(query.uuid));
-    }
-    catch (err) {
-        console.log(err);
-        res.send(`Ошибка при обработке запроса: ` + err.message);
     }
 }
