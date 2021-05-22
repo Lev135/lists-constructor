@@ -20,7 +20,7 @@ import { UserGetMinModel } from "./user-service";
 // POST models:
 
 export interface ListBlockCommentPostModel {
-    body : LatexFieldPostModel
+    body : LatexFieldPostModel | string
 }
 export interface ListBlockTasksPostModel {
     taskIds : number[]

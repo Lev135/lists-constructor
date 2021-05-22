@@ -12,7 +12,7 @@ import { ListBlockComment } from '../entities/list/list-block-comment';
 import { ListBlockTasks } from '../entities/list/list-block-tasks';
 import { ListBlockTaskItem } from '../entities/list/list-block-task-item';
 import { options } from './personal-options-process';
-import { PdfIndex } from '../entities/pdf-intex';
+import { PdfIndex } from '../entities/pdf-index';
 import { LatexField } from '../entities/latex/latex-field';
 import { LatexPackage } from '../entities/latex/latex-package';
 import { Draft } from '../entities/draft/draft';

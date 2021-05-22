@@ -1,5 +1,5 @@
 import { createQueryBuilder, getRepository } from 'typeorm';
-import { PdfIndex } from '../entities/pdf-intex';
+import { PdfIndex } from '../entities/pdf-index';
 import { mkdir } from 'fs/promises';
 import { Material } from '../entities/material/material';
 import { rootDir } from '../app';

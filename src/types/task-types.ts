@@ -1,3 +1,4 @@
+import { GlobalOptions } from "../compilation/options/global-options";
 import { LatexFieldGetModel, LatexFieldPostModel } from "../services/latex-service";
 import { TaskRemarkModel } from "../services/task-service";
 import { UserGetMinModel } from "../services/user-service";
@@ -15,7 +16,7 @@ export interface PostCreateSend {
     id : number
 }
 
-// tasl/view (query, _) => send
+// task/view (query, _) => send
 export interface GetViewQuery {
     id : number
 }
@@ -30,3 +31,15 @@ export interface GetViewSend {
     remarks: TaskRemarkModel[]
     userNote ?: string
 }
+
+// task/compile (query, body) => send
+export interface PostCompileQuery {
+    id : number
+}
+export type PostCompileBody = GlobalOptions;
+export interface PostCompileSend {
+    uuid : string
+}
+
+// task/remarkTypes (_, _) => send
+export type GetRemarkTypesSend = string[];
