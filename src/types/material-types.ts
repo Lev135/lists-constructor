@@ -11,5 +11,5 @@ export interface PostUserNoteQuery {
     id : number
 }
 export interface PostUserNoteBody {
-    note : string
+    note ?: string
 }

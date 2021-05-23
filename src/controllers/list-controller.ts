@@ -13,7 +13,7 @@ export async function create(req : ReqT<void, types.PostCreateBody>, res : ResT<
             authorId : req.user.id,
             themeIds : req.body.themeIds,
             userNote : req.body.userNote
-        })
+        });
         await listService.createList(id, req.body);
         res.send({ id });
     }

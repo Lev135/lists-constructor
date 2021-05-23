@@ -1,5 +1,7 @@
-import { getRepository } from "typeorm";
+import { keys } from "ts-transformer-keys";
+import { createQueryBuilder, getRepository } from "typeorm";
 import { User } from "../entities/user";
+import { keysForSelection } from "../mlib";
 
 export interface UserGetMinModel {
   id: number;
@@ -9,26 +11,8 @@ export interface UserGetMinModel {
   email: string
 }
 
-function getMin(obj : User) : UserGetMinModel {
-  const {
-    id, name, surname, patronymic, email
-  } = obj;
-  return {
-    id, name, surname, patronymic, email
-  }
-}
-
 export interface UserGetProfileModel extends UserGetMinModel {
   // Ещё разная информация об активности User'a
-}
-
-function getProfile(obj : User) : UserGetProfileModel {
-  const {
-    id, name, surname, patronymic, email
-  } = obj;
-  return {
-    id, name, surname, patronymic, email
-  };
 }
 
 export interface UserPostRegistrationModel {
@@ -43,9 +27,7 @@ export async function registerUser(obj: UserPostRegistrationModel) : Promise<num
   if (await getRepository(User).count({email: obj.email}) > 0) {
     throw new Error("Пользователь с такой почтой уже зарегистрирован");
   }
-  const user : User = getRepository(User).create(obj);
-  await user.save();
-  return user.id;
+  return (await getRepository(User).save(obj)).id;
 }
 
 export async function getUser(id : number) : Promise<User> {
@@ -53,25 +35,23 @@ export async function getUser(id : number) : Promise<User> {
 }
 
 export async function getUserProfile(id: number) : Promise<UserGetProfileModel> {
-  const users : User[] = await getRepository(User).findByIds([id]);
-  if (users.length == 0) {
-    throw new Error("Пользователя с таким идентификатором не зарегистрировано");
-  }
-  return getProfile(users[0]);
+  const user = await createQueryBuilder(User, 'user')
+      .select(keysForSelection<User>('user', keys<UserGetProfileModel>()))
+      .getOneOrFail();
+  return user;
 }
 
 export async function getUserMin(id: number) : Promise<UserGetMinModel> {
-  const users : User[] = await getRepository(User).findByIds([id]);
-  if (users.length == 0) {
-    throw new Error("Пользователя с таким идентификатором не зарегистрировано");
-  }
-  return getMin(users[0]);
+  const user = await createQueryBuilder(User, 'user')
+      .select(keysForSelection<User>('user', keys<UserGetMinModel>()))
+      .getOneOrFail();
+  return user;
 }
 
 export async function login(email: string, password: string) : Promise<number> {
-  const users : User[] = await getRepository(User).find({email, password});
-  if (users.length == 0) {
+  const user : User | undefined = await getRepository(User).findOne({email, password});
+  if (!user) {
     throw new Error("Неверная почта или пароль");
   }
-  return users[0].id;
+  return user.id;
 }

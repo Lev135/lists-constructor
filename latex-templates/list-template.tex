@@ -9,12 +9,12 @@
 <!~ f.lengthVars(pars) : lengthVar !>
     \setlength{<!= "\\" + lengthVar.name !>}{<!= f.lengthToString(lengthVar.value) !>}
 <!~!> 
-<!? pars.page.pageNumbering !>
+<!? pars.page.pageNumberType !== null !>
     \pagestyle{plain}
+    \pagenumbering{<!= pars.page.pageNumberType !>}
 <!?? true !>
     \pagestyle{empty}
 <!?!>
-\pagenumbering{<!= pars.page.pageNumberType !>}
 
 \begin{document}
     <!? obj.name && obj.name != "" !>

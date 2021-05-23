@@ -10,8 +10,7 @@ export interface GlobalOptions {
             columnSep : Length,
             columnSepRule : Length
         },
-        pageNumbering : boolean,
-        pageNumberType : Numbering,
+        pageNumberType : null | Numbering,
         margins : {
             left : Length,
             right : Length,

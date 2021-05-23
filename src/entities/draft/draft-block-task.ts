@@ -1,10 +1,10 @@
-import { Entity, ManyToOne, PrimaryGeneratedColumn, OneToOne, JoinColumn } from "typeorm";
+import { Entity, ManyToOne, OneToOne, JoinColumn, PrimaryColumn } from "typeorm";
 import { Task } from "../task/task";
 import { DraftBlock } from "./draft-block";
 
 @Entity()
 export class DraftBlockTask {
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   id!: number;
 
   @OneToOne(type => DraftBlock, { primary : true, onDelete : 'CASCADE'})

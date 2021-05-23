@@ -69,7 +69,7 @@ async function addRemarks(remarksObj : TaskRemarkModel[], task : Task) : Promise
 
 export async function createTask(materialId: number, obj: TaskPostCreateModel) : Promise<number> {
     const task : Task = await getRepository(Task).save({
-        material : await getMaterial(materialId),
+        id : materialId,
         statement : await createLatexField(obj.statement),
         answer : obj.answer
     });

@@ -37,12 +37,11 @@ export async function getMaterialMin(id : number, userId ?: number) : Promise<Ma
     }
 }
 
-export async function createMaterial(obj : MaterialPostCreateModel, userId ?: number) : Promise<number> {
+export async function createMaterial(obj : MaterialPostCreateModel) : Promise<number> {
     const author : User = await getUser(obj.authorId);
     const themes : Theme[] = await Promise.all(obj.themeIds.map(id => getTheme(id)));
     const material = await getRepository(Material).save({ author, themes });
-    if (userId !== undefined && obj.userNote)
-        setUserNote(material.id, userId, obj.userNote);
+    setUserNote(material.id, obj.authorId, obj.userNote);
     return material.id;
 }
 
@@ -50,30 +49,21 @@ export function getMaterial(id : number) : Promise<Material> {
     return getRepository(Material).findOneOrFail(id);
 }
 
-export async function setUserNote(materialId : number, userId : number, note : string) {
-    const material = await getRepository(Material).findOneOrFail(materialId);
-    const user = await getRepository(User).findOneOrFail(userId);
-    let noteObj = await getRepository(UserNote).findOne(undefined, {
-        where : {
-            material : material,
-            user : user
-        } 
-    });
-    if (!noteObj) {
-        noteObj = getRepository(UserNote).create({
-            material : material,
-            user : user
+export async function setUserNote(materialId : number, userId : number, note ?: string) : Promise<void> {
+    if (note) {
+        await getRepository(UserNote).save({
+            materialId, userId, body: note
         });
     }
-    noteObj.body = note;
-    await getRepository(UserNote).save(noteObj);
+    else {
+        await getRepository(UserNote).delete({
+            materialId, userId
+        });
+    }
 }
 
 export async function getUserNote(materialId : number, userId?: number) : Promise<string | undefined> {
     if (userId === undefined)
         return;
-    return (await createQueryBuilder(UserNote, 'note')
-        .where('note.materialId = :materialId', { materialId })
-        .andWhere('note.userId = :userId', { userId })
-        .getOne())?.body;
+    return (await getRepository(UserNote).findOne({ materialId, userId }))?.body;
 }
