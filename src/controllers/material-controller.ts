@@ -1,13 +1,12 @@
 import * as materialService from '../services/material-service';
-import * as types from '../types/material-types';
+import * as t from '../types/material-types';
+import { ReqT, ResT } from './mlib-controllers';
 
-export async function getUserNote(req : any, res : any) {
+export async function getUserNote(req : ReqT<t.GetUserNoteQuery, void>, res : ResT<t.GetUserNoteSend>) {
     try {
-        const query : types.GetUserNoteQuery = req.query;
-        const obj : types.SendUserNote = {
-            note : await materialService.getUserNote(query.id, req.user.id)
-        };
-        res.send(obj);
+        res.send({
+            note : await materialService.getUserNote(req.query.id, req.user.id)
+        });
     }
     catch (err) {
         console.log(err);
@@ -15,11 +14,9 @@ export async function getUserNote(req : any, res : any) {
     }
 }
 
-export async function setUserNote(req : any, res : any, _next : any) {
+export async function setUserNote(req : ReqT<t.PostUserNoteQuery, t.PostUserNoteBody>, res : ResT<void>, _ : any) {
     try {
-        const body : types.PostUserNoteBody = req.body;
-        const query : types.PostUserNoteQuery = req.query;
-        await materialService.setUserNote(query.id, req.user.id, body.note);
+        await materialService.setUserNote(req.query.id, req.user.id, req.body.note);
         res.send();
     }
     catch (err) {

@@ -2,22 +2,22 @@ import { GlobalOptions } from "../compilation/options/global-options";
 import { ListBlockPostModel, ListBlockGetModel } from "../services/list-service";
 import { UserGetMinModel } from "../services/user-service";
 
+// list/create (_, body) => send
 export interface PostCreateBody {
     name : string,
     blocks : ListBlockPostModel[],
     themeIds : number[],
     userNote ?: string
 }
-
-export interface SendPostCreate {
+export interface PostCreateSend {
     id : number
 }
 
-export interface GetViewPageQuery {
+// list/view (query, _) => send
+export interface GetViewQuery {
     id : number
 }
-
-export interface RenderViewPage {
+export interface GetViewSend {
     id: number,
     author: UserGetMinModel,
     name: string,
@@ -27,18 +27,11 @@ export interface RenderViewPage {
     userNote ?: string
 }
 
+// list/compile (query, body) => send
 export interface PostCompileQuery {
     id : number
 }
-
 export type PostCompileBody = GlobalOptions;
-
-export interface SendPostCompile {
+export interface PostCompileSend {
     uuid : string
 }
-
-export interface GetViewPdfQuery {
-    uuid : string
-}
-
-// SendViewPdf : .pdf file

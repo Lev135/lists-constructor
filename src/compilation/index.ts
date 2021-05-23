@@ -1,5 +1,5 @@
 import { createQueryBuilder, getRepository } from 'typeorm';
-import { PdfIndex } from '../entities/pdf-intex';
+import { PdfIndex } from '../entities/pdf-index';
 import { mkdir } from 'fs/promises';
 import { Material } from '../entities/material/material';
 import { rootDir } from '../app';
@@ -51,8 +51,9 @@ export async function compilePdf(compilableId : number,
     }
 }
 
-export async function getPdfPath(uuid : string) : Promise<string> {
-    // Проверка на существование:
-    const record : PdfIndex = await getRepository(PdfIndex).findOneOrFail(uuid);
-    return pdfFilePath(uuid);
+export async function getPdfPath(uuid : string) : Promise<string | null> {
+    if (await getRepository(PdfIndex).findOne(uuid))
+        return pdfFilePath(uuid);
+    else
+        return null;
 }

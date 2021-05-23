@@ -1,15 +1,14 @@
 import { keys } from "ts-transformer-keys";
 import { createQueryBuilder, getRepository } from "typeorm";
 import { LatexField } from "../entities/latex/latex-field";
-import { Material } from "../entities/material/material";
+import { List } from "../entities/list/list";
 import { Task } from "../entities/task/task";
 import { TaskRemark } from "../entities/task/task-remark";
 import { TaskSolution } from "../entities/task/task-solution";
-import { User } from "../entities/user";
 import { keysForSelection, pick, sortByField } from "../mlib";
-import { addPackages, createLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
-import { createMaterial, getMaterial } from "./material-service";
-import { UserGetMinModel } from "./user-service";
+import { createLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
+import { ListGetMinModel } from "./list-service";
+import { getMaterial } from "./material-service";
 
 export interface TaskGetMinModel {
     id : number,
@@ -25,7 +24,8 @@ export interface TaskRemarkModel {
 export interface TaskGetMaxModel extends TaskGetMinModel {
     answer: string,
     solutions: LatexFieldGetModel[],
-    remarks: TaskRemarkModel[]  
+    remarks: TaskRemarkModel[],
+    usedInLists: ListGetMinModel[]  
 }
 
 export interface TaskPostCreateModel {
@@ -39,8 +39,7 @@ export interface TaskCompModel {
     id : number,
     statement : LatexFieldCompModel
     answer: string,
-    solutions: LatexFieldCompModel[],
-    remarks: TaskRemarkModel[]  
+    solutions: LatexFieldCompModel[]
 }
 
 async function addSolutions(solutionsObj : LatexFieldPostModel[], task : Task) : Promise<TaskSolution[]> {
@@ -70,7 +69,7 @@ async function addRemarks(remarksObj : TaskRemarkModel[], task : Task) : Promise
 
 export async function createTask(materialId: number, obj: TaskPostCreateModel) : Promise<number> {
     const task : Task = await getRepository(Task).save({
-        material : await getMaterial(materialId),
+        id : materialId,
         statement : await createLatexField(obj.statement),
         answer : obj.answer
     });
@@ -100,6 +99,24 @@ export async function getTaskMin(id: number) : Promise<TaskGetMinModel> {
     }
 }
 
+export async function getTaskUsedInLists(id: number) : Promise<ListGetMinModel[]> {
+    const lists = await createQueryBuilder(List, 'list')
+        .innerJoin('list.blocks', 'block')
+            .addSelect('block.id')
+        .innerJoin('block.blockTasks', 'blockTasks')
+            .addSelect('blockTasks.id')
+        .innerJoin('blockTasks.taskItems', 'item')
+            .addSelect('item.id')
+        .innerJoin('item.task', 'task')
+            .addSelect('task.id')
+        .where('task.id = :id', { id })
+        .addSelect(keysForSelection<List>('list', keys<ListGetMinModel>()))
+        .getMany();
+    return lists.map(list => {
+        return { id: list.id, name: list.name}
+    });
+}
+
 export async function getTaskMax(id: number) : Promise<TaskGetMaxModel> {
     const task : Task = await createQueryBuilder(Task, 'task')
         .where('task.id = :id', {id})
@@ -120,12 +137,12 @@ export async function getTaskMax(id: number) : Promise<TaskGetMaxModel> {
         answer : task.answer,
         solutions : sortByField(task.solutions, 'index').map(solution => solution.body),
         remarks : task.remarks,
+        usedInLists : await getTaskUsedInLists(task.id)
     };
 }
 
 
 export async function getTaskComp(id : number) : Promise<TaskCompModel> {
-    console.log('getting task comp...', id);
     const task : Task = await createQueryBuilder(Task, 'task')
         .where({ id })
         .innerJoin('task.statement', 'statement')
@@ -139,12 +156,17 @@ export async function getTaskComp(id : number) : Promise<TaskCompModel> {
         .getOneOrFail();
     sortByField(task.solutions, 'index');
     sortByField(task.remarks, 'index');
-    console.log(task);
     return {
         id,
         statement : await getLatexFieldComp(task.statement.id),
         answer : task.answer,
-        solutions : await Promise.all(task.solutions.map(solution => getLatexFieldComp(solution.body.id))),
-        remarks : task.remarks
+        solutions : await Promise.all(task.solutions.map(solution => getLatexFieldComp(solution.body.id)))
     }
+}
+
+export async function getRemarkTypes() : Promise<string[]> {
+    const remarks =  await createQueryBuilder(TaskRemark, 'remark')
+        .select(keysForSelection<TaskRemark>('remark', ['type']))
+        .getMany();
+    return remarks.map(remark => remark.type);
 }

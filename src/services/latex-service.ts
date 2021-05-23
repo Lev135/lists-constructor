@@ -10,7 +10,7 @@ export interface LatexFieldGetModel {
 
 export interface LatexFieldPostModel {
     // TODO : Вставка в LaTeX-поле картинок, таблиц и т. п.
-    packageUuids : string[], 
+    packageUuids ?: string[], 
     body : string
 }
 
@@ -19,9 +19,11 @@ export interface LatexFieldCompModel {
     body : string
 }
 
-export async function createLatexField(model : LatexFieldPostModel) : Promise<LatexField> {
-    const res : LatexField = await getRepository(LatexField).save({ body : model.body });
-    await addPackages(res.id, model.packageUuids);
+export async function createLatexField(model : LatexFieldPostModel | string) : Promise<LatexField> {
+    const body = typeof(model) === "string" ? model : model.body;
+    const res : LatexField = await getRepository(LatexField).save({ body });
+    if (typeof(model) !== "string" && model.packageUuids)
+        await addPackages(res.id, model.packageUuids);
     return res;
 }
 

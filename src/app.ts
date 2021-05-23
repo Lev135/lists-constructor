@@ -16,7 +16,7 @@ async function main() {
     initOptions();
   }
   catch (err) {
-    return console.error("Ошибка при считывании personal-options.json: ", err.message);
+    return console.error("Ошибка при считывании personal-options.json: \n", err);
   }
   try {
     const connection = await connectToDatabase();
@@ -27,7 +27,7 @@ async function main() {
         console.log("База данных успешно удалена");
       }
       catch (err) {
-        return console.error("Ошибка при удалении базы данных: " + err.message);
+        return console.error("Ошибка при удалении базы данных: ", err);
       }
     }
     try {
@@ -36,7 +36,7 @@ async function main() {
       console.log("База данных успешно создана или существовала ранее");
     }
     catch (err) {
-      return console.error("Ошибка при создании базы данных: " + err.message);
+      return console.error("Ошибка при создании базы данных: ",  err);
     }
     try {
       console.log("Подключение к базе данных через TypeOrm....");
@@ -44,7 +44,7 @@ async function main() {
       console.log("TypeOrm успешно подключён к базе данных");
     }
     catch(err) {
-      return console.error("Ошибка при запуске TypeORM: " + err.message);
+      return console.error("Ошибка при запуске TypeORM: ", err);
     }
     if (options.run.createTestData) {
       try {
@@ -53,7 +53,7 @@ async function main() {
         console.log("Тестовые данные успешно созданы");
       }
       catch (err) {
-        console.error("Ошибка при добавлении тестовых данных: " + err.message);
+        console.error("Ошибка при добавлении тестовых данных: \n", err);
       }
     }
     if (options.run.runTests) {
@@ -63,7 +63,7 @@ async function main() {
         console.log("Тестирование завершилось успешно");
       }
       catch (err) {
-        return console.error("Ошибка во время тестирования: " + err.message);
+        return console.error("Ошибка во время тестирования: \n", err);
       }
     }
     if (options.run.startServer) {
@@ -73,7 +73,7 @@ async function main() {
         console.log(`Сервер успешно запущен на порту: ${options.server.port}`);
       }
       catch (err) {
-        return console.error("Ошибка во время запуска сервера: " + err.message);
+        return console.error("Ошибка во время запуска сервера: \n", err);
       }
       try {
         console.log("Инициализация шаблонов для LaTeX'a....");
@@ -81,12 +81,12 @@ async function main() {
         console.log("Шаблоны успешно инициализированы");
       }
       catch (err) {
-        return console.error("Ошибка во время инициализации шаблонов: " + err.message);
+        return console.error("Ошибка во время инициализации шаблонов: \n", err);
       }
     }
   }
   catch (err) {
-    console.error("Ошибка при подключении к базе данных: " + err.message);
+    console.error("Ошибка при подключении к базе данных: \n", err);
     return;
   }
 }

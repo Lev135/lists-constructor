@@ -2,7 +2,8 @@ import { pick } from '../mlib';
 import * as userService from '../services/user-service';
 import jwt from 'jsonwebtoken';
 import { keys } from 'ts-transformer-keys';
-import * as types from '../types/user-types';
+import * as t from '../types/user-types';
+import { ReqT, ResT } from './mlib-controllers';
 
 const SECRETKEY = 'SECRET_KEY'
 
@@ -34,18 +35,13 @@ function produceToken(user: UserTokenInfo): string {
     return jwt.sign(info, SECRETKEY);
 }
 
-export async function loginPage(req : any, res : any) {
-    res.render("user/login.pug");
-}
-export async function login(req : any, res : any, _next : any) {
+export async function login(req : ReqT<void, t.PostLoginBody>, res : ResT<t.PostLoginSend>, _ : any) {
     try {
-        const body : types.PostLoginBody = req.body;
-        const id : number = await userService.login(body.email, body.password);
+        const id : number = await userService.login(req.body.email, req.body.password);
         const token = produceToken( { id } );
-        const obj : types.SendPostLogin = {
+        res.send({
             id, token
-        }
-        res.send(obj);
+        });
     }
     catch (err) {
         console.log(err);
@@ -53,41 +49,23 @@ export async function login(req : any, res : any, _next : any) {
     }
 }
 
-export async function registrationPage(req : any, res : any) {
-    res.render("user/register.pug");
-}
-export async function register (req : any, res : any, next : any) {
+export async function register (req : ReqT<void, t.PostRegisterBody>, res : ResT<t.PostRegisterSend>, _ : any) {
     try {
-        const body : types.PostRegisterBody = req.body;
-        const id = await userService.registerUser( body );
+        const id = await userService.registerUser( req.body );
         const token = produceToken( { id } );
-        const obj : types.SendPostRegister = {
+        res.send({
             id, token
-        }
-        res.send( obj );
+        });
     }
     catch (err) {
         console.log(err);
         res.send(err.message);
     }
 }
-export async function logout (req : any, res : any) {
-    res.send("Unrealized");
-}
-export async function usersPage(req : any, res : any) {
-    res.send("Unrealized");
-}
-export async function profilePage(req : any, res : any)  {
+export async function profile(req : ReqT<t.GetProfileQuery, void>, res : ResT<t.GetProfilePost>)  {
     try {
-        const query : types.GetProfilePageQuery = req.query;
-        const profile = await userService.getUserProfile(query.id);
-        const obj : types.RenderProfilePage = { profile }
-        if (req.query.id == req.user.id) {
-            res.render('user/my-profile.pug', obj);
-        }
-        else {
-            res.render('user/profile.pug', obj);
-        }
+        const profile = await userService.getUserProfile(req.query.id);
+        res.send({ profile })
     }
     catch (err) {
         console.log(err);

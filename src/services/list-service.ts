@@ -8,19 +8,15 @@ import { ListBlockTaskItem } from "../entities/list/list-block-task-item";
 import { ListBlockTasks } from "../entities/list/list-block-tasks";
 import { Material } from "../entities/material/material";
 import { Task } from "../entities/task/task";
-import { User } from "../entities/user";
 import { keysForSelection, pick, sortByField } from "../mlib";
 import { createLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
-import { createMaterial, getMaterial } from "./material-service";
+import { getMaterial } from "./material-service";
 import { getTaskComp, getTaskMin, TaskCompModel, TaskGetMinModel } from "./task-service";
-import { UserGetMinModel } from "./user-service";
-
-
 
 // POST models:
 
 export interface ListBlockCommentPostModel {
-    body : LatexFieldPostModel
+    body : LatexFieldPostModel | string
 }
 export interface ListBlockTasksPostModel {
     taskIds : number[]
@@ -32,8 +28,11 @@ export interface ListPostCreateModel {
 };
 
 async function createBlockTasksItem(taskId : number, index : number, blockTasks : ListBlockTasks) {
-    const task : Task = await getRepository(Task).findOneOrFail(taskId);
-    await getRepository(ListBlockTaskItem).save({ block : blockTasks, index, task });
+    await getRepository(ListBlockTaskItem).save({
+        block : blockTasks,
+        index,
+        taskId
+    });
 }
 
 async function createBlock(blockObj : ListBlockPostModel, index : number, list : List) {
@@ -65,8 +64,7 @@ async function createBlocks(blocksObj : ListBlockPostModel[], list : List) {
 }
 
 export async function createList(materialId : number, obj : ListPostCreateModel) : Promise<number> {
-    const material : Material = await getMaterial(materialId);
-    const list : List = await getRepository(List).save({ name: obj.name, material });
+    const list : List = await getRepository(List).save({ id: materialId, name: obj.name });
     await Promise.all([
         createBlocks(obj.blocks, list),
     ]);
