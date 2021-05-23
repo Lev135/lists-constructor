@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, CreateDateColumn, ManyToMany, JoinTable } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, OneToMany, ManyToOne, CreateDateColumn, ManyToMany, JoinTable, OneToOne, JoinColumn, Column } from "typeorm";
+import { Access } from "../access";
 import { User } from "../user";
 import { Theme } from "./theme";
 import { UserNote } from "./user-note";
@@ -20,4 +21,11 @@ export class Material {
   @ManyToMany(type => Theme)
   @JoinTable()
   themes!: Theme[];
+
+  @Column()
+  accessId!: number
+
+  @OneToOne(type => Access)
+  @JoinColumn({ name : 'accessId' })
+  access!: Access;
 }

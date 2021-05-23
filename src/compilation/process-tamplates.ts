@@ -2,7 +2,7 @@ import dot from 'dot';
 import { readFile, readdir, writeFile } from 'fs/promises';
 import { getRepository } from 'typeorm';
 import { rootDir } from '../app';
-import { PdfIndex } from '../entities/pdf-index';
+import { PdfIndex } from '../entities/latex/pdf-index';
 import { f } from './options/functions';
 
 dot.setDelimiters({

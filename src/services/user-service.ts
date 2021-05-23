@@ -36,6 +36,7 @@ export async function getUser(id : number) : Promise<User> {
 
 export async function getUserProfile(id: number) : Promise<UserGetProfileModel> {
   const user = await createQueryBuilder(User, 'user')
+      .where({ id })
       .select(keysForSelection<User>('user', keys<UserGetProfileModel>()))
       .getOneOrFail();
   return user;
@@ -43,6 +44,7 @@ export async function getUserProfile(id: number) : Promise<UserGetProfileModel> 
 
 export async function getUserMin(id: number) : Promise<UserGetMinModel> {
   const user = await createQueryBuilder(User, 'user')
+      .where({ id })
       .select(keysForSelection<User>('user', keys<UserGetMinModel>()))
       .getOneOrFail();
   return user;

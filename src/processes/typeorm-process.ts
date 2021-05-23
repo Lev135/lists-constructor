@@ -12,13 +12,15 @@ import { ListBlockComment } from '../entities/list/list-block-comment';
 import { ListBlockTasks } from '../entities/list/list-block-tasks';
 import { ListBlockTaskItem } from '../entities/list/list-block-task-item';
 import { options } from './personal-options-process';
-import { PdfIndex } from '../entities/pdf-index';
+import { PdfIndex } from '../entities/latex/pdf-index';
 import { LatexField } from '../entities/latex/latex-field';
 import { LatexPackage } from '../entities/latex/latex-package';
 import { Draft } from '../entities/draft/draft';
 import { DraftBlock } from '../entities/draft/draft-block';
 import { DraftBlockComment } from '../entities/draft/draft-block-comment';
 import { DraftBlockTask } from '../entities/draft/draft-block-task';
+import { Access } from '../entities/access';
+import { UserAccess } from '../entities/user-access';
 
 export async function startTypeOrm() {
     const connection = await TypeOrm.createConnection({
@@ -38,7 +40,8 @@ export async function startTypeOrm() {
             List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem,
             Draft, DraftBlock, DraftBlockComment, DraftBlockTask,
             PdfIndex,
-            LatexField, LatexPackage
+            LatexField, LatexPackage,
+            Access, UserAccess
         ]
     });
     return connection;

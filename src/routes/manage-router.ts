@@ -22,3 +22,6 @@ manageRouter.get('/ut', async (req : any, res : any) => {
         res.send(err);
     }
 })
+manageRouter.get('/user', async (req : any, res : any) => {
+    res.send(req.user);
+})

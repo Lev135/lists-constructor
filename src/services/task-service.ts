@@ -5,10 +5,9 @@ import { List } from "../entities/list/list";
 import { Task } from "../entities/task/task";
 import { TaskRemark } from "../entities/task/task-remark";
 import { TaskSolution } from "../entities/task/task-solution";
-import { keysForSelection, pick, sortByField } from "../mlib";
+import { keysForSelection, sortByField } from "../mlib";
 import { createLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
 import { ListGetMinModel } from "./list-service";
-import { getMaterial } from "./material-service";
 
 export interface TaskGetMinModel {
     id : number,
@@ -106,7 +105,7 @@ export async function getTaskUsedInLists(id: number) : Promise<ListGetMinModel[]
         .innerJoin('block.blockTasks', 'blockTasks')
             .addSelect('blockTasks.id')
         .innerJoin('blockTasks.taskItems', 'item')
-            .addSelect('item.id')
+            .addSelect('item.blockId')
         .innerJoin('item.task', 'task')
             .addSelect('task.id')
         .where('task.id = :id', { id })

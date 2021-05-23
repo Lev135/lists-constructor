@@ -1,4 +1,5 @@
 import { GlobalOptions } from "../compilation/options/global-options";
+import { AccessGetMaxModel } from "../services/access-service";
 import { ListBlockPostModel, ListBlockGetModel } from "../services/list-service";
 import { UserGetMinModel } from "../services/user-service";
 
@@ -24,7 +25,8 @@ export interface GetViewSend {
     themeIds: number[],
     creationDate: Date,
     blocks: ListBlockGetModel[]
-    userNote ?: string
+    userNote ?: string,
+    accessRules : AccessGetMaxModel
 }
 
 // list/compile (query, body) => send

@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Material } from "./material/material";
+import { Material } from "../material/material";
 
 @Entity()
 export class PdfIndex {

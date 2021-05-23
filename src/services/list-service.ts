@@ -6,11 +6,9 @@ import { ListBlock } from "../entities/list/list-block";
 import { ListBlockComment } from "../entities/list/list-block-comment";
 import { ListBlockTaskItem } from "../entities/list/list-block-task-item";
 import { ListBlockTasks } from "../entities/list/list-block-tasks";
-import { Material } from "../entities/material/material";
 import { Task } from "../entities/task/task";
-import { keysForSelection, pick, sortByField } from "../mlib";
+import { keysForSelection, sortByField } from "../mlib";
 import { createLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
-import { getMaterial } from "./material-service";
 import { getTaskComp, getTaskMin, TaskCompModel, TaskGetMinModel } from "./task-service";
 
 // POST models:

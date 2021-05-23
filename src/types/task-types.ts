@@ -1,4 +1,5 @@
 import { GlobalOptions } from "../compilation/options/global-options";
+import { AccessGetMaxModel } from "../services/access-service";
 import { LatexFieldGetModel, LatexFieldPostModel } from "../services/latex-service";
 import { TaskRemarkModel } from "../services/task-service";
 import { UserGetMinModel } from "../services/user-service";
@@ -29,7 +30,8 @@ export interface GetViewSend {
     answer: string,
     solutions: LatexFieldGetModel[],
     remarks: TaskRemarkModel[]
-    userNote ?: string
+    userNote ?: string,
+    accessRules : AccessGetMaxModel
 }
 
 // task/compile (query, body) => send

@@ -27,7 +27,7 @@ export async function view(req : ReqT<types.GetViewQuery, void>,
                            res : ResT<types.GetViewSend>) : Promise<void> {
     try {
         const id : number = req.query.id;
-        const material = await materialService.getMaterialMin(id, req.user.id);
+        const material = await materialService.getMaterialMax(id, req.user.id);
         const list = await listService.getListMax(id);
         res.send({
             ...material,
@@ -45,7 +45,7 @@ export async function compile(req : ReqT<types.PostCompileQuery, types.PostCompi
     try {
         const id : number = req.query.id;
         const material : materialService.MaterialGetMinModel 
-            = await materialService.getMaterialMin(id);
+            = await materialService.getMaterialMin(id, req.user.id);
         const list : listService.ListCompModel 
             = await listService.getListCompile(id);
         const compObj : ListCompileModel = {

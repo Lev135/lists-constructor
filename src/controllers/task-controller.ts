@@ -24,7 +24,7 @@ export async function create(req : ReqT<void, t.PostCreateBody>, res : ResT<t.Po
 export async function viewPage(req : ReqT<t.GetViewQuery, void>, res : ResT<t.GetViewSend>) {
     try {
         const id = req.query.id;
-        const material = await materialService.getMaterialMin(id, req.user.id);
+        const material = await materialService.getMaterialMax(id, req.user.id);
         const task = await taskService.getTaskMax(id);
         res.send({
             ...task,
@@ -41,7 +41,7 @@ export async function compile(req : ReqT<t.PostCompileQuery, t.PostCompileBody>,
                               res : ResT<t.PostCompileSend>) {
     try {
         const id  = req.query.id;
-        const material = await materialService.getMaterialMin(id);
+        const material = await materialService.getMaterialMin(id, req.user.id);
         const task = await taskService.getTaskComp(id);
         const compObj : taskService.TaskCompModel = {
             ...task
