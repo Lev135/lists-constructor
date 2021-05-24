@@ -5,7 +5,7 @@ import { Theme } from "../entities/material/theme";
 import { UserNote } from "../entities/material/user-note";
 import { User } from "../entities/user";
 import { keysForSelection } from "../mlib";
-import { AccessGetMaxModel, AccessType, createAccess, getAccessMax, hasAccess } from "./access-service";
+import { AccessGetMaxModel, AccessType, checkAccessLevel, createAccess, getAccessMax } from "./access-service";
 import { getTheme } from "./theme-service";
 import { getUser, UserGetMinModel } from "./user-service";
 
@@ -22,15 +22,12 @@ export interface MaterialPostCreateModel {
     userNote?: string
 }
 
-
-async function checkMaterialAccess(materialId : number, userId : number, type: AccessType) : Promise<void> {
-    const accessId = (await getMaterial(materialId)).accessId;
-    if (!await hasAccess(accessId, userId, type))
-        throw new Error("Недостаточно прав");
+async function getAccessId(materialId : number) {
+    return getMaterial(materialId).then(mat => mat.accessId);
 }
 
 export async function getMaterialMin(id : number, userId : number) : Promise<MaterialGetMinModel> {
-    await checkMaterialAccess(id, userId, AccessType.readAccess);
+    await checkAccessLevel(await getAccessId(id), userId, AccessType.read);
     const material = await createQueryBuilder(Material, 'material')
         .where({id})
         .innerJoin('material.author', 'author')
@@ -84,8 +81,8 @@ export interface MaterialGetMaxModel extends MaterialGetMinModel {
 }
 
 export async function getMaterialMax(materialId : number, userId : number) : Promise<MaterialGetMaxModel> {
-    await checkMaterialAccess(materialId, userId, AccessType.readAccess);
-    const accessId = (await getMaterial(materialId)).accessId;
+    const accessId = await getAccessId(materialId);
+    await checkAccessLevel(accessId, userId, AccessType.read);
     return {
         ...await getMaterialMin(materialId, userId),
         accessRules : await getAccessMax(accessId)

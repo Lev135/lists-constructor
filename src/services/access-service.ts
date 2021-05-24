@@ -1,13 +1,15 @@
 import { createQueryBuilder, getRepository } from "typeorm";
 import { Access } from "../entities/access";
 import { UserAccess } from "../entities/user-access";
+import { keysForSelection } from "../mlib";
 import { getUserMin, UserGetMinModel } from "./user-service";
 
 export enum AccessType {
-    noneAccess = 0,
-    readAccess = 1,
-    writeAccess = 2,
-    moderatorAccess = 3
+    none = 0,
+    read = 1,
+    write = 2,
+    moderate = 3,
+    owner = 4
 }
 
 export async function createAccess(ownerId : number) : Promise<number> {
@@ -20,33 +22,44 @@ export async function createAccess(ownerId : number) : Promise<number> {
     return accessObj.id;
 }
 
-export async function hasAccess(accessId : number, userId : number, accessType : AccessType) : Promise<boolean> {
-    return (await createQueryBuilder(UserAccess, 'userAccess')
-        .where({ userId, accessId })
-        .andWhere('userAccess.type >= :accessType', { accessType })
-        .getCount()) > 0;
+async function isOwner(accessId : number, userId : number) : Promise<boolean> {
+    return createQueryBuilder(Access, 'access')
+        .where({ accessId, userId })
+        .getCount().then(c => c > 0);
 }
 
-export async function addAccess(accessId : number, userId : number, accessType : AccessType, moderatorId : number) {
-    if (!hasAccess(accessId, moderatorId, AccessType.moderatorAccess)
-                || accessType === AccessType.moderatorAccess 
-                    && !getRepository(Access).findOne({ id : accessId, ownerId : moderatorId})) {
+export async function accessLevel(accessId : number, userId : number) : Promise<AccessType> {
+    if (isOwner(accessId, userId))
+        return AccessType.owner;
+    const accessRules = await createQueryBuilder(UserAccess, 'userAccess')
+        .select(keysForSelection<UserAccess>('userAccess', ['type']))
+        .where({ userId, accessId })
+        .getMany()
+    return Math.max.apply(Math, accessRules.map(uAccess => uAccess.type).concat([AccessType.none]));
+}
+
+export async function checkAccessLevel(accessId : number, userId : number, minLevel : AccessType) {
+    if (await accessLevel(accessId, userId) < minLevel)
         throw new Error("Недостаточно прав");
-    }
-    const access = await getRepository(UserAccess).findOne({ accessId, userId });
+}
+
+export async function setAccess(accessId : number, userId : number, type : AccessType, actorId : number) {
+    if (type < AccessType.none || type >= AccessType.owner)
+        throw new Error("Некорректный тип " + type);
+    
+    let access = await getRepository(UserAccess).findOne({ accessId, userId });
+    if (access?.type == AccessType.moderate || type == AccessType.moderate)
+        checkAccessLevel(accessId, actorId, AccessType.owner);
+    else
+        checkAccessLevel(accessId, actorId, AccessType.moderate);
     if (access) {
-        if (access.type >= accessType) {
-            return;
-        }
-        else {
-            access.type = accessType;
-            await getRepository(UserAccess).save(access);
-        }
+        if (type == AccessType.none)
+            await getRepository(UserAccess).delete({ accessId, userId });
+        else
+            await getRepository(UserAccess).update({ accessId, userId }, { type });
     }
-    else {
-        await getRepository(UserAccess).save({
-            accessId, userId, type : accessType
-        });
+    else if (type > AccessType.none) {
+        await getRepository(UserAccess).insert({ accessId, userId, type});
     }
 }
 
@@ -57,31 +70,28 @@ export interface AccessGetMaxModel {
     moderate : UserGetMinModel[]
 };
 
+interface tmp {
+    user : UserGetMinModel,
+    type : AccessType 
+}
+
 export async function getAccessMax(accessId : number) : Promise<AccessGetMaxModel> {
     const access = await getRepository(Access).findOneOrFail(accessId);
     const userAccess = await getRepository(UserAccess).find({ where: { accessId } });
-    const read : UserAccess[] = [], 
-          write : UserAccess[] = [],
-          moderate : UserAccess[] = [];
-    userAccess.forEach(userAccess => {
-        switch (userAccess.type) {
-        case AccessType.readAccess:
-            read.push(userAccess);
-            break;
-        case AccessType.writeAccess:
-            write.push(userAccess);
-            break;
-        case AccessType.moderatorAccess:
-            moderate.push(userAccess);
-            break;
-        default:
-            console.log("Unknown access type");
-        }
-    })
+    const infos = await Promise.all(
+        userAccess.map(a =>  new Promise<tmp>((res, rej) => {
+            getUserMin(a.userId)
+                .then(user => res({ user, type: a.type }))
+                .catch(rej)
+        }))
+    );
+    const filterUsers = (type : AccessType) =>
+                infos.filter(info => info.type === type)
+                     .map(info => info.user);
     return {
         owner : await getUserMin(access.ownerId),
-        read : await Promise.all(read.map(a => getUserMin(a.userId))),
-        write : await Promise.all(write.map(a => getUserMin(a.userId))),
-        moderate : await Promise.all(moderate.map(a => getUserMin(a.userId)))
+        read : filterUsers(AccessType.read),
+        write : filterUsers(AccessType.write),
+        moderate : filterUsers(AccessType.moderate)
     }
 }
