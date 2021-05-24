@@ -13,29 +13,24 @@ export enum AccessType {
 }
 
 export async function createAccess(ownerId : number) : Promise<number> {
-    const accessObj = await getRepository(Access).save({ ownerId });
-    await getRepository(UserAccess).save({
-        accessId : accessObj.id,
-        type : 3,
-        userId : ownerId
-    })
-    return accessObj.id;
+    return getRepository(Access).save({ ownerId })
+        .then(access => access.id)
 }
 
 async function isOwner(accessId : number, userId : number) : Promise<boolean> {
     return createQueryBuilder(Access, 'access')
-        .where({ accessId, userId })
+        .where({ id: accessId, ownerId: userId })
         .getCount().then(c => c > 0);
 }
 
 export async function accessLevel(accessId : number, userId : number) : Promise<AccessType> {
-    if (isOwner(accessId, userId))
+    if (await isOwner(accessId, userId))
         return AccessType.owner;
-    const accessRules = await createQueryBuilder(UserAccess, 'userAccess')
+    return createQueryBuilder(UserAccess, 'userAccess')
         .select(keysForSelection<UserAccess>('userAccess', ['type']))
         .where({ userId, accessId })
-        .getMany()
-    return Math.max.apply(Math, accessRules.map(uAccess => uAccess.type).concat([AccessType.none]));
+        .getOne()
+        .then(user => user?.type || AccessType.none);
 }
 
 export async function checkAccessLevel(accessId : number, userId : number, minLevel : AccessType) {
@@ -70,7 +65,7 @@ export interface AccessGetMaxModel {
     moderate : UserGetMinModel[]
 };
 
-interface tmp {
+interface UserAccessType {
     user : UserGetMinModel,
     type : AccessType 
 }
@@ -79,7 +74,7 @@ export async function getAccessMax(accessId : number) : Promise<AccessGetMaxMode
     const access = await getRepository(Access).findOneOrFail(accessId);
     const userAccess = await getRepository(UserAccess).find({ where: { accessId } });
     const infos = await Promise.all(
-        userAccess.map(a =>  new Promise<tmp>((res, rej) => {
+        userAccess.map(a =>  new Promise<UserAccessType>((res, rej) => {
             getUserMin(a.userId)
                 .then(user => res({ user, type: a.type }))
                 .catch(rej)

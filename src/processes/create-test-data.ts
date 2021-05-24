@@ -137,7 +137,7 @@ async function createTestTasks() {
         const authorId : number = testUserIds[model.answer.length % testUserIds.length];
         const materialId : number = await materialService.createMaterial({
             authorId,
-            themeIds : [ testThemeIds[model.statement.body.length % testThemeIds.length] ]
+            themeIds : [ testThemeIds[0] ]
         })
         testTaskIds.push(await taskService.createTask(materialId, model));
     }

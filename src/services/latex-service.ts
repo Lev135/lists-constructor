@@ -4,27 +4,52 @@ import { LatexField } from "../entities/latex/latex-field";
 import { LatexPackage } from "../entities/latex/latex-package";
 import { keysForSelection } from "../mlib";
 
-export interface LatexFieldGetModel {
+interface LatexFieldGetModelObj {
     body : string
 }
+export type LatexFieldGetModel = LatexFieldGetModelObj | string;
 
-export interface LatexFieldPostModel {
+interface LatexFieldPostModelObj {
     // TODO : Вставка в LaTeX-поле картинок, таблиц и т. п.
     packageUuids ?: string[], 
     body : string
 }
+export type LatexFieldPostModel = LatexFieldPostModelObj | string
 
 export interface LatexFieldCompModel {
     packageUuids : string[],
     body : string
 }
 
-export async function createLatexField(model : LatexFieldPostModel | string) : Promise<LatexField> {
-    const body = typeof(model) === "string" ? model : model.body;
-    const res : LatexField = await getRepository(LatexField).save({ body });
-    if (typeof(model) !== "string" && model.packageUuids)
-        await addPackages(res.id, model.packageUuids);
+function toGetObj(model : LatexFieldGetModel) : LatexFieldGetModelObj {
+    return typeof(model) === "string" ? { body : model }
+                                      : model;
+}
+function fromGetObj(obj : LatexFieldGetModelObj) : LatexFieldGetModel {
+    return obj.body;
+}
+
+function toPostObj(model : LatexFieldPostModel) : LatexFieldPostModelObj {
+    return typeof(model) === "string" 
+                    ? { body : model }
+                    :  model;
+}
+function fromPostObj(obj : LatexFieldPostModelObj) : LatexFieldPostModel {
+    return obj.packageUuids && obj.packageUuids.length > 0 
+                    ? obj 
+                    : obj.body;
+}
+
+export async function createLatexField(model : LatexFieldPostModel ) : Promise<LatexField> {
+    const obj = toPostObj(model);
+    const res : LatexField = await getRepository(LatexField).save(obj);
+    await addPackages(res.id, obj.packageUuids || []);
     return res;
+}
+
+export async function getLatexField(id : number) : Promise<LatexFieldGetModel> {
+    return getRepository(LatexField).findOneOrFail(id)
+                    .then(fromGetObj);
 }
 
 export async function getLatexFieldComp(id : number) : Promise<LatexFieldCompModel> {

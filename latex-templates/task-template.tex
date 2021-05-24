@@ -1,19 +1,24 @@
-\documentclass{article}
+\documentclass[<!= f.optionsToString(f.documentClassOptions(pars)) !>]{article}
+\usepackage[utf8]{inputenc}
 \usepackage[russian]{babel}
+\usepackage[<!= f.optionsToString(f.geometryOptions(pars)) !>]{geometry}
+<!~ obj.packages : package !>
+\usepackage{<!= package !>}
+<!~!>
 
 \newcommand{\tmp}[1]{\noindent\par\textit{#1: }\nopagebreak\par}
 
 \begin{document}
     \section{Задача \textnumero <!= obj.id !>}
     \tmp{Условие}
-    <!= obj.statement.body !>
+        <!= obj.statement.body !>
     \tmp{Ответ}
-    <!= obj.answer !>
+        <!= obj.answer !>
 
     <!~ obj.solutions :s !>
-        \tmp{Решение}
+    \tmp{Решение}
         <!= s.body !>
-        \tmp{Класс}
+    \tmp{Класс}
         <!= s.grade !>
     <!~!>
 

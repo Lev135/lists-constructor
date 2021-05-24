@@ -4,6 +4,7 @@ import * as t from "../types/task-types"
 import { ReqT, ResT } from "./mlib-controllers";
 import { PackageName } from "../compilation/options/latex-language-types";
 import { compilePdf } from "../compilation";
+import { getPackageName } from "../services/latex-service";
 
 export async function create(req : ReqT<void, t.PostCreateBody>, res : ResT<t.PostCreateSend>, _ : any) {
     try {
@@ -46,16 +47,17 @@ export async function compile(req : ReqT<t.PostCompileQuery, t.PostCompileBody>,
         const compObj : taskService.TaskCompModel = {
             ...task
         }
-        const packages : PackageName[] = task.statement.packageUuids;
+        const packagePromises : Promise<PackageName>[] = 
+            task.statement.packageUuids.map(uuid => getPackageName(uuid));
         task.solutions.forEach(sol => {
-            packages.push(...sol.packageUuids);
+            packagePromises.push(...sol.packageUuids.map(uuid => getPackageName(uuid)));
         })
         res.send({
             uuid : await compilePdf(
                 id, 
                 'task-template', 
                 req.body, 
-                { ...compObj, packages, author: material.author }
+                { ...compObj, packages: await Promise.all(packagePromises), author: material.author }
             )
         });
     }

@@ -13,8 +13,11 @@ export class Task {
   @JoinColumn({name: 'id'})
   material!: Material;
 
+  @Column()
+  statementId!: number;
+
   @OneToOne(type => LatexField, { nullable : false })
-  @JoinColumn()
+  @JoinColumn({ name : 'statementId' })
   statement!: LatexField;
 
   @Column()

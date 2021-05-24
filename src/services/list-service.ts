@@ -1,4 +1,3 @@
-import { keys } from "ts-transformer-keys";
 import { createQueryBuilder, getRepository } from "typeorm";
 import { LatexField } from "../entities/latex/latex-field";
 import { List } from "../entities/list/list";
@@ -8,13 +7,13 @@ import { ListBlockTaskItem } from "../entities/list/list-block-task-item";
 import { ListBlockTasks } from "../entities/list/list-block-tasks";
 import { Task } from "../entities/task/task";
 import { keysForSelection, sortByField } from "../mlib";
-import { createLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
+import { createLatexField, getLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
 import { getTaskComp, getTaskMin, TaskCompModel, TaskGetMinModel } from "./task-service";
 
 // POST models:
 
 export interface ListBlockCommentPostModel {
-    body : LatexFieldPostModel | string
+    body : LatexFieldPostModel
 }
 export interface ListBlockTasksPostModel {
     taskIds : number[]
@@ -106,7 +105,7 @@ export interface ListCompModel extends ListGetMinModel {
 export async function getBlock(obj : ListBlock) : Promise<ListBlockGetModel> {
     if (obj.blockComment) {
         return {
-            body : obj.blockComment.body
+            body : await getLatexField(obj.blockComment.bodyId)
         }
     }
     else if (obj.blockTasks) {
@@ -145,22 +144,19 @@ export async function getListMax(id : number) : Promise<ListGetMaxModel> {
             .leftJoin('list.blocks', 'block')
                 .addSelect(keysForSelection<ListBlock>('block', [ 'index' ]))
             .leftJoin('block.blockComment', 'blockComment')
-                .addSelect('blockComment.id')
-            .leftJoin('blockComment.body', 'comment_body')
-                .addSelect(keysForSelection<LatexField>('comment_body', keys<LatexFieldGetModel>()))
+                .addSelect(keysForSelection<ListBlockComment>('blockComment', ['bodyId']))
             .leftJoin('block.blockTasks', 'blockTasks')
                 .addSelect(keysForSelection<ListBlockTasks>('blockTasks', [ 'id' ]))
             .leftJoin('blockTasks.taskItems', 'item')
                 .addSelect(keysForSelection<ListBlockTaskItem>('item', [ 'index' ]))
-                .addOrderBy('item.index')
             .leftJoin('item.task', 'task')
                 .addSelect(keysForSelection<Task>('task', [ 'id' ]))
             .getOneOrFail();
-        console.log('list', list);
+        sortByField(list.blocks, 'index');
         return {
             id,
             name: list.name,
-            blocks: await Promise.all(sortByField(list.blocks, 'index').map(block => getBlock(block)))
+            blocks: await Promise.all(list.blocks.map(block => getBlock(block)))
         }
     }
     catch (err) {

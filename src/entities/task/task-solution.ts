@@ -10,8 +10,11 @@ export class TaskSolution {
   @Column()
   index!: number;
 
+  @Column()
+  bodyId!: number;
+
   @OneToOne(type => LatexField, { nullable : false })
-  @JoinColumn()
+  @JoinColumn({ name : 'bodyId' })
   body!: LatexField;
 
   @ManyToOne(type => Task, task => task.solutions)

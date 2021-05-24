@@ -11,7 +11,10 @@ export class ListBlockComment {
   @JoinColumn({name: 'id'})
   listBlock!: ListBlock;
 
+  @Column()
+  bodyId!: number;
+
   @OneToOne(type => LatexField, { nullable : false })
-  @JoinColumn()
+  @JoinColumn({ name : 'bodyId' })
   body!: LatexField;
 }
