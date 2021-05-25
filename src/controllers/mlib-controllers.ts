@@ -12,3 +12,8 @@ export interface ReqT<QueryT, BodyT> {
 export interface ResT<SendT> {
     send : (data: SendT | ErrorT) => void
 };
+
+export function processError(err : any, res : { send : (msg : ErrorT) => void }) {
+    console.log(err);
+    res.send("Ошибка при обработке запроса: " + err.message);
+} 

@@ -4,8 +4,9 @@ import { Material } from "../entities/material/material";
 import { Theme } from "../entities/material/theme";
 import { UserNote } from "../entities/material/user-note";
 import { User } from "../entities/user";
+import { AccessType } from "../entities/user-access";
 import { keysForSelection } from "../mlib";
-import { AccessGetMaxModel, AccessType, checkAccessLevel, createAccess, getAccessMax } from "./access-service";
+import { AccessGetMaxModel, checkAccessLevel, createAccess, getAccessMax, NonOwnerAccessType, setAccess } from "./access-service";
 import { getTheme } from "./theme-service";
 import { getUser, UserGetMinModel } from "./user-service";
 
@@ -49,7 +50,7 @@ export async function createMaterial(obj : MaterialPostCreateModel) : Promise<nu
     const accessId : number = await createAccess(author.id);
     
     const material = await getRepository(Material).save({ author, themes, accessId });
-    setUserNote(material.id, obj.authorId, obj.userNote);
+    await setUserNote(material.id, obj.authorId, obj.userNote);
     return material.id;
 }
 
@@ -80,11 +81,21 @@ export interface MaterialGetMaxModel extends MaterialGetMinModel {
     accessRules : AccessGetMaxModel
 }
 
-export async function getMaterialMax(materialId : number, userId : number) : Promise<MaterialGetMaxModel> {
-    const accessId = await getAccessId(materialId);
-    await checkAccessLevel(accessId, userId, AccessType.read);
+export async function getMaterialMax(materialId : number, actorId : number) : Promise<MaterialGetMaxModel> {
     return {
-        ...await getMaterialMin(materialId, userId),
-        accessRules : await getAccessMax(accessId)
+        ...await getMaterialMin(materialId, actorId),
+        accessRules : await getMaterialAccess(materialId, actorId)
     }
+}
+
+export async function getMaterialAccess(materialId : number, actorId : number) : Promise<AccessGetMaxModel> {
+    return getAccessId(materialId)
+        .then(accessId => getAccessMax(accessId, actorId));
+}
+
+export async function setMaterialUserAccess(materialId : number, 
+                                accessType : NonOwnerAccessType, userId : number,
+                                actorId : number) {    
+    return getAccessId(materialId)
+        .then(accessId => setAccess(accessId, userId, accessType, actorId));
 }

@@ -1,4 +1,6 @@
-// usernote (query, _) => send
+import { AccessGetMaxModel, NonOwnerAccessType } from "../services/access-service";
+
+// material/usernote (query, _) => send
 export interface GetUserNoteQuery {
     id : number
 }
@@ -6,10 +8,25 @@ export interface GetUserNoteSend {
     note ?: string
 }
 
-// usernote (query, body) => _
+// material/usernote (query, body) => _
 export interface PostUserNoteQuery {
     id : number
 }
 export interface PostUserNoteBody {
     note ?: string
+}
+
+// material/accessrules (query, _) => send
+export interface GetAccessRulesQuery {
+    id : number
+}
+export type GetAccessRulesSend = AccessGetMaxModel;
+
+// material/accessrules (query, body) => _
+export interface PutAccessRulesQuery {
+    id : number
+}
+export interface PutAccessRulesBody {
+    userId : number,
+    type : NonOwnerAccessType
 }

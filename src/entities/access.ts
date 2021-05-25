@@ -9,11 +9,4 @@ export class Access {
 
     @OneToMany(type => UserAccess, userAcess => userAcess.access)
     usersAccess !: UserAccess[];
-
-    @Column()
-    ownerId !: number
-
-    @ManyToOne(type => User)
-    @JoinColumn({ name: 'ownerId' })
-    owner !: User;
 }

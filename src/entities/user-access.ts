@@ -2,6 +2,14 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedC
 import { Access } from "./access";
 import { User } from "./user";
 
+export enum AccessType {
+    none = 0,
+    read = 1,
+    write = 2,
+    moderate = 3,
+    owner = 4
+}
+
 @Entity()
 export class UserAccess {
     @PrimaryColumn()
@@ -18,12 +26,6 @@ export class UserAccess {
     @JoinColumn({ name: 'accessId'})
     access !: Access;
     
-    /*
-        Acess types:
-        1 --- READ
-        2 --- WRITE
-        3 --- MODERATOR
-    */
-    @Column()
-    type !: number;
+    @Column({ type : 'enum', enum : AccessType })
+    type !: AccessType;
 }
