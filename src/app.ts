@@ -1,7 +1,7 @@
 import { resolve } from 'path'
 export const rootDir = resolve(__dirname + "\\..");
 
-import { initTemplates } from './compilation/process-tamplates';
+import { initTemplates } from './compilation/latex-templates';
 import { createTestData } from './processes/create-test-data';
 import { startExpress } from './processes/express-process';
 import { connectToDatabase, createDatabaseIfNotExists, dropDatabase } from './processes/mysql-process';

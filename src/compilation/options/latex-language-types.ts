@@ -1,4 +1,3 @@
-import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 
 export namespace dco {
     export type MainTypeSize = '10pt' | '11pt' | '12pt';
@@ -35,14 +34,6 @@ export type Length = [ number, LengthUnit ]
 export function lengthToString(length : Length) {
     return length[0].toString() + length[1];
 } 
-
-// export function stringify<Type extends Stringable>(obj : Type | string) : string {
-//     return typeof obj === "string" ? obj : obj.toTexString();
-// }
-
-// export function stringifyArr<Type extends Stringable | string>(arr : Type[]) : string {
-//     return arr.map(el => stringify(el)).join(',');
-// }
 
 export type MarginName = 'left' | 'right' | 'top' | 'bottom' | 'bindingoffset';
 

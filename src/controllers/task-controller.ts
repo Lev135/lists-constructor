@@ -3,7 +3,7 @@ import * as materialService from "../services/material-service"
 import * as t from "../types/task-types"
 import { ReqT, ResT } from "./mlib-controllers";
 import { PackageName } from "../compilation/options/latex-language-types";
-import { compilePdf } from "../compilation";
+import { compilePdf } from "../compilation/latex-compilation";
 import { getPackageName } from "../services/latex-service";
 
 export async function create(req : ReqT<void, t.PostCreateBody>, res : ResT<t.PostCreateSend>, _ : any) {

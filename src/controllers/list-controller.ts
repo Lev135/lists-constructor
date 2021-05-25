@@ -1,5 +1,5 @@
 import { getListPackages, ListCompileModel } from "../compilation/compilation-types";
-import { compilePdf } from "../compilation/index";
+import { compilePdf } from "../compilation/latex-compilation";
 import { PackageName } from "../compilation/options/latex-language-types";
 import { getPackageName } from "../services/latex-service";
 import * as listService from "../services/list-service";

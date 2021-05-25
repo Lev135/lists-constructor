@@ -1,6 +1,5 @@
-import express from 'express'
 import { Router } from 'express'
-import { initTemplates, updateTemplates } from '../compilation/process-tamplates';
+import { initTemplates, updateTemplates } from '../compilation/latex-templates';
 
 export const manageRouter = Router();
 
