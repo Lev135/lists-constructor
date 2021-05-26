@@ -8,8 +8,8 @@ export function pick<T2 extends object, T1 extends T2> (obj : T1, keysArr : Arra
     return res;
 }
 
-export function sortByField<T1, T2 extends keyof T1>(arr : T1[], key : T2) {
-    return arr.sort((a, b) => {
+export function sortByField<T1, T2 extends keyof T1>(arr : T1[], key : T2) : void {
+    arr.sort((a, b) => {
         if (a[key] < b[key])
             return -1;
         else if (a[key] == b[key])

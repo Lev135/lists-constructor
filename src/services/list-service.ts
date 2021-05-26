@@ -33,39 +33,33 @@ async function createBlockTasksItem(taskId : number, index : number, blockTasks 
 }
 
 async function createBlock(blockObj : ListBlockPostModel, index : number, list : List) {
-    const block = getRepository(ListBlock).create({ index, list });
-    await getRepository(ListBlock).save(block);
+    const block = await getRepository(ListBlock).save({ index, list });
     if ('taskIds' in blockObj) {
         const blockTasks = await getRepository(ListBlockTasks).save({ listBlock : block });
-        const promises = [];
-        for (let i = 0; i < blockObj.taskIds.length; ++i) {
-            promises.push(createBlockTasksItem(blockObj.taskIds[i], i, blockTasks));
-        }
-        await Promise.all(promises);
+        await Promise.all(blockObj.taskIds.map((taskId, i) => 
+            createBlockTasksItem(taskId, i, blockTasks)    
+        ));
     }
     else {
-        const commentBlock = getRepository(ListBlockComment).create({
+        await getRepository(ListBlockComment).save({
             listBlock : block, 
             body : await createLatexField(blockObj.body) 
         });
-        await getRepository(ListBlockComment).save(commentBlock);
     }
 }
 
-async function createBlocks(blocksObj : ListBlockPostModel[], list : List) {
-    const promises = [];
-    for (let i = 0; i < blocksObj.length; ++i) {
-        promises.push(createBlock(blocksObj[i], i, list));
-    }
-    await Promise.all(promises);
+async function createBlocks(blocksObj : ListBlockPostModel[], list : List) : Promise<void>{
+    return Promise.all(blocksObj.map((blocksObj, i) =>
+        createBlock(blocksObj, i, list)
+    )).then()
 }
 
 export async function createList(materialId : number, obj : ListPostCreateModel) : Promise<number> {
-    const list : List = await getRepository(List).save({ id: materialId, name: obj.name });
-    await Promise.all([
-        createBlocks(obj.blocks, list),
-    ]);
-
+    const list : List = await getRepository(List).save({
+        id: materialId,
+        name: obj.name
+    });
+    await createBlocks(obj.blocks, list);
     return list.id;
 }
 
@@ -125,7 +119,6 @@ export async function getListMin(id: number) : Promise<ListGetMinModel> {
         const list : List = await createQueryBuilder(List, 'list')
             .where('list.id = :id', { id })
             .getOneOrFail();
-        console.log('list', list);
         return {
             id : list.id,
             name : list.name,
@@ -198,10 +191,10 @@ export async function getListCompile(id : number) : Promise<ListCompModel> {
         .leftJoin('list.blocks', 'block')
             .addSelect(keysForSelection<ListBlock>('block', [ 'id', 'index' ]))
         .getOneOrFail();
-    console.log('list', list);
+    sortByField(list.blocks, 'index');
     return {
         id,
         name: list.name,
-        blocks: await Promise.all(sortByField(list.blocks, 'index').map(block => getBlockComp(block.id)))
+        blocks: await Promise.all(list.blocks.map(block => getBlockComp(block.id)))
     }   
 }

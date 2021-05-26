@@ -14,31 +14,31 @@ export interface ThemeGetTreeModel extends ThemePostCreateTreeModel {
 }
 
 function getTree(theme : Theme) : ThemeGetTreeModel {
+    const subThemes = theme.subThemes.map(getTree);
+    sortByField(subThemes, 'name');
     return {
         id : theme.id,
         name : theme.name,
-        subThemes : sortByField(theme.subThemes.map(theme => getTree(theme)), 'name')
+        subThemes
     };
 }
 
 export async function getThemeTrees() : Promise<ThemeGetTreeModel[]> {
-    return sortByField(
-        (await getTreeRepository(Theme).findTrees())
-            .map(theme => getTree(theme)),
-        'name');
+    const themeTrees = (await getTreeRepository(Theme).findTrees()).map(getTree);
+    sortByField(themeTrees, 'name');
+    return themeTrees
 }
 
 async function createThemeTree(model : ThemePostCreateTreeModel) : Promise<Theme> {
-    const children = await Promise.all(model.subThemes.map(theme => createThemeTree(theme)));
-    const tree = getRepository(Theme).create({
+    const children = await Promise.all(model.subThemes.map(createThemeTree));
+    return getRepository(Theme).save({
         name : model.name,
         subThemes : children
     });
-    return getRepository(Theme).save(tree);
 }
 
 export async function createThemeTrees(trees : ThemePostCreateTreeModel[]) {
-    await Promise.all(trees.map(tree => createThemeTree(tree)));
+    await Promise.all(trees.map(createThemeTree));
 }
 
 export async function clearThemes() {

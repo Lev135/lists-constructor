@@ -161,11 +161,11 @@ export async function draftGet(draftId : number) : Promise<DraftGetModel> {
         .leftJoin('draft.owner', 'user')
             .addSelect(keysForSelection<User>('user', keys<UserGetMinModel>()))
         .getOneOrFail();
-    const blockPromises : Promise<DraftBlockGetModel>[] = 
-        sortByField(draft.blocks, 'index').map(blockGet);
+    sortByField(draft.blocks, 'index');
+    const blocks = await Promise.all(draft.blocks.map(blockGet));
     return {
         name : draft.name,
         owner : draft.owner,
-        blocks : await Promise.all(blockPromises)
+        blocks
     }
 }

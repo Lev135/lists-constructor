@@ -23,7 +23,11 @@ export interface MaterialPostCreateModel {
     userNote?: string
 }
 
-async function getAccessId(materialId : number) {
+async function getMaterial(id : number) : Promise<Material> {
+    return getRepository(Material).findOneOrFail(id);
+}
+
+async function getAccessId(materialId : number) : Promise<number> {
     return getMaterial(materialId).then(mat => mat.accessId);
 }
 
@@ -54,10 +58,6 @@ export async function createMaterial(obj : MaterialPostCreateModel) : Promise<nu
     return material.id;
 }
 
-function getMaterial(id : number) : Promise<Material> {
-    return getRepository(Material).findOneOrFail(id);
-}
-
 export async function setUserNote(materialId : number, userId : number, note ?: string) : Promise<void> {
     if (note) {
         await getRepository(UserNote).save({
@@ -71,10 +71,9 @@ export async function setUserNote(materialId : number, userId : number, note ?: 
     }
 }
 
-export async function getUserNote(materialId : number, userId?: number) : Promise<string | undefined> {
-    if (userId === undefined)
-        return;
-    return (await getRepository(UserNote).findOne({ materialId, userId }))?.body;
+export async function getUserNote(materialId : number, userId: number) : Promise<string | undefined> {
+    return getRepository(UserNote).findOne({ materialId, userId })
+                .then(note => note?.body)
 }
 
 export interface MaterialGetMaxModel extends MaterialGetMinModel {
