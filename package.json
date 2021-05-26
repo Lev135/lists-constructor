@@ -28,7 +28,9 @@
   "scripts": {
     "start": "node --unhandled-rejections=strict ./dist/app.js",
     "tsc": "ttsc",
-    "a": "npm run tsc && npm start"
+    "a": "npm run tsc && npm start",
+    "startd": "node --unhandled-rejections=strict ./dist/app.js --drop --sync --data",
+    "ad": "npm run tsc && npm run startd"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^8.5.1",

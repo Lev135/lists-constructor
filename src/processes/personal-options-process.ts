@@ -1,29 +1,8 @@
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { LoggerOptions } from "typeorm";
-
-interface DatabaseOptions {
-  name: string,
-  user: string,
-  password: string,
-  host: string,
-  port: number,
-  logging?: LoggerOptions,
-  logger?: "advanced-console" | "simple-console" | "file" | "debug"
-}
-
-interface ServerOptions {
-  port: number
-}
+import GetOpt from 'node-getopt';
 
 type RunBlock = 'dropDataBase' | 'syncDataBase' | 'clearTables' | 'createTestData' | 'runTests' | 'startServer'
-
-type RunSequence = RunBlock[];
-
-export interface PersonalOptionsModel {
-  dataBase: DatabaseOptions,
-  server: ServerOptions,
-  defaultRun?: RunSequence
-}
 
 export interface IPersonalOptions {
   "options-version": number,
@@ -47,12 +26,12 @@ export interface IPersonalOptions {
 const optionsPath = './personal-options.json';
 const genOptionsPath = './generated-personal-options.json';
 
-function readOptions(): IPersonalOptions {
+function readOptions() : IPersonalOptions {
   const optionsStr = readFileSync(optionsPath, 'utf8').toString();
   return optionsStr.split(/(?={")/).map(x => JSON.parse(x))[0];
 }
 
-function createOptionsFile(path : string): void {
+function createOptionsFile(path : string) : void {
   const obj: IPersonalOptions = {
     "options-version" : 1,
     dataBase: {
@@ -81,6 +60,37 @@ function createOptionsFile(path : string): void {
 
 export let options: IPersonalOptions;
 
+interface RunOption {
+  shortName : string;
+  name : string;
+  descr : string;
+  runBlock : RunBlock;
+}
+
+const runOptions : RunOption[] = [
+  { shortName : 'd',  name : 'drop',   runBlock : 'dropDataBase',    descr : "Drop database"    },
+  { shortName : '',   name : 'sync',   runBlock : 'syncDataBase',    descr : "Sync database"    },
+  { shortName : 'c',  name : 'clear',  runBlock : 'clearTables',     descr : "Clear tables"     },
+  { shortName : '',   name : 'data',   runBlock : 'createTestData',  descr : "Create test data" },
+  { shortName : 't',  name : 'test',   runBlock : 'runTests',        descr : "Run tests"        },
+  { shortName : 's',  name : 'start',  runBlock : 'startServer',     descr : "Start server"     }
+]
+
+
+
+export function updateOptionsByConsole() {
+  const getOpt = GetOpt.create(runOptions.map(opt => [
+    opt.shortName, opt.name, opt.descr
+  ])).bindHelp().parseSystem();
+
+  runOptions.forEach(opt => {
+    const curOptState = getOpt.options[opt.name];
+    if (typeof(curOptState) == "boolean") {
+      options.run[opt.runBlock] = curOptState;
+    }
+  });
+}
+
 export function initOptions() {
   if (!existsSync(optionsPath)) {
     createOptionsFile(optionsPath);
@@ -93,4 +103,5 @@ export function initOptions() {
     throw new Error("Файл 'personal-options.json', находящийся в корневой директории, устарел"
       + "Отредактируйте его в соответствии с автоматически созданным 'generated-personal-options.json' и перезапустите программу") 
   }
+  updateOptionsByConsole();
 }
