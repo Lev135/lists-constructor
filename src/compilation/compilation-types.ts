@@ -1,11 +1,11 @@
-import { ListBlockCompModel, ListCompModel } from "../services/list-service";
-import { UserGetMinModel } from "../services/user-service";
+import { ListBlockComp } from "../types/list-impl-types";
+import { UserMin } from "../services/user-service";
 
 export interface ListCompileModel {
     id: number,
-    author: UserGetMinModel,
+    author: UserMin,
     name: string,
-    blocks: ListBlockCompModel[]
+    blocks: ListBlockComp[]
 }
 
 export function getListPackages(obj : ListCompileModel) : string[] {

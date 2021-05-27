@@ -11,12 +11,7 @@ async function createLatexTasks() : Promise<number[]> {
     const promises : Promise<number>[] = [];
     for (const fileName of fileNames) {
         const statement : string = readFileSync(taskStatementsDir + "/" + fileName).toString();
-        console.log('statement', statement);
-        const materialId : number = await createMaterial({
-            authorId : 1,
-            themeIds : []
-        });
-        promises.push(createTask(materialId, {
+        promises.push(createTask({
             statement : {
                 body : statement,
                 packageUuids : [],
@@ -24,7 +19,8 @@ async function createLatexTasks() : Promise<number[]> {
             answer : "",
             remarks : [],
             solutions : [],
-        }));
+            themeIds : []
+        }, 1));
     }
     return Promise.all(promises);
 }
@@ -33,11 +29,7 @@ export async function createLatexTestData() {
     const ids : number[] = await createLatexTasks();
     const firstBlockIds = ids.slice();
     const secondBlockIds = ids.slice(1).reverse();
-    const materialId : number = await createMaterial({
-        authorId : 1,
-        themeIds : []
-    })
-    await createList(materialId, {
+    await createList({
         name : 'first \LaTeX list',
         blocks : [
             {
@@ -64,6 +56,7 @@ export async function createLatexTestData() {
                     packageUuids : []
                 }
             }
-        ]
-    });
+        ],
+        themeIds : []
+    }, 1);
 }

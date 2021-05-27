@@ -4,11 +4,7 @@ import { inspect } from 'util'
 import { createMaterial } from '../services/material-service';
 
 export async function testListService() {
-    const materialId : number = await createMaterial({
-        authorId : testUserIds[0],
-        themeIds : []
-    })
-    const listId : number = await listService.createList(materialId, {
+    const listId : number = await listService.createList({
         name: 'list 1',
         blocks: [
             {
@@ -29,12 +25,13 @@ export async function testListService() {
             {
                 taskIds: [ testTaskIds[1], testTaskIds[0] ]
             }
-        ]
-    });
+        ],
+        themeIds : []
+    }, 1);
     
     console.log(listId);
-    const listMinObj : listService.ListGetMinModel = await listService.getListMin(listId);
+    const listMinObj : listService.ListMin = await listService.getListMin(listId, 1);
     console.log('listMinObj', inspect(listMinObj, false, null, true));
-    const listMaxObj : listService.ListGetMaxModel = await listService.getListMax(listId);
+    const listMaxObj : listService.ListMax = await listService.getListMax(listId, 1);
     console.log('listMaxObj', inspect(listMaxObj, false, null, true));
 }

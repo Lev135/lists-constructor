@@ -11,7 +11,7 @@ export interface UserTokenInfo {
     id: number
 };
 
-export async function checkAuth(token: string): Promise<userService.UserGetMinModel | null> {
+export async function checkAuth(token: string): Promise<userService.UserMin | null> {
     if (!token) {
         return null;
     }

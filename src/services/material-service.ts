@@ -6,37 +6,33 @@ import { UserNote } from "../entities/material/user-note";
 import { User } from "../entities/user";
 import { AccessType } from "../entities/user-access";
 import { keysForSelection } from "../mlib";
-import { AccessGetMaxModel, checkAccessLevel, createAccess, getAccessMax, NonOwnerAccessType, setAccess } from "./access-service";
+import { AccessMax, accessLevel, checkAccessLevel, createAccess, getAccessMax, NonOwnerAccessType, setAccess } from "./access-service";
 import { getTheme } from "./theme-service";
-import { getUser, UserGetMinModel } from "./user-service";
+import { getUser, UserMin } from "./user-service";
 
-export interface MaterialGetMinModel {
-    author : UserGetMinModel,
-    themeIds : number[],
-    creationDate : Date,
-    userNote?: string
-}
-
-export interface MaterialPostCreateModel {
+export interface MaterialCreate {
     authorId : number,
     themeIds : number[],
     userNote?: string
 }
 
-async function getMaterial(id : number) : Promise<Material> {
-    return getRepository(Material).findOneOrFail(id);
+export interface MaterialMin {
+    author : UserMin,
+    themeIds : number[],
+    creationDate : Date,
+    userNote?: string
 }
 
-async function getAccessId(materialId : number) : Promise<number> {
-    return getMaterial(materialId).then(mat => mat.accessId);
+export interface MaterialMax extends MaterialMin {
+    accessRules : AccessMax
 }
 
-export async function getMaterialMin(id : number, userId : number) : Promise<MaterialGetMinModel> {
+export async function getMaterialMin(id : number, userId : number) : Promise<MaterialMin> {
     await checkAccessLevel(await getAccessId(id), userId, AccessType.read);
     const material = await createQueryBuilder(Material, 'material')
         .where({id})
         .innerJoin('material.author', 'author')
-            .addSelect(keysForSelection<User>('author', keys<UserGetMinModel>()))
+            .addSelect(keysForSelection<User>('author', keys<UserMin>()))
         .leftJoin('material.themes', 'theme')
             .addSelect(keysForSelection<Theme>('theme', ['id']))
         .getOneOrFail();
@@ -48,7 +44,7 @@ export async function getMaterialMin(id : number, userId : number) : Promise<Mat
     }
 }
 
-export async function createMaterial(obj : MaterialPostCreateModel) : Promise<number> {
+export async function createMaterial(obj : MaterialCreate) : Promise<number> {
     const author : User = await getUser(obj.authorId);
     const themes : Theme[] = await Promise.all(obj.themeIds.map(id => getTheme(id)));
     const accessId : number = await createAccess(author.id);
@@ -76,18 +72,14 @@ export async function getUserNote(materialId : number, userId: number) : Promise
                 .then(note => note?.body)
 }
 
-export interface MaterialGetMaxModel extends MaterialGetMinModel {
-    accessRules : AccessGetMaxModel
-}
-
-export async function getMaterialMax(materialId : number, actorId : number) : Promise<MaterialGetMaxModel> {
+export async function getMaterialMax(materialId : number, actorId : number) : Promise<MaterialMax> {
     return {
         ...await getMaterialMin(materialId, actorId),
         accessRules : await getMaterialAccess(materialId, actorId)
     }
 }
 
-export async function getMaterialAccess(materialId : number, actorId : number) : Promise<AccessGetMaxModel> {
+export async function getMaterialAccess(materialId : number, actorId : number) : Promise<AccessMax> {
     return getAccessId(materialId)
         .then(accessId => getAccessMax(accessId, actorId));
 }
@@ -97,4 +89,27 @@ export async function setMaterialUserAccess(materialId : number,
                                 actorId : number) {    
     return getAccessId(materialId)
         .then(accessId => setAccess(accessId, userId, accessType, actorId));
+}
+
+export async function materialAcessLevel(materialId : number,
+                                         userId : number) : Promise<AccessType> {
+    return getAccessId(materialId)
+        .then(accessId => accessLevel(accessId, userId));
+}
+
+export async function materialCheckAccessLevel(materialId : number,
+                                               userId : number, 
+                                               minLevel : AccessType) {
+    return getAccessId(materialId)
+        .then(accessId => checkAccessLevel(accessId, userId, minLevel));
+}
+
+// private methods implementation
+
+async function getMaterial(id : number) : Promise<Material> {
+    return getRepository(Material).findOneOrFail(id);
+}
+
+async function getAccessId(materialId : number) : Promise<number> {
+    return getMaterial(materialId).then(mat => mat.accessId);
 }

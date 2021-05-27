@@ -1,8 +1,8 @@
 import { GlobalOptions } from "../compilation/options/global-options";
-import { AccessGetMaxModel } from "../services/access-service";
+import { AccessMax } from "../services/access-service";
 import { LatexFieldGetModel, LatexFieldPostModel } from "../services/latex-service";
-import { TaskRemarkModel } from "../services/task-service";
-import { UserGetMinModel } from "../services/user-service";
+import { UserMin } from "../services/user-service";
+import { TaskRemarkModel } from "./task-impl-types";
 
 // task/create (_, body) => send
 export interface PostCreateBody {
@@ -23,7 +23,7 @@ export interface GetViewQuery {
 }
 export interface GetViewSend {
     id : number,
-    author: UserGetMinModel,
+    author: UserMin,
     statement : LatexFieldGetModel,
     themeIds : number[],
     creationDate: Date,
@@ -31,7 +31,7 @@ export interface GetViewSend {
     solutions: LatexFieldGetModel[],
     remarks: TaskRemarkModel[]
     userNote ?: string,
-    accessRules : AccessGetMaxModel
+    accessRules : AccessMax
 }
 
 // task/compile (query, body) => send

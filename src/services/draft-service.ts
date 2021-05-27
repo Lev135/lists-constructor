@@ -1,11 +1,11 @@
 import { createQueryBuilder, getRepository } from "typeorm";
 import { Draft } from "../entities/draft/draft";
-import { getUser, UserGetMinModel } from "./user-service";
+import { getUser, UserMin } from "./user-service";
 import { DraftBlockComment } from '../entities/draft/draft-block-comment'
 import { DraftBlock } from "../entities/draft/draft-block";
 import { DraftBlockTask } from "../entities/draft/draft-block-task";
 import { Task } from "../entities/task/task";
-import { getTaskMin, TaskGetMinModel } from "./task-service";
+import { getTaskMin, TaskMin } from "./task-service";
 import { keysForSelection, sortByField } from "../mlib";
 import { keys } from "ts-transformer-keys";
 import { User } from "../entities/user";
@@ -124,7 +124,7 @@ export async function moveBlock(draftId : number, index : number, newIndex : num
 }
 
 export type DraftBlockCommentModel = string;
-export type DraftBlockTaskGetModel = TaskGetMinModel;
+export type DraftBlockTaskGetModel = TaskMin;
 export type DraftBlockTaskPostModel = number;
 
 export type DraftBlockGetModel = DraftBlockCommentModel | DraftBlockTaskGetModel;
@@ -132,7 +132,7 @@ export type DraftBlockPostModel = DraftBlockCommentModel | DraftBlockTaskPostMod
 
 export interface DraftGetModel {
     name : string,
-    owner : UserGetMinModel,
+    owner : UserMin,
     blocks : DraftBlockGetModel[]
 }
 export interface DraftPostModel {
@@ -140,7 +140,7 @@ export interface DraftPostModel {
     blocks : DraftBlockPostModel[]
 }
 
-async function blockGet(abstractBlock : DraftBlock) : Promise<DraftBlockGetModel>{
+async function blockGet(abstractBlock : DraftBlock, actorId : number) : Promise<DraftBlockGetModel>{
     const commentBlock  = await getRepository(DraftBlockComment)
         .findOne(abstractBlock.id);
     if (commentBlock) {
@@ -150,19 +150,19 @@ async function blockGet(abstractBlock : DraftBlock) : Promise<DraftBlockGetModel
         .where("id = :id", { id : abstractBlock.id })
         .select('taskId')
         .getRawOne();
-    return getTaskMin(taskId);
+    return getTaskMin(taskId, actorId);
 }
 
-export async function draftGet(draftId : number) : Promise<DraftGetModel> {
+export async function draftGet(draftId : number, actorId : number) : Promise<DraftGetModel> {
     const draft : Draft = await createQueryBuilder(Draft, 'draft')
         .where('draft.id = :id', { id : draftId })
         .leftJoin('draft.blocks', 'block')
             .addSelect(keysForSelection<DraftBlock>('block', [ 'id', 'index' ]))
         .leftJoin('draft.owner', 'user')
-            .addSelect(keysForSelection<User>('user', keys<UserGetMinModel>()))
+            .addSelect(keysForSelection<User>('user', keys<UserMin>()))
         .getOneOrFail();
     sortByField(draft.blocks, 'index');
-    const blocks = await Promise.all(draft.blocks.map(blockGet));
+    const blocks = await Promise.all(draft.blocks.map(block => blockGet(block, actorId)));
     return {
         name : draft.name,
         owner : draft.owner,

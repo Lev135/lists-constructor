@@ -8,8 +8,8 @@ export const logObject = (obj : any) =>
 
 export async function testTaskService() {
     const taskId : number = testTaskIds[0];
-    const taskMin = await taskService.getTaskMin(taskId);
+    const taskMin = await taskService.getTaskMin(taskId, 1);
     logObject(taskMin)
-    const taskMax = await taskService.getTaskMax(taskId);
+    const taskMax = await taskService.getTaskMax(taskId, 1);
     logObject(taskMax);
 }

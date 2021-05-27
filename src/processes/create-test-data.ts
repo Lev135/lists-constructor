@@ -1,12 +1,11 @@
 import * as userService from '../services/user-service'
 import * as themeService from '../services/theme-service'
 import * as taskService from '../services/task-service' 
-import * as materialService from '../services/material-service'
 import { getRepository } from 'typeorm';
 import { User } from '../entities/user';
 import { addPackage, addPackages, getPackages } from '../services/latex-service';
 
-const testUserModels : userService.UserPostRegistrationModel[] = [
+const testUserModels : userService.UserRegistration[] = [
     {
         name: 'admin',
         surname: 'adminov',
@@ -55,7 +54,7 @@ const testThemeTree : themeService.ThemePostCreateTreeModel[] = [
 ];
 export let testThemeIds : number[] = [];
 
-const testTaskModels : taskService.TaskPostCreateModel[] = [
+const testTaskModels : taskService.TaskCreate[] = [
     {
         statement: {
             body : "test statement",
@@ -81,7 +80,9 @@ const testTaskModels : taskService.TaskPostCreateModel[] = [
                 label: "2 note",
                 body: "second note"
             }
-        ]
+        ],
+        themeIds : [],
+        userNote : "User Note"
     },
     {
         statement: {
@@ -90,7 +91,8 @@ const testTaskModels : taskService.TaskPostCreateModel[] = [
         },
         answer: "2 answer",
         solutions: [],
-        remarks: []
+        remarks: [],
+        themeIds : []
     },
     {
         statement: {
@@ -105,6 +107,8 @@ const testTaskModels : taskService.TaskPostCreateModel[] = [
             }
         ],
         remarks: [],
+        themeIds : [],
+        userNote : "User note"
     }
 ];
 export let testTaskIds : number[] = [];
@@ -135,11 +139,7 @@ async function createTestTasks() {
     console.log("Creating tasks...");
     for (const model of testTaskModels) {
         const authorId : number = testUserIds[model.answer.length % testUserIds.length];
-        const materialId : number = await materialService.createMaterial({
-            authorId,
-            themeIds : [ testThemeIds[0] ]
-        })
-        testTaskIds.push(await taskService.createTask(materialId, model));
+        testTaskIds.push(await taskService.createTask(model, authorId));
     }
     console.log("tasks were created successfuly");
 }

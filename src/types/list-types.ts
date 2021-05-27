@@ -1,12 +1,12 @@
 import { GlobalOptions } from "../compilation/options/global-options";
-import { AccessGetMaxModel } from "../services/access-service";
-import { ListBlockPostModel, ListBlockGetModel } from "../services/list-service";
-import { UserGetMinModel } from "../services/user-service";
+import { AccessMax } from "../services/access-service";
+import { ListBlockCreate, ListBlockModel } from "./list-impl-types";
+import { UserMin } from "../services/user-service";
 
 // list/create (_, body) => send
 export interface PostCreateBody {
     name : string,
-    blocks : ListBlockPostModel[],
+    blocks : ListBlockCreate[],
     themeIds : number[],
     userNote ?: string
 }
@@ -20,13 +20,13 @@ export interface GetViewQuery {
 }
 export interface GetViewSend {
     id: number,
-    author: UserGetMinModel,
+    author: UserMin,
     name: string,
     themeIds: number[],
     creationDate: Date,
-    blocks: ListBlockGetModel[]
+    blocks: ListBlockModel[]
     userNote ?: string,
-    accessRules : AccessGetMaxModel
+    accessRules : AccessMax
 }
 
 // list/compile (query, body) => send

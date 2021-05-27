@@ -1,4 +1,6 @@
 import { createQueryBuilder, getRepository } from "typeorm";
+import { getListPackages } from "../compilation/compilation-types";
+import { PackageName } from "../compilation/options/latex-language-types";
 import { LatexField } from "../entities/latex/latex-field";
 import { List } from "../entities/list/list";
 import { ListBlock } from "../entities/list/list-block";
@@ -7,54 +9,78 @@ import { ListBlockTaskItem } from "../entities/list/list-block-task-item";
 import { ListBlockTasks } from "../entities/list/list-block-tasks";
 import { Task } from "../entities/task/task";
 import { keysForSelection, sortByField } from "../mlib";
-import { createLatexField, getLatexField, getLatexFieldComp, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
-import { getTaskComp, getTaskMin, TaskCompModel, TaskGetMinModel } from "./task-service";
+import { ListBlockComp, ListBlockModel, ListBlockCreate, ListComplImpl, ListMaxImpl, ListMinImpl, ListCreateImpl } from "../types/list-impl-types";
+import { AccessMax } from "./access-service";
+import { createLatexField, getLatexField, getLatexFieldComp, getPackageName, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
+import { createMaterial, getMaterialMax, getMaterialMin } from "./material-service";
+import { getTaskComp, getTaskMin } from "./task-service";
+import { UserMin } from "./user-service";
+
+
+export interface ListCreate extends ListCreateImpl {
+    themeIds : number[],
+    userNote ?: string
+}
+
+export async function createList(obj : ListCreate, actorId : number) : Promise<number> {
+    return createMaterial({
+        authorId : actorId, ...obj
+    }).then(materialId => createListImpl(materialId, obj));
+}
+
+export interface ListMin extends ListMinImpl {
+    author : UserMin;
+//    owner : UserMin; TODO
+}
+
+export async function getListMin(id : number, actorId : number) : Promise<ListMin> {
+    const material = await getMaterialMin(id, actorId);
+    const list = await getListMinImpl(id);
+    return {
+        ...list,
+        author : material.author,
+    };
+}
+
+export interface ListMax extends ListMaxImpl {
+    author : UserMin;
+    themeIds : number[];
+    creationDate : Date;
+    userNote ?: string;
+    accessRules : AccessMax;
+}
+
+export async function getListMax(id: number, actorId : number) : Promise<ListMax> {
+    const material = await getMaterialMax(id, actorId);
+    const list = await getListMaxImpl(id, actorId);
+    return {
+        ...material,
+        ...list
+    }
+}
+
+export interface ListComp extends ListComplImpl {
+    packages : string[];
+    author : UserMin;
+}
+
+export async function getListComp(id : number, actorId : number) : Promise<ListComp> {
+    const material = await getMaterialMin(id, actorId);
+    const listComp = await getListCompImpl(id, actorId);
+    const packages : PackageName[] = await Promise.all(
+        getListPackages({ ...listComp, author: material.author }).map(getPackageName)
+    );
+    
+    return {
+        ...listComp,
+        packages,
+        author : material.author
+    };
+}
 
 // POST models:
 
-export interface ListBlockCommentPostModel {
-    body : LatexFieldPostModel
-}
-export interface ListBlockTasksPostModel {
-    taskIds : number[]
-}
-export type  ListBlockPostModel = ListBlockCommentPostModel | ListBlockTasksPostModel;
-export interface ListPostCreateModel {
-    name : string,
-    blocks : ListBlockPostModel[],
-};
-
-async function createBlockTasksItem(taskId : number, index : number, blockTasks : ListBlockTasks) {
-    await getRepository(ListBlockTaskItem).save({
-        block : blockTasks,
-        index,
-        taskId
-    });
-}
-
-async function createBlock(blockObj : ListBlockPostModel, index : number, list : List) {
-    const block = await getRepository(ListBlock).save({ index, list });
-    if ('taskIds' in blockObj) {
-        const blockTasks = await getRepository(ListBlockTasks).save({ listBlock : block });
-        await Promise.all(blockObj.taskIds.map((taskId, i) => 
-            createBlockTasksItem(taskId, i, blockTasks)    
-        ));
-    }
-    else {
-        await getRepository(ListBlockComment).save({
-            listBlock : block, 
-            body : await createLatexField(blockObj.body) 
-        });
-    }
-}
-
-async function createBlocks(blocksObj : ListBlockPostModel[], list : List) : Promise<void>{
-    return Promise.all(blocksObj.map((blocksObj, i) =>
-        createBlock(blocksObj, i, list)
-    )).then()
-}
-
-export async function createList(materialId : number, obj : ListPostCreateModel) : Promise<number> {
+async function createListImpl(materialId : number, obj : ListCreateImpl) : Promise<number> {
     const list : List = await getRepository(List).save({
         id: materialId,
         name: obj.name
@@ -63,40 +89,7 @@ export async function createList(materialId : number, obj : ListPostCreateModel)
     return list.id;
 }
 
-export interface ListGetMinModel {
-    id: number,
-    name: string,
-}
-
-export interface ListBlockCommentGetModel {
-    body : LatexFieldGetModel
-}
-
-export interface ListBlockTasksGetModel {
-    tasks: TaskGetMinModel[]
-}
-export type ListBlockGetModel = ListBlockCommentGetModel | ListBlockTasksGetModel;
-
-export interface ListGetMaxModel extends ListGetMinModel{
-    blocks: ListBlockGetModel[]
-}
-
-
-export interface ListBlockTasksCompModel {
-    tasks: TaskCompModel[]
-}
-
-export interface ListBlockCommentCompModel {
-    body : LatexFieldCompModel
-}
-
-export type ListBlockCompModel = ListBlockCommentCompModel | ListBlockTasksCompModel;
-
-export interface ListCompModel extends ListGetMinModel {
-    blocks: ListBlockCompModel[]
-}
-
-export async function getBlock(obj : ListBlock) : Promise<ListBlockGetModel> {
+async function getBlock(obj : ListBlock, actorId : number) : Promise<ListBlockModel> {
     if (obj.blockComment) {
         return {
             body : await getLatexField(obj.blockComment.bodyId)
@@ -105,7 +98,7 @@ export async function getBlock(obj : ListBlock) : Promise<ListBlockGetModel> {
     else if (obj.blockTasks) {
         return {
             tasks : await Promise.all(
-                obj.blockTasks.taskItems.map(item => getTaskMin(item.task.id))
+                obj.blockTasks.taskItems.map(item => getTaskMin(item.task.id, actorId))
             )
         }
     }
@@ -114,7 +107,7 @@ export async function getBlock(obj : ListBlock) : Promise<ListBlockGetModel> {
     }
 }
 
-export async function getListMin(id: number) : Promise<ListGetMinModel> {
+async function getListMinImpl(id: number) : Promise<ListMinImpl> {
     try {
         const list : List = await createQueryBuilder(List, 'list')
             .where('list.id = :id', { id })
@@ -130,7 +123,7 @@ export async function getListMin(id: number) : Promise<ListGetMinModel> {
     }
 }
 
-export async function getListMax(id : number) : Promise<ListGetMaxModel> {
+async function getListMaxImpl(id : number, actorId : number) : Promise<ListMaxImpl> {
     try {
         const list : List = await createQueryBuilder(List, 'list')
             .where('list.id = :id', { id })
@@ -149,7 +142,7 @@ export async function getListMax(id : number) : Promise<ListGetMaxModel> {
         return {
             id,
             name: list.name,
-            blocks: await Promise.all(list.blocks.map(block => getBlock(block)))
+            blocks: await Promise.all(list.blocks.map(block => getBlock(block, actorId)))
         }
     }
     catch (err) {
@@ -158,7 +151,7 @@ export async function getListMax(id : number) : Promise<ListGetMaxModel> {
     }
 }
 
-async function getBlockComp(blockId : number) : Promise<ListBlockCompModel> {
+async function getBlockComp(blockId : number, actorId : number) : Promise<ListBlockComp> {
     const commentBlock : ListBlockComment | undefined = await createQueryBuilder(ListBlockComment, 'comment')
         .where({id : blockId})
         .leftJoin('comment.body', 'body')
@@ -179,13 +172,13 @@ async function getBlockComp(blockId : number) : Promise<ListBlockCompModel> {
     if (tasksBlock) {
         sortByField(tasksBlock.taskItems, 'index');
         return {
-            tasks : await Promise.all(tasksBlock.taskItems.map(item => getTaskComp(item.task.id)))
+            tasks : await Promise.all(tasksBlock.taskItems.map(item => getTaskComp(item.task.id, actorId)))
         }
     }
     throw new Error("Unknown block type");
 }
 
-export async function getListCompile(id : number) : Promise<ListCompModel> {
+async function getListCompImpl(id : number, actorId : number) : Promise<ListComplImpl> {
     const list : List = await createQueryBuilder(List, 'list')
         .where('list.id = :id', { id })
         .leftJoin('list.blocks', 'block')
@@ -195,6 +188,37 @@ export async function getListCompile(id : number) : Promise<ListCompModel> {
     return {
         id,
         name: list.name,
-        blocks: await Promise.all(list.blocks.map(block => getBlockComp(block.id)))
+        blocks: await Promise.all(list.blocks.map(block => getBlockComp(block.id, actorId)))
     }   
 }
+
+async function createBlockTasksItem(taskId : number, index : number, blockTasks : ListBlockTasks) {
+    await getRepository(ListBlockTaskItem).save({
+        block : blockTasks,
+        index,
+        taskId
+    });
+}
+
+async function createBlock(blockObj : ListBlockCreate, index : number, list : List) {
+    const block = await getRepository(ListBlock).save({ index, list });
+    if ('taskIds' in blockObj) {
+        const blockTasks = await getRepository(ListBlockTasks).save({ listBlock : block });
+        await Promise.all(blockObj.taskIds.map((taskId, i) => 
+            createBlockTasksItem(taskId, i, blockTasks)    
+        ));
+    }
+    else {
+        await getRepository(ListBlockComment).save({
+            listBlock : block, 
+            body : await createLatexField(blockObj.body) 
+        });
+    }
+}
+
+async function createBlocks(blocksObj : ListBlockCreate[], list : List) : Promise<void>{
+    return Promise.all(blocksObj.map((blocksObj, i) =>
+        createBlock(blocksObj, i, list)
+    )).then()
+}
+
