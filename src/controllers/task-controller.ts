@@ -1,6 +1,6 @@
 import * as taskService  from "../services/task-service";
 import * as t from "../types/task-types"
-import { processError, ReqT, ResT } from "./mlib-controllers";
+import { processError, ReqT, ResT } from "../mlib";
 import { compilePdf } from "../compilation/latex-compilation";
 
 export async function create(req : ReqT<void, t.PostCreateBody>, res : ResT<t.PostCreateSend>, _ : any) {

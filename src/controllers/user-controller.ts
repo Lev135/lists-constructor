@@ -3,7 +3,7 @@ import * as userService from '../services/user-service';
 import jwt from 'jsonwebtoken';
 import { keys } from 'ts-transformer-keys';
 import * as t from '../types/user-types';
-import { ReqT, ResT } from './mlib-controllers';
+import { ReqT, ResT } from "../mlib";
 
 const SECRETKEY = 'SECRET_KEY'
 

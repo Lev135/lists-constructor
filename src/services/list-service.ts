@@ -8,11 +8,12 @@ import { ListBlockComment } from "../entities/list/list-block-comment";
 import { ListBlockTaskItem } from "../entities/list/list-block-task-item";
 import { ListBlockTasks } from "../entities/list/list-block-tasks";
 import { Task } from "../entities/task/task";
+import { AccessType } from "../entities/user-access";
 import { keysForSelection, sortByField } from "../mlib";
 import { ListBlockComp, ListBlockModel, ListBlockCreate, ListComplImpl, ListMaxImpl, ListMinImpl, ListCreateImpl } from "../types/list-impl-types";
-import { AccessMax } from "./access-service";
+import { AccessMax, checkAccessLevel } from "./access-service";
 import { createLatexField, getLatexField, getLatexFieldComp, getPackageName, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
-import { createMaterial, getMaterialMax, getMaterialMin } from "./material-service";
+import { createMaterial, getMaterialMax, getMaterialMin, materialCheckAccessLevel } from "./material-service";
 import { getTaskComp, getTaskMin } from "./task-service";
 import { UserMin } from "./user-service";
 
@@ -25,7 +26,7 @@ export interface ListCreate extends ListCreateImpl {
 export async function createList(obj : ListCreate, actorId : number) : Promise<number> {
     return createMaterial({
         authorId : actorId, ...obj
-    }).then(materialId => createListImpl(materialId, obj));
+    }).then(materialId => createListImpl(materialId, obj, actorId));
 }
 
 export interface ListMin extends ListMinImpl {
@@ -80,12 +81,12 @@ export async function getListComp(id : number, actorId : number) : Promise<ListC
 
 // POST models:
 
-async function createListImpl(materialId : number, obj : ListCreateImpl) : Promise<number> {
+async function createListImpl(materialId : number, obj : ListCreateImpl, actorId : number) : Promise<number> {
     const list : List = await getRepository(List).save({
         id: materialId,
         name: obj.name
     });
-    await createBlocks(obj.blocks, list);
+    await createBlocks(obj.blocks, list, actorId);
     return list.id;
 }
 
@@ -192,7 +193,8 @@ async function getListCompImpl(id : number, actorId : number) : Promise<ListComp
     }   
 }
 
-async function createBlockTasksItem(taskId : number, index : number, blockTasks : ListBlockTasks) {
+async function createBlockTasksItem(taskId : number, index : number, blockTasks : ListBlockTasks, actorId : number) {
+    await materialCheckAccessLevel(taskId, actorId, AccessType.read)
     await getRepository(ListBlockTaskItem).save({
         block : blockTasks,
         index,
@@ -200,12 +202,12 @@ async function createBlockTasksItem(taskId : number, index : number, blockTasks 
     });
 }
 
-async function createBlock(blockObj : ListBlockCreate, index : number, list : List) {
+async function createBlock(blockObj : ListBlockCreate, index : number, list : List, actorId : number) {
     const block = await getRepository(ListBlock).save({ index, list });
     if ('taskIds' in blockObj) {
         const blockTasks = await getRepository(ListBlockTasks).save({ listBlock : block });
         await Promise.all(blockObj.taskIds.map((taskId, i) => 
-            createBlockTasksItem(taskId, i, blockTasks)    
+            createBlockTasksItem(taskId, i, blockTasks, actorId)    
         ));
     }
     else {
@@ -216,9 +218,9 @@ async function createBlock(blockObj : ListBlockCreate, index : number, list : Li
     }
 }
 
-async function createBlocks(blocksObj : ListBlockCreate[], list : List) : Promise<void>{
+async function createBlocks(blocksObj : ListBlockCreate[], list : List, actorId : number) : Promise<void>{
     return Promise.all(blocksObj.map((blocksObj, i) =>
-        createBlock(blocksObj, i, list)
+        createBlock(blocksObj, i, list, actorId)
     )).then()
 }
 

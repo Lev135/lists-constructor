@@ -1,7 +1,7 @@
 import { compilePdf } from "../compilation/latex-compilation";
 import * as listService from "../services/list-service";
 import * as types from '../types/list-types';
-import { processError, ReqT, ResT } from "./mlib-controllers";
+import { processError, ReqT, ResT } from "../mlib";
 
 export async function create(req : ReqT<void, types.PostCreateBody>, res : ResT<types.PostCreateSend>, _next : any) {
     return listService.createList(req.body, req.user.id)

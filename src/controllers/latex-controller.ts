@@ -1,7 +1,7 @@
 import { getPdfPath } from "../compilation/latex-compilation";
 import * as latexService from "../services/latex-service";
 import * as types from '../types/latex-types'
-import { ReqT, ResT } from "./mlib-controllers";
+import { ReqT, ResT } from "../mlib";
 
 export async function latexPackages(req : ReqT<void, void>, res : ResT<types.GetPackagesSend>) {
     res.send(await latexService.getPackages());

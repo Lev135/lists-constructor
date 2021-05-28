@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import * as listController from '../controllers/list-controller'
-import { GetFT, PostFT } from './mlib-routers';
+import { GetFT, PostFT } from '../mlib';
 
 export const listRouter = Router();
 

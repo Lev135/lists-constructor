@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import * as latexController from '../controllers/latex-controller'
-import { GetFT } from './mlib-routers';
+import { GetFT } from '../mlib';
 
 export const latexRouter = Router();
 

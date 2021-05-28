@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import * as taskController from '../controllers/task-controller'
-import { GetFT, PostFT } from './mlib-routers';
+import { GetFT, PostFT } from '../mlib';
 
 export const taskRouter : Router = Router();
 

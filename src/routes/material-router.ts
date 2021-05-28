@@ -1,7 +1,7 @@
 import express from 'express'
 import { Router } from 'express'
 import * as materialController from '../controllers/material-controller';
-import { GetFT, PostFT } from './mlib-routers';
+import { GetFT, PostFT } from '../mlib';
 
 export const materialRouter : Router = Router();
 
