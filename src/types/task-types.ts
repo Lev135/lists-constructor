@@ -14,15 +14,20 @@ export interface PostCreateBody {
     userNote? : string
 }
 export interface PostCreateSend {
-    id : number
+    uuid : string,
+    materialId : number,
+    index : number
 }
 
 // task/view (query, _) => send
 export interface GetViewQuery {
-    id : number
+    uuid : string
 }
 export interface GetViewSend {
-    id : number,
+    uuid : string,
+    materialId : number,
+    index : number,
+
     author: UserMin,
     statement : LatexFieldGetModel,
     themeIds : number[],
@@ -31,12 +36,12 @@ export interface GetViewSend {
     solutions: LatexFieldGetModel[],
     remarks: TaskRemarkModel[]
     userNote ?: string,
-    accessRules : AccessMax
+    access : AccessMax
 }
 
 // task/compile (query, body) => send
 export interface PostCompileQuery {
-    id : number
+    uuid : string
 }
 export type PostCompileBody = GlobalOptions;
 export interface PostCompileSend {
@@ -45,3 +50,19 @@ export interface PostCompileSend {
 
 // task/remarkTypes (_, _) => send
 export type GetRemarkTypesSend = string[];
+
+// task/edit (query, body) => send
+export interface PutEditQuery {
+    uuid : string
+}
+export interface PutEditBody {
+    statement: LatexFieldPostModel,
+    answer: string,
+    solutions: LatexFieldPostModel[],
+    remarks: TaskRemarkModel[],
+    themeIds : number[],
+    userNote? : string
+}
+export interface PutEditSend {
+    index : number
+}

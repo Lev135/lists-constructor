@@ -6,9 +6,9 @@ import { createTask } from "../../services/task-service";
 
 const taskStatementsDir = rootDir + '/src/tests/latex-tests/task-statements';
 
-async function createLatexTasks() : Promise<number[]> {
+async function createLatexTasks() : Promise<string[]> {
     const fileNames : string[] = readdirSync(taskStatementsDir);
-    const promises : Promise<number>[] = [];
+    const promises : Promise<string>[] = [];
     for (const fileName of fileNames) {
         const statement : string = readFileSync(taskStatementsDir + "/" + fileName).toString();
         promises.push(createTask({
@@ -20,17 +20,17 @@ async function createLatexTasks() : Promise<number[]> {
             remarks : [],
             solutions : [],
             themeIds : []
-        }, 1));
+        }, 1).then(res => res.uuid));
     }
     return Promise.all(promises);
 }
 
 export async function createLatexTestData() {
-    const ids : number[] = await createLatexTasks();
-    const firstBlockIds = ids.slice();
-    const secondBlockIds = ids.slice(1).reverse();
+    const uuids : string[] = await createLatexTasks();
+    const firstBlockIds = uuids.slice();
+    const secondBlockIds = uuids.slice(1).reverse();
     await createList({
-        name : 'first \LaTeX list',
+        title : 'first \LaTeX list',
         blocks : [
             {
                 body : {
@@ -39,7 +39,7 @@ export async function createLatexTestData() {
                 }
             },
             {
-                taskIds : firstBlockIds
+                taskUuids : firstBlockIds
             },
             {
                 body : {
@@ -48,7 +48,7 @@ export async function createLatexTestData() {
                 }
             },
             {
-                taskIds : secondBlockIds
+                taskUuids : secondBlockIds
             },
             {
                 body : {

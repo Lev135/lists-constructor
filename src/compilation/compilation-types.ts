@@ -2,9 +2,9 @@ import { ListBlockComp } from "../types/list-impl-types";
 import { UserMin } from "../services/user-service";
 
 export interface ListCompileModel {
-    id: number,
+    uuid : string,
     author: UserMin,
-    name: string,
+    title: string,
     blocks: ListBlockComp[]
 }
 

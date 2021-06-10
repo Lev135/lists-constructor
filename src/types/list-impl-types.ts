@@ -7,19 +7,18 @@ export interface ListBlockCommentCreate {
     body : LatexFieldPostModel
 }
 export interface ListBlockTasksCreate {
-    taskIds : number[]
+    taskUuids : string[]
 }
 export type  ListBlockCreate = ListBlockCommentCreate | ListBlockTasksCreate;
 export interface ListCreateImpl {
-    name : string,
+    title : string,
     blocks : ListBlockCreate[],
 };
 
 // Get types
 
 export interface ListMinImpl {
-    id: number,
-    name: string,
+    title: string,
 }
 export interface ListBlockCommentModel {
     body : LatexFieldGetModel

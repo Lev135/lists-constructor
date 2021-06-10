@@ -24,7 +24,9 @@ export function keysForSelection<T>(name : string, keys : Array<keyof T>) : Arra
 export type PostFT = (req : any, res : any, next : any) => void;
 export type GetFT = (req : any, res : any) => void;
 
-export type ErrorT = string;
+export interface ErrorT {
+    msg : string
+}
 
 export interface ReqT<QueryT, BodyT> {
     query : QueryT,
@@ -40,5 +42,9 @@ export interface ResT<SendT> {
 
 export function processError(err : any, res : { send : (msg : ErrorT) => void }) {
     console.log(err);
-    res.send("Ошибка при обработке запроса: " + err.message);
+    res.send({ msg : "Ошибка при обработке запроса: " + err.message });
 } 
+
+export function filterNonNullValues<T>(arr : (T | null)[]) : T[] {
+    return arr.filter(el => el !== null) as T[];
+}

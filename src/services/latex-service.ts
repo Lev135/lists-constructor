@@ -41,6 +41,7 @@ function fromPostObj(obj : LatexFieldPostModelObj) : LatexFieldPostModel {
 }
 
 export async function createLatexField(model : LatexFieldPostModel ) : Promise<LatexField> {
+    console.log("Creating latex field: ", model);
     const obj = toPostObj(model);
     const res : LatexField = await getRepository(LatexField).save(obj);
     await addPackages(res.id, obj.packageUuids || []);

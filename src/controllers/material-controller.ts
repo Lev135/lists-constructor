@@ -15,7 +15,7 @@ export async function setUserNote(req : ReqT<t.PostUserNoteQuery, t.PostUserNote
 }
 
 export async function getAccessRules(req : ReqT<t.GetAccessRulesQuery, void>, res : ResT<t.GetAccessRulesSend>) {
-    return materialService.getMaterialAccess(req.query.id, req.user.id)
+    return materialService.getMaterialAccess(req.query.id)
         .then(access => res.send(access))
         .catch(err => processError(err, res));
 }

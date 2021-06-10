@@ -2,36 +2,36 @@ import { GlobalOptions } from "../compilation/options/global-options";
 import { AccessMax } from "../services/access-service";
 import { ListBlockCreate, ListBlockModel } from "./list-impl-types";
 import { UserMin } from "../services/user-service";
+import { VersionIds } from "../services/version-service";
 
 // list/create (_, body) => send
 export interface PostCreateBody {
-    name : string,
+    title : string,
     blocks : ListBlockCreate[],
     themeIds : number[],
     userNote ?: string
 }
-export interface PostCreateSend {
-    id : number
+export interface PostCreateSend extends VersionIds {
+    
 }
 
 // list/view (query, _) => send
 export interface GetViewQuery {
-    id : number
+    uuid : string
 }
-export interface GetViewSend {
-    id: number,
+export interface GetViewSend extends VersionIds {
     author: UserMin,
-    name: string,
+    title: string,
     themeIds: number[],
     creationDate: Date,
     blocks: ListBlockModel[]
     userNote ?: string,
-    accessRules : AccessMax
+    access : AccessMax
 }
 
 // list/compile (query, body) => send
 export interface PostCompileQuery {
-    id : number
+    uuid : string
 }
 export type PostCompileBody = GlobalOptions;
 export interface PostCompileSend {

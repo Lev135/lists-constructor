@@ -8,7 +8,7 @@ export interface TaskRemarkModel {
 }
 
 export interface TaskMinImpl {
-    id : number,
+    uuid : string,
     statement : LatexFieldGetModel
 }
 
@@ -27,7 +27,7 @@ export interface TaskCreateImpl {
 }
 
 export interface TaskCompImpl {
-    id : number,
+    uuid : string,
     statement : LatexFieldCompModel
     answer: string,
     solutions: LatexFieldCompModel[]

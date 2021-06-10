@@ -32,13 +32,13 @@ async function doWork(uuid : string,
     }
 }
 
-async function compilePdfImpl(compilableId : number,
+async function compilePdfImpl(compilableUuid : string,
                              templateName : string,
                              templatePars : any,
                              obj : any) : Promise<string> {
     const templateParsJSON : string = JSON.stringify(templatePars);
     const newRecord : PdfIndex = await getRepository(PdfIndex).save({
-        compilableId,
+        compilableUuid,
         templateName,
         templateParsJSON
     });
@@ -47,15 +47,15 @@ async function compilePdfImpl(compilableId : number,
     return newRecord.uuid;
 }
 
-export async function compilePdf(compilableId : number,
+export async function compilePdf(compilableUuid : string,
                                 templateName : string,
                                 templatePars : any,
                                 obj : any) : Promise<string> {
     const templateParsJSON : string = JSON.stringify(templatePars);
-    return getRepository(PdfIndex).findOne({ compilableId, templateName, templateParsJSON })
+    return getRepository(PdfIndex).findOne({ compilableUuid, templateName, templateParsJSON })
         .then(index => index 
                     ? index.uuid
-                    : compilePdfImpl(compilableId, templateName, templatePars, obj));
+                    : compilePdfImpl(compilableUuid, templateName, templatePars, obj));
 }
 
 

@@ -1,5 +1,5 @@
 import { inspect } from "util";
-import { testTaskIds } from "../processes/create-test-data";
+import { testTaskUuids } from "../processes/create-test-data";
 import * as DS from "../services/draft-service";
 import { inspectLog } from "./test";
 
@@ -16,7 +16,7 @@ export async function testDraftService() {
                 res();
             })
     })
-    await DS.insertTaskBlock(draftId, testTaskIds[0]);
+    await DS.insertTaskBlock(draftId, 1);
     await DS.insertCommentBlock(draftId, "Второй комментарий");
     
     const draft = await DS.draftGet(draftId, 1);

@@ -11,11 +11,11 @@ import { Task } from "../entities/task/task";
 import { AccessType } from "../entities/user-access";
 import { keysForSelection, sortByField } from "../mlib";
 import { ListBlockComp, ListBlockModel, ListBlockCreate, ListComplImpl, ListMaxImpl, ListMinImpl, ListCreateImpl } from "../types/list-impl-types";
-import { AccessMax, checkAccessLevel } from "./access-service";
-import { createLatexField, getLatexField, getLatexFieldComp, getPackageName, LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "./latex-service";
-import { createMaterial, getMaterialMax, getMaterialMin, materialCheckAccessLevel } from "./material-service";
+import { AccessMax } from "./access-service";
+import { createLatexField, getLatexField, getLatexFieldComp, getPackageName,  } from "./latex-service";
 import { getTaskComp, getTaskMin } from "./task-service";
 import { UserMin } from "./user-service";
+import { createBase, getVersionAccess, getVersionMax, getVersionMin, versionCheckAccessLevel, VersionIds } from "./version-service";
 
 
 export interface ListCreate extends ListCreateImpl {
@@ -23,39 +23,49 @@ export interface ListCreate extends ListCreateImpl {
     userNote ?: string
 }
 
-export async function createList(obj : ListCreate, actorId : number) : Promise<number> {
-    return createMaterial({
+export async function createList(obj : ListCreate, actorId : number) : Promise<VersionIds> {
+    return createBase({
         authorId : actorId, ...obj
-    }).then(materialId => createListImpl(materialId, obj, actorId));
+    }).then(versionIds => createListImpl(versionIds.uuid, obj, actorId)
+      .then(_ => versionIds)
+    );
 }
 
-export interface ListMin extends ListMinImpl {
+export interface ListMin extends ListMinImpl, VersionIds {
     author : UserMin;
 //    owner : UserMin; TODO
 }
 
-export async function getListMin(id : number, actorId : number) : Promise<ListMin> {
-    const material = await getMaterialMin(id, actorId);
-    const list = await getListMinImpl(id);
-    return {
-        ...list,
-        author : material.author,
-    };
+export async function getListMin(uuid : string, actorId : number) : Promise<ListMin> {
+    return getVersionMax(uuid, actorId)
+        .then(version => getListMinImpl(uuid)
+        .then(list => ({
+            uuid,
+            materialId : version.materialId,
+            index : version.index,
+            title : list.title,
+            author : version.material.author,
+        })));
 }
 
-export interface ListMax extends ListMaxImpl {
+export interface ListMax extends ListMaxImpl, VersionIds {
     author : UserMin;
     themeIds : number[];
     creationDate : Date;
     userNote ?: string;
-    accessRules : AccessMax;
+    access : AccessMax;
 }
 
-export async function getListMax(id: number, actorId : number) : Promise<ListMax> {
-    const material = await getMaterialMax(id, actorId);
-    const list = await getListMaxImpl(id, actorId);
+export async function getListMax(uuid : string, actorId : number) : Promise<ListMax> {
+    const version = await getVersionMax(uuid, actorId);
+    const access = await getVersionAccess(uuid);
+    const list = await getListMaxImpl(uuid, actorId);
     return {
-        ...material,
+        uuid,
+        materialId : version.materialId,
+        index : version.index,
+        ...version.material,
+        access,
         ...list
     }
 }
@@ -65,29 +75,31 @@ export interface ListComp extends ListComplImpl {
     author : UserMin;
 }
 
-export async function getListComp(id : number, actorId : number) : Promise<ListComp> {
-    const material = await getMaterialMin(id, actorId);
-    const listComp = await getListCompImpl(id, actorId);
+export async function getListComp(uuid : string, actorId : number) : Promise<ListComp> {
+    const version = await getVersionMax(uuid, actorId);
+    const listComp = await getListCompImpl(uuid, actorId);
     const packages : PackageName[] = await Promise.all(
-        getListPackages({ ...listComp, author: material.author }).map(getPackageName)
+        getListPackages({ 
+            ...listComp,
+            author: version.material.author,
+            uuid
+        }).map(getPackageName)
     );
     
     return {
         ...listComp,
         packages,
-        author : material.author
+        author : version.material.author
     };
 }
 
 // POST models:
 
-async function createListImpl(materialId : number, obj : ListCreateImpl, actorId : number) : Promise<number> {
-    const list : List = await getRepository(List).save({
-        id: materialId,
-        name: obj.name
-    });
-    await createBlocks(obj.blocks, list, actorId);
-    return list.id;
+async function createListImpl(uuid : string, obj : ListCreateImpl, actorId : number) {
+    return getRepository(List).save({
+        uuid,
+        title: obj.title
+    }).then(list => createBlocks(obj.blocks, list, actorId));
 }
 
 async function getBlock(obj : ListBlock, actorId : number) : Promise<ListBlockModel> {
@@ -99,7 +111,7 @@ async function getBlock(obj : ListBlock, actorId : number) : Promise<ListBlockMo
     else if (obj.blockTasks) {
         return {
             tasks : await Promise.all(
-                obj.blockTasks.taskItems.map(item => getTaskMin(item.task.id, actorId))
+                obj.blockTasks.taskItems.map(item => getTaskMin(item.task.uuid, actorId))
             )
         }
     }
@@ -108,26 +120,17 @@ async function getBlock(obj : ListBlock, actorId : number) : Promise<ListBlockMo
     }
 }
 
-async function getListMinImpl(id: number) : Promise<ListMinImpl> {
-    try {
-        const list : List = await createQueryBuilder(List, 'list')
-            .where('list.id = :id', { id })
-            .getOneOrFail();
-        return {
-            id : list.id,
-            name : list.name,
-        }
-    }
-    catch (err) {
-        console.log(`Error while getting list min (id: ${id})`);
-        throw err;
-    }
+async function getListMinImpl(uuid : string) : Promise<ListMinImpl> {
+    return getRepository(List).findOneOrFail(uuid)
+        .then(list => ({
+            title : list.title
+        }));
 }
 
-async function getListMaxImpl(id : number, actorId : number) : Promise<ListMaxImpl> {
+async function getListMaxImpl(uuid : string, actorId : number) : Promise<ListMaxImpl> {
     try {
         const list : List = await createQueryBuilder(List, 'list')
-            .where('list.id = :id', { id })
+            .where({ uuid })
             .leftJoin('list.blocks', 'block')
                 .addSelect(keysForSelection<ListBlock>('block', [ 'index' ]))
             .leftJoin('block.blockComment', 'blockComment')
@@ -137,17 +140,16 @@ async function getListMaxImpl(id : number, actorId : number) : Promise<ListMaxIm
             .leftJoin('blockTasks.taskItems', 'item')
                 .addSelect(keysForSelection<ListBlockTaskItem>('item', [ 'index' ]))
             .leftJoin('item.task', 'task')
-                .addSelect(keysForSelection<Task>('task', [ 'id' ]))
+                .addSelect(keysForSelection<Task>('task', [ 'uuid' ]))
             .getOneOrFail();
         sortByField(list.blocks, 'index');
         return {
-            id,
-            name: list.name,
+            title: list.title,
             blocks: await Promise.all(list.blocks.map(block => getBlock(block, actorId)))
         }
     }
     catch (err) {
-        console.log(`Error while getting list max (id: ${id})`);
+        console.log(`Error while getting list max (uuid: ${uuid})`);
         throw err;
     }
 }
@@ -163,7 +165,7 @@ async function getBlockComp(blockId : number, actorId : number) : Promise<ListBl
         .leftJoin('blockTasks.taskItems', 'item')
             .addSelect(keysForSelection<ListBlockTaskItem>('item', ['index']))
         .leftJoin('item.task', 'task')
-            .addSelect(keysForSelection<Task>('task', ['id']))
+            .addSelect(keysForSelection<Task>('task', ['uuid']))
         .getOne();
     if (commentBlock) {
         return {
@@ -173,41 +175,40 @@ async function getBlockComp(blockId : number, actorId : number) : Promise<ListBl
     if (tasksBlock) {
         sortByField(tasksBlock.taskItems, 'index');
         return {
-            tasks : await Promise.all(tasksBlock.taskItems.map(item => getTaskComp(item.task.id, actorId)))
+            tasks : await Promise.all(tasksBlock.taskItems.map(item => getTaskComp(item.task.uuid, actorId)))
         }
     }
     throw new Error("Unknown block type");
 }
 
-async function getListCompImpl(id : number, actorId : number) : Promise<ListComplImpl> {
+async function getListCompImpl(uuid : string, actorId : number) : Promise<ListComplImpl> {
     const list : List = await createQueryBuilder(List, 'list')
-        .where('list.id = :id', { id })
+        .where({ uuid })
         .leftJoin('list.blocks', 'block')
             .addSelect(keysForSelection<ListBlock>('block', [ 'id', 'index' ]))
         .getOneOrFail();
     sortByField(list.blocks, 'index');
     return {
-        id,
-        name: list.name,
+        title: list.title,
         blocks: await Promise.all(list.blocks.map(block => getBlockComp(block.id, actorId)))
     }   
 }
 
-async function createBlockTasksItem(taskId : number, index : number, blockTasks : ListBlockTasks, actorId : number) {
-    await materialCheckAccessLevel(taskId, actorId, AccessType.read)
+async function createBlockTasksItem(taskUuid : string, index : number, blockTasks : ListBlockTasks, actorId : number) {
+    await versionCheckAccessLevel(taskUuid, actorId, AccessType.read)
     await getRepository(ListBlockTaskItem).save({
         block : blockTasks,
         index,
-        taskId
+        taskUuid
     });
 }
 
 async function createBlock(blockObj : ListBlockCreate, index : number, list : List, actorId : number) {
     const block = await getRepository(ListBlock).save({ index, list });
-    if ('taskIds' in blockObj) {
+    if ('taskUuids' in blockObj) {
         const blockTasks = await getRepository(ListBlockTasks).save({ listBlock : block });
-        await Promise.all(blockObj.taskIds.map((taskId, i) => 
-            createBlockTasksItem(taskId, i, blockTasks, actorId)    
+        await Promise.all(blockObj.taskUuids.map((taskUuid, i) => 
+            createBlockTasksItem(taskUuid, i, blockTasks, actorId)    
         ));
     }
     else {

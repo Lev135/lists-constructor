@@ -72,8 +72,7 @@ interface UserAccessType {
     type : AccessType 
 }
 
-export async function getAccessMax(accessId : number, actorId : number) : Promise<AccessMax> {
-    await checkAccessLevel(accessId, actorId, AccessType.read);
+export async function getAccessMax(accessId : number) : Promise<AccessMax> {
     const userAccess = await getRepository(UserAccess).find({ where: { accessId } });
     const infos = await Promise.all(
         userAccess.map(a =>  new Promise<UserAccessType>((res, rej) => {

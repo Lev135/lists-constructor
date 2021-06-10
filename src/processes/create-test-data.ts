@@ -111,14 +111,14 @@ const testTaskModels : taskService.TaskCreate[] = [
         userNote : "User note"
     }
 ];
-export let testTaskIds : number[] = [];
+export let testTaskUuids : string[] = [];
 
 
 async function registerTestUsers() {
     for (const model of testUserModels) {
         const user : User | undefined = await getRepository(User).findOne({where : { email : model.email }});
         if (user) {
-            testTaskIds.push(user.id);
+            testTaskUuids.push();
         }
         else {
             testUserIds.push(await userService.registerUser(model));
@@ -139,7 +139,7 @@ async function createTestTasks() {
     console.log("Creating tasks...");
     for (const model of testTaskModels) {
         const authorId : number = testUserIds[model.answer.length % testUserIds.length];
-        testTaskIds.push(await taskService.createTask(model, authorId));
+        testTaskUuids.push(await taskService.createTask(model, authorId).then(res => res.uuid));
     }
     console.log("tasks were created successfuly");
 }

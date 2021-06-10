@@ -12,10 +12,10 @@ export class ListBlockTaskItem {
   block!: ListBlockTasks;
 
   @Column()
-  taskId!: number;
+  taskUuid!: string;
 
   @ManyToOne(type => Task)
-  @JoinColumn({ name : 'taskId' })
+  @JoinColumn({ name : 'taskUuid' })
   task!: Task;
 
   @PrimaryColumn()
