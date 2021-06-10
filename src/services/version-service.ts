@@ -63,7 +63,7 @@ export async function confirmVersion(uuid : string, confirmerId : number) : Prom
 }
 
 export interface VersionGetMinModel extends VersionIds{
-    author : UserMin;
+    editor : UserMin;
     creationDate : Date;
     confirmed : boolean;
     confirmer ?: UserMin;
@@ -135,7 +135,7 @@ async function getVersionImpl(v : Version) : Promise<VersionGetMinModel> {
         materialId : v.materialId,
         index : v.index,
 
-        author : await getUserMin(v.authorId),
+        editor : await getUserMin(v.editorId),
         creationDate : v.creationDate,
         confirmed : v.confirmed,
         confirmer : v.confirmed ? await getUserMin(v.confirmerId) : undefined,

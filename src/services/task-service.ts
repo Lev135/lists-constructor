@@ -78,7 +78,7 @@ export interface TaskComp extends TaskCompImpl, VersionIds {
 }
 
 export async function getTaskComp(uuid : string, actorId : number) : Promise<TaskComp> {
-    const version = await getVersionMin(uuid);
+    const version = await getVersionMax(uuid, actorId);
     const taskComp = await getTaskCompImpl(uuid);
     const promises : Promise<PackageName>[] =
         taskComp.statement.packageUuids.map(uuid => getPackageName(uuid));
@@ -92,7 +92,7 @@ export async function getTaskComp(uuid : string, actorId : number) : Promise<Tas
         index : version.index,
         ...taskComp,
         packages,
-        author : version.author
+        author : version.material.author
     };
 }
 

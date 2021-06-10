@@ -13,7 +13,7 @@ export class Version {
   index!: number;
 
   @Column({ nullable : false })
-  authorId!: number;
+  editorId!: number;
   @CreateDateColumn({ nullable : false })
   creationDate!: Date;
 
@@ -25,8 +25,8 @@ export class Version {
   confirmationDate!: Date;
 
   @ManyToOne(type => User, user => user.createdMaterials)
-  @JoinColumn({ name: 'authorId' })
-  author!: User;
+  @JoinColumn({ name: 'editorId' })
+  editor!: User;
   
   @ManyToOne(type => User, { nullable : true })
   @JoinColumn({ name : 'confirmerId' })
