@@ -136,12 +136,10 @@ async function createTestThemes() {
 }
 
 async function createTestTasks() {
-    console.log("Creating tasks...");
     for (const model of testTaskModels) {
         const authorId : number = testUserIds[model.answer.length % testUserIds.length];
         testTaskUuids.push(await taskService.createTask(model, authorId).then(res => res.uuid));
     }
-    console.log("tasks were created successfuly");
 }
 
 const testPackages = [

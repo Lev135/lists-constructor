@@ -13,7 +13,7 @@ import { createLatexField, getLatexField, getLatexFieldComp, getPackageName, Lat
 import { getListMin, ListMin } from "./list-service";
 import { createMaterial, getMaterialAccess, getMaterialMax, getMaterialMin } from "./material-service";
 import { UserMin } from "./user-service";
-import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionMin, VersionIds } from "./version-service";
+import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, VersionIds, VersionListModel } from "./version-service";
 
 
 export interface TaskCreate extends TaskCreateImpl {
@@ -51,6 +51,8 @@ export async function getTaskMin(uuid : string, actorId : number) : Promise<Task
 }
 
 export interface TaskMax extends TaskMaxImpl, VersionIds {
+    versionList : VersionListModel,
+
     author : UserMin;
     themeIds : number[];
     creationDate : Date;
@@ -60,9 +62,11 @@ export interface TaskMax extends TaskMaxImpl, VersionIds {
 
 export async function getTaskMax(uuid : string, actorId : number) : Promise<TaskMax> {
     const version = await getVersionMax(uuid, actorId);
+    const versionList = await getVersionsList(uuid);
     const access = await getVersionAccess(uuid);
     const task = await getTaskMaxImpl(uuid, actorId);
     return {
+        versionList, 
         ... version.material,
         access,
         materialId : version.materialId,

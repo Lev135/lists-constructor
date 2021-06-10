@@ -2,7 +2,7 @@ import { GlobalOptions } from "../compilation/options/global-options";
 import { AccessMax } from "../services/access-service";
 import { ListBlockCreate, ListBlockModel } from "./list-impl-types";
 import { UserMin } from "../services/user-service";
-import { VersionIds } from "../services/version-service";
+import { VersionIds, VersionListModel } from "../services/version-service";
 
 // list/create (_, body) => send
 export interface PostCreateBody {
@@ -20,6 +20,8 @@ export interface GetViewQuery {
     uuid : string
 }
 export interface GetViewSend extends VersionIds {
+    versionList : VersionListModel,
+    
     author: UserMin,
     title: string,
     themeIds: number[],

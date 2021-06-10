@@ -15,7 +15,7 @@ import { AccessMax } from "./access-service";
 import { createLatexField, getLatexField, getLatexFieldComp, getPackageName,  } from "./latex-service";
 import { getTaskComp, getTaskMin } from "./task-service";
 import { UserMin } from "./user-service";
-import { createBase, getVersionAccess, getVersionMax, getVersionMin, versionCheckAccessLevel, VersionIds } from "./version-service";
+import { createBase, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, versionCheckAccessLevel, VersionIds, VersionListModel } from "./version-service";
 
 
 export interface ListCreate extends ListCreateImpl {
@@ -49,6 +49,8 @@ export async function getListMin(uuid : string, actorId : number) : Promise<List
 }
 
 export interface ListMax extends ListMaxImpl, VersionIds {
+    versionList : VersionListModel,
+
     author : UserMin;
     themeIds : number[];
     creationDate : Date;
@@ -58,10 +60,12 @@ export interface ListMax extends ListMaxImpl, VersionIds {
 
 export async function getListMax(uuid : string, actorId : number) : Promise<ListMax> {
     const version = await getVersionMax(uuid, actorId);
+    const versionList = await getVersionsList(uuid);
     const access = await getVersionAccess(uuid);
     const list = await getListMaxImpl(uuid, actorId);
     return {
         uuid,
+        versionList,
         materialId : version.materialId,
         index : version.index,
         ...version.material,

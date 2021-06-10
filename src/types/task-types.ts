@@ -2,6 +2,7 @@ import { GlobalOptions } from "../compilation/options/global-options";
 import { AccessMax } from "../services/access-service";
 import { LatexFieldGetModel, LatexFieldPostModel } from "../services/latex-service";
 import { UserMin } from "../services/user-service";
+import { VersionListModel } from "../services/version-service";
 import { TaskRemarkModel } from "./task-impl-types";
 
 // task/create (_, body) => send
@@ -27,6 +28,8 @@ export interface GetViewSend {
     uuid : string,
     materialId : number,
     index : number,
+
+    versionList : VersionListModel,
 
     author: UserMin,
     statement : LatexFieldGetModel,
