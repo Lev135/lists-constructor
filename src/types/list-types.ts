@@ -1,36 +1,21 @@
 import { GlobalOptions } from "../compilation/options/global-options";
-import { AccessMax } from "../services/access-service";
-import { ListBlockCreate, ListBlockModel } from "./list-impl-types";
-import { UserMin } from "../services/user-service";
-import { VersionIds, VersionListModel } from "../services/version-service";
+import { ListCreateImpl, ListMaxImpl } from "./list-impl-types";
+import { MaterialCreateImpl } from "./material-impl-types";
+import { VersionalMaxInfo, VersionIds } from "./version-impl-types";
 
 // list/create (_, body) => send
 export interface PostCreateBody {
-    title : string,
-    blocks : ListBlockCreate[],
-    packageUuids : string[],
-    themeIds : number[],
-    userNote ?: string
+    list : ListCreateImpl
+    material : MaterialCreateImpl
 }
-export interface PostCreateSend extends VersionIds {
-    
-}
+export type PostCreateSend = VersionIds;
 
 // list/view (query, _) => send
 export interface GetViewQuery {
     uuid : string
 }
-export interface GetViewSend extends VersionIds {
-    versionList : VersionListModel,
-    
-    author: UserMin,
-    title: string,
-    themeIds: number[],
-    creationDate: Date,
-    blocks: ListBlockModel[]
-    userNote ?: string,
-    access : AccessMax,
-    packageUuids : string[]
+export interface GetViewSend extends VersionalMaxInfo {
+    list : ListMaxImpl
 }
 
 // list/edit (query, body) => send
@@ -38,12 +23,9 @@ export interface PutEditQuery {
     uuid : string
 }
 export interface PutEditBody {
-    title : string,
-    blocks : ListBlockCreate[],
-    packageUuids : string[]
+    list : ListCreateImpl
 }
-export interface PutEditSend extends VersionIds {
-}
+export type PutEditSend = VersionIds;
 
 // list/compile (query, body) => send
 export interface PostCompileQuery {

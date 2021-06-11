@@ -2,24 +2,17 @@ import { createQueryBuilder, getRepository } from "typeorm";
 import { Version } from "../entities/material/version";
 import { AccessType } from "../entities/user-access";
 import { sortByField } from "../mlib";
+import { MaterialCreateImpl } from "../types/material-impl-types";
+import { VersionalMaxInfo, VersionalMinInfo, VersionGetMaxModel, VersionIds, VersionListModel } from "../types/version-impl-types";
 import { AccessMax } from "./access-service";
-import { createMaterial, getMaterialAccess, getMaterialMin, materialCheckAccessLevel, MaterialCreate, MaterialMin } from "./material-service";
-import { getUserMin, UserMin } from "./user-service";
+import { createMaterial, getMaterialAccess, getMaterialMax, materialCheckAccessLevel } from "./material-service";
+import { getUserMin } from "./user-service";
 
-export interface VersionIds {
-    uuid : string,
-    materialId : number,
-    index : number
-}
 
-export interface BaseCreateModel extends MaterialCreate {
-
-}
-
-export async function createBase(obj : BaseCreateModel) : Promise <VersionIds> {
-    const materialId = await createMaterial(obj);
+export async function createBase(obj : MaterialCreateImpl, authorId : number) : Promise <VersionIds> {
+    const materialId = await createMaterial(obj, authorId);
     const version = await getRepository(Version).save({
-        editorId : obj.authorId,
+        editorId : authorId,
         materialId,
         index : 0
     });
@@ -30,9 +23,7 @@ export async function createBase(obj : BaseCreateModel) : Promise <VersionIds> {
     }
 }
 
-export async function createVersionCheck(uuid : string, actorId : number) {
-    return versionCheckAccessLevel(uuid, actorId, AccessType.write);    
-}
+// @access write
 export async function createVersion(uuid : string, editorId : number) : Promise <VersionIds> {
     const materialId = await getVersionMaterialId(uuid);
     const obj = await createQueryBuilder(Version, 'version')
@@ -52,9 +43,7 @@ export async function createVersion(uuid : string, editorId : number) : Promise 
     };
 }
 
-export async function confirmVersionCheck(uuid : string, actorId : number) : Promise<void> {
-    return versionCheckAccessLevel(uuid, actorId, AccessType.moderate);
-}
+// @access moderate
 export async function confirmVersion(uuid : string, confirmerId : number) : Promise<void>  {
     const { confirmed } = await createQueryBuilder(Version, 'version')
         .where({ uuid })
@@ -69,50 +58,26 @@ export async function confirmVersion(uuid : string, confirmerId : number) : Prom
     }).then();
 }
 
-interface VersionMinWithoutIds {
-    editor : UserMin;
-    creationDate : Date;
-    confirmed : boolean;
-    confirmer ?: UserMin;
-    confirmationDate ?: Date;
+// @access read
+export async function getVersionIds(uuid : string) : Promise<VersionIds> {
+    return getRepository(Version).findOneOrFail(uuid).then(v => ({
+        uuid : v.uuid,
+        materialId : v.materialId,
+        index : v.index
+    }))
 }
 
-export interface VersionGetMinModel extends VersionIds, VersionMinWithoutIds {    
-}
-
-export interface VersionGetMaxModel extends VersionGetMinModel {
-    material : MaterialMin
-}
-
-export interface VersionListModel {
-    materialId : number;
-    versions : VersionGetMinModel[];
-}
-
-export async function getVersionMinCheck(uuid : string, actorId : number) {
-    return versionCheckAccessLevel(uuid, actorId, AccessType.read);
-}
-export async function getVersionMin(uuid : string) : Promise<VersionGetMinModel> {
+// @access read
+export async function getVersionMax(uuid : string) : Promise<VersionGetMaxModel> {
     return getRepository(Version).findOneOrFail(uuid).then(getVersionImpl);
 }
 
-export async function getVersionMaxCheck(uuid : string, actorId : number) {
-    return versionCheckAccessLevel(uuid, actorId, AccessType.read);
-}
-export async function getVersionMax(uuid : string, userId : number) : Promise<VersionGetMaxModel> {
-    return getVersionMin(uuid)
-      .then(obj => getMaterialMin(obj.materialId, userId)
-      .then(material => ({ ...obj, material })
-    ));
-}
-
+// @access read
 export async function getVersionAccess(uuid : string) : Promise <AccessMax> {
     return getVersionMaterialId(uuid).then(getMaterialAccess)
 }
 
-export async function getVersionsListCheck(uuid : string, actorId : number) {
-    return versionCheckAccessLevel(uuid, actorId, AccessType.read);
-}
+// @access read
 export async function getVersionsList(uuid: string) : Promise<VersionListModel> {
     const materialId = await getVersionMaterialId(uuid);
     const versions = await getRepository(Version).find({
@@ -125,10 +90,30 @@ export async function getVersionsList(uuid: string) : Promise<VersionListModel> 
     }
 }
 
-async function getVersion(uuid : string) : Promise<Version> {
-    return getRepository(Version)
-        .findOneOrFail(uuid)
-        .catch(_ => { throw new Error(`Incorrect version uuid: "${uuid}"`) })
+// @access read
+export async function getVersionalMinInfo(uuid : string, userId : number) : Promise<VersionalMinInfo> {
+    const curVersion = await getVersionIds(uuid);
+    const material = await getMaterialMax(curVersion.materialId, userId);
+
+    return {
+        curVersion,
+        material
+    }
+}
+
+// @access read
+export async function getVersionalMaxInfo(uuid : string, userId : number) : Promise<VersionalMaxInfo> {
+    const curVersion = await getVersionMax(uuid);
+    const versionList = await getVersionsList(uuid);
+    const material = await getMaterialMax(curVersion.materialId, userId);
+    const access = await getMaterialAccess(curVersion.materialId);
+    
+    return {
+        curVersionIndex : curVersion.index,
+        versionList,
+        material,
+        access
+    }
 }
 
 export async function versionCheckAccessLevel(uuid : string, userId : number, minLevel : AccessType) {
@@ -139,12 +124,18 @@ export async function versionCheckAccessLevel(uuid : string, userId : number, mi
 
 // private methods implementation
 
+async function getVersion(uuid : string) : Promise<Version> {
+    return getRepository(Version)
+        .findOneOrFail(uuid)
+        .catch(_ => { throw new Error(`Incorrect version uuid: "${uuid}"`) })
+}
+
 async function getVersionMaterialId(uuid : string) : Promise<number> {
     return getRepository(Version).findOneOrFail(uuid)
         .then(v => v.materialId);
 }
 
-async function getVersionImpl(v : Version) : Promise<VersionGetMinModel> {
+async function getVersionImpl(v : Version) : Promise<VersionGetMaxModel> {
     return {
         uuid : v.uuid,
         materialId : v.materialId,

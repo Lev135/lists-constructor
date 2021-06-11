@@ -1,5 +1,3 @@
-import { ListMinImpl } from "./list-impl-types";
-
 export interface TaskRemarkModel {
     type: string,
     label: string,

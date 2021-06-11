@@ -8,95 +8,59 @@ import { TaskRemark } from "../entities/task/task-remark";
 import { TaskSolution } from "../entities/task/task-solution";
 import { AccessType } from "../entities/user-access";
 import { filterNonNullValues, keysForSelection, sortByField } from "../mlib";
-import { ListMinImpl } from "../types/list-impl-types";
-import { TaskCompImpl, TaskCreateImpl, TaskMaxImpl, TaskMinImpl, TaskRemarkModel, TaskSolutionModel } from "../types/task-impl-types";
-import { AccessMax } from "./access-service";
+import { TaskCompImpl, TaskCreateImpl, TaskMaxImpl, TaskMinImpl, TaskRemarkModel } from "../types/task-impl-types";
 import { getPackage, getPackageName, packageCheckUuid } from "./latex-service";
 import { getListMin, ListMin } from "./list-service";
 import { UserMin } from "./user-service";
-import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, versionCheckAccessLevel, VersionIds, VersionListModel } from "./version-service";
+import { createBase, createVersion, getVersionalMaxInfo, getVersionalMinInfo, versionCheckAccessLevel } from "./version-service";
+import * as t from "../types/task-types"
+import { VersionalMinInfo, VersionIds } from "../types/version-impl-types";
 
-
-export interface TaskCreate extends TaskCreateImpl {
-    themeIds : number[];
-    userNote?: string;
-}
-
-export interface TaskEdit extends TaskCreateImpl {
-}
-
-export interface TaskCreateRes {
-    uuid : string;
-    materialId : number,
-    index : number
-}
-
-export async function createTask(obj : TaskCreate, actorId : number) : Promise<TaskCreateRes> {
-    await createTaskImplCheck(obj);
-    const vIds = await createBase({
-        authorId : actorId,
-        themeIds : obj.themeIds,
-        userNote : obj.userNote
-    });
-    await createTaskImpl(vIds.uuid, obj);
+export async function createTask(obj : t.PostCreateBody, actorId : number) : Promise<t.PostCreateSend> {
+    await createTaskImplCheck(obj.task);
+    
+    const vIds = await createBase(obj.material, actorId);
+    await createTaskImpl(vIds.uuid, obj.task);
     return vIds;
 }
 
-export async function editTask(uuid : string, obj : TaskEdit, actorId : number) {
-    await createTaskImplCheck(obj);
+export async function editTask(uuid : string, obj : t.PutEditBody, actorId : number) : Promise<t.PutEditSend> {
+    await createTaskImplCheck(obj.task);
     await versionCheckAccessLevel(uuid, actorId, AccessType.write);
+    
     const vIds = await createVersion(uuid, actorId);
-    await createTaskImpl(vIds.uuid, obj);
+    await createTaskImpl(vIds.uuid, obj.task);
     return vIds;
 }
 
-export interface TaskMin extends TaskMinImpl, VersionIds {
-    author : UserMin;
-//    owner : UserMin    TODO
+export interface TaskMin extends VersionalMinInfo {
+    task : TaskMinImpl
 }
 
 export async function getTaskMin(uuid : string, actorId : number) : Promise<TaskMin> {
     await versionCheckAccessLevel(uuid, actorId, AccessType.read);
-    const version = await getVersionMax(uuid, actorId);
-    const minObj = await getTaskMinImpl(uuid)
+    
+    const info = await getVersionalMinInfo(uuid, actorId);
+    const task = await getTaskMinImpl(uuid)
     return {
-        uuid : version.uuid,
-        materialId : version.materialId,
-        index : version.index,
-
-        ...minObj,
-        author : version.material.author
+        ...info,
+        task
     };
 }
 
-export interface TaskMax extends TaskMaxImpl, VersionIds {
-    versionList : VersionListModel,
-
-    author : UserMin;
-    themeIds : number[];
-    creationDate : Date;
-    userNote ?: string;
-    access : AccessMax;
-    usedInLists: ListMinImpl[]
-}
-
-export async function getTaskMax(uuid : string, actorId : number) : Promise<TaskMax> {
+export async function getTaskMax(uuid : string, actorId : number) : Promise<t.GetViewSend> {
     await versionCheckAccessLevel(uuid, actorId, AccessType.read);
-    const version = await getVersionMax(uuid, actorId);
-    const versionList = await getVersionsList(uuid);
-    const access = await getVersionAccess(uuid);
+    
+    const info = await getVersionalMaxInfo(uuid, actorId);
     const task = await getTaskMaxImpl(uuid);
+    const usedInLists = await getTaskUsedInLists(uuid, actorId) 
+    
     return {
-        uuid : version.uuid,
-        materialId : version.materialId,
-        index : version.index,
-
-        versionList, 
-        ... version.material,
-        access,
-
-        ...task,
-        usedInLists : await getTaskUsedInLists(uuid, actorId)
+        ...info,
+        task,
+        other : {
+            usedInLists
+        }
     }
 }
 
@@ -106,7 +70,7 @@ export interface TaskComp extends TaskCompImpl, VersionIds {
 }
 
 export async function getTaskComp(uuid : string, actorId : number) : Promise<TaskComp> {
-    const version = await getVersionMax(uuid, actorId);
+    const info = await getVersionalMinInfo(uuid, actorId);
     const taskComp = await getTaskCompImpl(uuid);
     const promises : Promise<PackageName>[] =
         taskComp.packageUuids.map(uuid => getPackageName(uuid));
@@ -116,11 +80,10 @@ export async function getTaskComp(uuid : string, actorId : number) : Promise<Tas
     const packages = await Promise.all(promises);
 
     return {
-        materialId : version.materialId,
-        index : version.index,
+        ...info.curVersion,
         ...taskComp,
         packages,
-        author : version.material.author
+        author : info.material.author
     };
 }
 

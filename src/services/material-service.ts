@@ -6,28 +6,12 @@ import { UserNote } from "../entities/material/user-note";
 import { User } from "../entities/user";
 import { AccessType } from "../entities/user-access";
 import { keysForSelection } from "../mlib";
+import { MaterialCreateImpl, MaterialGetMaxImpl } from "../types/material-impl-types";
 import { AccessMax, accessLevel, checkAccessLevel, createAccess, getAccessMax, NonOwnerAccessType, setAccess } from "./access-service";
 import { getTheme } from "./theme-service";
 import { getUser, UserMin } from "./user-service";
 
-export interface MaterialCreate {
-    authorId : number,
-    themeIds : number[],
-    userNote?: string
-}
-
-export interface MaterialMin {
-    author : UserMin,
-    themeIds : number[],
-    creationDate : Date,
-    userNote?: string
-}
-
-export interface MaterialMax extends MaterialMin {
-    accessRules : AccessMax
-}
-
-export async function getMaterialMin(id : number, userId : number) : Promise<MaterialMin> {
+export async function getMaterialMax(id : number, userId : number) : Promise<MaterialGetMaxImpl> {
     const material = await createQueryBuilder(Material, 'material')
         .where({id})
         .innerJoin('material.author', 'author')
@@ -43,13 +27,13 @@ export async function getMaterialMin(id : number, userId : number) : Promise<Mat
     }
 }
 
-export async function createMaterial(obj : MaterialCreate) : Promise<number> {
-    const author : User = await getUser(obj.authorId);
+export async function createMaterial(obj : MaterialCreateImpl, authorId : number) : Promise<number> {
+    const author : User = await getUser(authorId);
     const themes : Theme[] = await Promise.all(obj.themeIds.map(id => getTheme(id)));
     const accessId : number = await createAccess(author.id);
 
     const material = await getRepository(Material).save({ author, themes, accessId });
-    await setUserNote(material.id, obj.authorId, obj.userNote);
+    await setUserNote(material.id, authorId, obj.userNote);
     return material.id;
 }
 
@@ -69,13 +53,6 @@ export async function setUserNote(materialId : number, userId : number, note ?: 
 export async function getUserNote(materialId : number, userId: number) : Promise<string | undefined> {
     return getRepository(UserNote).findOne({ materialId, userId })
                 .then(note => note?.body)
-}
-
-export async function getMaterialMax(materialId : number, userId : number) : Promise<MaterialMax> {
-    return {
-        ...await getMaterialMin(materialId, userId),
-        accessRules : await getMaterialAccess(materialId)
-    }
 }
 
 export async function getMaterialAccess(materialId : number) : Promise<AccessMax> {

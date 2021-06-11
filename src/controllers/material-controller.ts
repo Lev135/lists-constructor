@@ -31,7 +31,7 @@ export async function setAccessRule(req : ReqT<t.PutAccessRulesQuery, t.PutAcces
 }
 
 export async function confirmVersion(req : ReqT<t.PutConfirmVersionQuery, void>, res : ResT<void>) {
-    return versionService.confirmVersionCheck(req.query.uuid, req.user.id)
+    return versionService.versionCheckAccessLevel(req.query.uuid, req.user.id, AccessType.moderate)
         .then(_ => versionService.confirmVersion(req.query.uuid, req.user.id))
         .then(_ => res.send())
         .catch(err => processError(err, res));

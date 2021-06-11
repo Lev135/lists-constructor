@@ -11,76 +11,56 @@ import { Task } from "../entities/task/task";
 import { AccessType } from "../entities/user-access";
 import { keysForSelection, sortByField } from "../mlib";
 import { ListBlockComp, ListBlockModel, ListBlockCreate, ListComplImpl, ListMaxImpl, ListMinImpl, ListCreateImpl, ListBlockTasksCreate } from "../types/list-impl-types";
-import { AccessMax } from "./access-service";
 import { getPackageName, packageCheckUuid,  } from "./latex-service";
 import { getTaskComp, getTaskMin } from "./task-service";
 import { UserMin } from "./user-service";
-import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionsList, versionCheckAccessLevel, VersionIds, VersionListModel } from "./version-service";
+import { createBase, createVersion, getVersionalMaxInfo, getVersionalMinInfo, versionCheckAccessLevel } from "./version-service";
+import * as t from "../types/list-types"
+import { VersionalMinInfo } from "../types/version-impl-types";
 
 
-export interface ListCreate extends ListCreateImpl {
-    themeIds : number[],
-    userNote ?: string
-}
+export async function createList(obj : t.PostCreateBody, actorId : number) : Promise<t.PostCreateSend> {
+    await createListImplCheck(obj.list, actorId);
 
-export interface ListEdit extends ListCreateImpl {
-}
-
-export async function createList(obj : ListCreate, actorId : number) : Promise<VersionIds> {
-    await createListImplCheck(obj, actorId);
-    const versionIds = await  createBase({
-        authorId : actorId, ...obj
-    })
-    await createListImpl(versionIds.uuid, obj, actorId)
+    const versionIds = await createBase(obj.material, actorId);
+    await createListImpl(versionIds.uuid, obj.list, actorId)
     return versionIds;
 }
 
-export async function editList(uuid: string, obj : ListEdit, actorId : number) : Promise <VersionIds> {
-    return createVersion(uuid, actorId)
-        .then(vIds => createListImpl(vIds.uuid, obj, actorId)
-        .then(_ => vIds))
+export async function editList(uuid: string, obj : t.PutEditBody, actorId : number) : Promise <t.PutEditSend> {
+    await createListImplCheck(obj.list, actorId);
+    await versionCheckAccessLevel(uuid, actorId, AccessType.write);
+
+    const vIds = await createVersion(uuid, actorId);
+    await createListImpl(vIds.uuid, obj.list, actorId);
+    return vIds;
 }
 
-export interface ListMin extends ListMinImpl, VersionIds {
-    author : UserMin;
-//    owner : UserMin; TODO
+export interface ListMin extends VersionalMinInfo {
+    list : ListMinImpl
 }
 
-export async function getListMin(uuid : string, userId : number) : Promise<ListMin> {
-    return getVersionMax(uuid, userId)
-        .then(version => getListMinImpl(uuid)
-        .then(list => ({
-            uuid,
-            materialId : version.materialId,
-            index : version.index,
-            title : list.title,
-            author : version.material.author,
-        })));
+export async function getListMin(uuid : string, actorId : number) : Promise<ListMin> {
+    await versionCheckAccessLevel(uuid, actorId, AccessType.read);
+
+    const info = await getVersionalMinInfo(uuid, actorId);
+    const list = await getListMinImpl(uuid);
+
+    return {
+        ...info,
+        list
+    };
 }
 
-export interface ListMax extends ListMaxImpl, VersionIds {
-    versionList : VersionListModel,
-
-    author : UserMin;
-    themeIds : number[];
-    creationDate : Date;
-    userNote ?: string;
-    access : AccessMax;
-}
-
-export async function getListMax(uuid : string, actorId : number) : Promise<ListMax> {
-    const version = await getVersionMax(uuid, actorId);
-    const versionList = await getVersionsList(uuid);
-    const access = await getVersionAccess(uuid);
+export async function getListMax(uuid : string, actorId : number) : Promise<t.GetViewSend> {
+    await versionCheckAccessLevel(uuid, actorId, AccessType.read);
+    // TODO : check access level to all tasks (in getListMaxImplCheck)
+    
+    const info = await getVersionalMaxInfo(uuid, actorId);
     const list = await getListMaxImpl(uuid, actorId);
     return {
-        uuid,
-        materialId : version.materialId,
-        index : version.index,
-        versionList,
-        ...version.material,
-        access,
-        ...list
+        ...info,
+        list
     }
 }
 
@@ -90,12 +70,12 @@ export interface ListComp extends ListComplImpl {
 }
 
 export async function getListComp(uuid : string, actorId : number) : Promise<ListComp> {
-    const version = await getVersionMax(uuid, actorId);
+    const info = await getVersionalMinInfo(uuid, actorId);
     const listComp = await getListCompImpl(uuid, actorId);
     const packages : PackageName[] = await Promise.all(
         getListPackages({ 
             ...listComp,
-            author: version.material.author,
+            author: info.material.author,
             uuid
         }).map(getPackageName)
     );
@@ -103,9 +83,11 @@ export async function getListComp(uuid : string, actorId : number) : Promise<Lis
     return {
         ...listComp,
         packages,
-        author : version.material.author
+        author : info.material.author
     };
 }
+
+// Private methods implementation
 
 async function checkListTaskBlocks(taskBlocks : ListBlockTasksCreate[], actorId : number) {
     const taskUuids = taskBlocks.flatMap(block => block.taskUuids);

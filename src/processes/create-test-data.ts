@@ -1,6 +1,7 @@
 import * as userService from '../services/user-service'
 import * as themeService from '../services/theme-service'
 import * as taskService from '../services/task-service' 
+import * as t from '../types/task-types'
 import { getRepository } from 'typeorm';
 import { User } from '../entities/user';
 import { addPackage, getPackages } from '../services/latex-service';
@@ -54,55 +55,67 @@ const testThemeTree : themeService.ThemePostCreateTreeModel[] = [
 ];
 export let testThemeIds : number[] = [];
 
-const testTaskModels : taskService.TaskCreate[] = [
+const testTaskModels : t.PostCreateBody[] = [
     {
-        statement: "test statement",
-        answer: "test answer",
-        solutions: [
-            {
-                body : "first solution",
-                packageUuids : []
-            }, 
-            {
-                body : "second solution",
-                packageUuids : []
-            }
-        ],
-        remarks: [ {
-                type: "1 note type",
-                label: "1 note",
-                body: "first note",
-            }, {
-                type: "2 note type",
-                label: "2 note",
-                body: "second note"
-            }
-        ],
-        themeIds : [],
-        userNote : "User Note",
-        packageUuids : []
+        task : {
+            statement: "test statement",
+            answer: "test answer",
+            solutions: [
+                {
+                    body : "first solution",
+                    packageUuids : []
+                }, 
+                {
+                    body : "second solution",
+                    packageUuids : []
+                }
+            ],
+            remarks: [ {
+                    type: "1 note type",
+                    label: "1 note",
+                    body: "first note",
+                }, {
+                    type: "2 note type",
+                    label: "2 note",
+                    body: "second note"
+                }
+            ],
+            packageUuids : []
+        },
+        material : {
+            themeIds : [],
+            userNote : "User Note",
+        }
     },
     {
-        statement: "2 statement",
-        answer: "2 answer",
-        solutions: [],
-        remarks: [],
-        themeIds : [],
-        packageUuids : []
+        task : {
+            statement: "2 statement",
+            answer: "2 answer",
+            solutions: [],
+            remarks: [],
+            packageUuids : []
+        },
+        material : {
+            themeIds : []
+        }
     },
     {
-        statement: "Как набрать $\\frac{2 + 3}{5}$?",
-        answer: " Привет, \\LaTeX!",
-        solutions: [
-            {
-                body : "Набираешь \\verb|$\\frac{2 + 3}{5}$|",
-                packageUuids : []
-            }
-        ],
-        remarks: [],
-        themeIds : [],
-        userNote : "User note",
-        packageUuids : []
+        task : {
+            statement: "Как набрать $\\frac{2 + 3}{5}$?",
+            answer: " Привет, \\LaTeX!",
+            solutions: [
+                {
+                    body : "Набираешь \\verb|$\\frac{2 + 3}{5}$|",
+                    packageUuids : []
+                }
+            ],
+            remarks: [],
+            packageUuids : []
+        },
+        material : {
+            themeIds : [],
+            userNote : "User note",
+        }
     }
 ];
 export let testTaskUuids : string[] = [];
@@ -131,7 +144,7 @@ async function createTestThemes() {
 
 async function createTestTasks() {
     for (const model of testTaskModels) {
-        const authorId : number = testUserIds[model.answer.length % testUserIds.length];
+        const authorId : number = testUserIds[model.task.answer.length % testUserIds.length];
         testTaskUuids.push(await taskService.createTask(model, authorId).then(res => res.uuid));
     }
 }

@@ -1,46 +1,35 @@
 import { GlobalOptions } from "../compilation/options/global-options";
-import { AccessMax } from "../services/access-service";
-import { UserMin } from "../services/user-service";
-import { VersionIds, VersionListModel } from "../services/version-service";
-import { TaskCreateImpl, TaskMaxImpl, TaskRemarkModel } from "./task-impl-types";
+import { ListMin } from "../services/list-service";
+import { MaterialCreateImpl } from "./material-impl-types";
+import { TaskCreateImpl, TaskMaxImpl } from "./task-impl-types";
+import { VersionalMaxInfo, VersionIds } from "./version-impl-types";
 
 // task/create (_, body) => send
-export interface PostCreateBody extends TaskCreateImpl {
-    themeIds : number[],
-    userNote? : string
+export interface PostCreateBody {
+    task: TaskCreateImpl
+    material: MaterialCreateImpl
 }
-export interface PostCreateSend {
-    uuid : string,
-    materialId : number,
-    index : number
-}
+export type PostCreateSend = VersionIds;
 
 // task/view (query, _) => send
 export interface GetViewQuery {
     uuid : string
 }
-export interface GetViewSend extends TaskMaxImpl {
-    uuid : string,
-    materialId : number,
-    index : number,
-
-    versionList : VersionListModel,
-
-    author: UserMin,
-    themeIds : number[],
-    creationDate: Date,
-    userNote ?: string,
-    access : AccessMax
+export interface GetViewSend extends VersionalMaxInfo {
+    task : TaskMaxImpl,
+    other : {
+        usedInLists : ListMin[]
+    }
 }
 
 // task/edit (query, body) => send
 export interface PutEditQuery {
     uuid : string
 }
-export interface PutEditBody extends TaskCreateImpl {
+export interface PutEditBody {
+    task : TaskCreateImpl
 }
-export interface PutEditSend extends VersionIds {
-}
+export type PutEditSend = VersionIds;
 
 
 // task/compile (query, body) => send
