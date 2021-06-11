@@ -7,13 +7,12 @@ import { ListBlock } from "../entities/list/list-block";
 import { ListBlockComment } from "../entities/list/list-block-comment";
 import { ListBlockTaskItem } from "../entities/list/list-block-task-item";
 import { ListBlockTasks } from "../entities/list/list-block-tasks";
-import { Version } from "../entities/material/version";
 import { Task } from "../entities/task/task";
 import { AccessType } from "../entities/user-access";
 import { keysForSelection, sortByField } from "../mlib";
-import { ListBlockComp, ListBlockModel, ListBlockCreate, ListComplImpl, ListMaxImpl, ListMinImpl, ListCreateImpl } from "../types/list-impl-types";
-import { AccessMax } from "./access-service";
-import { createLatexField, getLatexField, getLatexFieldComp, getPackageName,  } from "./latex-service";
+import { ListBlockComp, ListBlockModel, ListBlockCreate, ListComplImpl, ListMaxImpl, ListMinImpl, ListCreateImpl, ListBlockTasksCreate, ListBlockCommentCreate } from "../types/list-impl-types";
+import { AccessMax, checkAccessLevel } from "./access-service";
+import { createLatexField, getLatexField, getLatexFieldComp, getPackageName, packageCheckUuid,  } from "./latex-service";
 import { getTaskComp, getTaskMin } from "./task-service";
 import { UserMin } from "./user-service";
 import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, versionCheckAccessLevel, VersionIds, VersionListModel } from "./version-service";
@@ -28,11 +27,12 @@ export interface ListEdit extends ListCreateImpl {
 }
 
 export async function createList(obj : ListCreate, actorId : number) : Promise<VersionIds> {
-    return createBase({
+    await createListImplCheck(obj, actorId);
+    const versionIds = await  createBase({
         authorId : actorId, ...obj
-    }).then(versionIds => createListImpl(versionIds.uuid, obj, actorId)
-      .then(_ => versionIds)
-    );
+    })
+    await createListImpl(versionIds.uuid, obj, actorId)
+    return versionIds;
 }
 
 export async function editList(uuid: string, obj : ListEdit, actorId : number) : Promise <VersionIds> {
@@ -46,8 +46,8 @@ export interface ListMin extends ListMinImpl, VersionIds {
 //    owner : UserMin; TODO
 }
 
-export async function getListMin(uuid : string, actorId : number) : Promise<ListMin> {
-    return getVersionMax(uuid, actorId)
+export async function getListMin(uuid : string, userId : number) : Promise<ListMin> {
+    return getVersionMax(uuid, userId)
         .then(version => getListMinImpl(uuid)
         .then(list => ({
             uuid,
@@ -107,7 +107,22 @@ export async function getListComp(uuid : string, actorId : number) : Promise<Lis
     };
 }
 
-// POST models:
+async function checkListTaskBlocks(taskBlocks : ListBlockTasksCreate[], actorId : number) {
+    const taskUuids = taskBlocks.flatMap(block => block.taskUuids);
+    return Promise.all(
+        taskUuids.map(uuid => versionCheckAccessLevel(uuid, actorId, AccessType.read))
+    ).then();
+}
+
+async function createListImplCheck(obj : ListCreateImpl, actorId : number) {
+    await checkListTaskBlocks(
+        obj.blocks.filter(block => 'taskUuids' in block) as ListBlockTasksCreate[],
+        actorId
+    );
+    await Promise.all(
+        obj.packageUuids.map(uuid => packageCheckUuid(uuid))
+    );
+}
 
 async function createListImpl(uuid : string, obj : ListCreateImpl, actorId : number) {
     return getRepository(List).save({
@@ -209,7 +224,6 @@ async function getListCompImpl(uuid : string, actorId : number) : Promise<ListCo
 }
 
 async function createBlockTasksItem(taskUuid : string, index : number, blockTasks : ListBlockTasks, actorId : number) {
-    await versionCheckAccessLevel(taskUuid, actorId, AccessType.read)
     await getRepository(ListBlockTaskItem).save({
         block : blockTasks,
         index,

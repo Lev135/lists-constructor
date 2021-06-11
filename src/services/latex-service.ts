@@ -90,3 +90,12 @@ export async function addPackage(packageName : string) : Promise<string> {
 export async function getPackages() : Promise<PackageGetModel[]> {
     return await createQueryBuilder(LatexPackage).getMany();
 }
+
+export async function packageCheckUuid(uuid : string) {
+    return getRepository(LatexPackage)
+        .findOne(uuid)
+        .then(p => {
+            if (!p)
+                throw new Error (`Incorrect package uuid: "${uuid}"`);
+        })
+}

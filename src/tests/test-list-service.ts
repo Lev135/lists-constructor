@@ -26,7 +26,8 @@ export async function testListService() {
                 taskUuids: [ testTaskUuids[1], testTaskUuids[0] ]
             }
         ],
-        themeIds : []
+        themeIds : [],
+        packageUuids : []
     }, 1);
     
     console.log(uuid);

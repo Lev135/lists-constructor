@@ -6,13 +6,14 @@ import { List } from "../entities/list/list";
 import { Task } from "../entities/task/task";
 import { TaskRemark } from "../entities/task/task-remark";
 import { TaskSolution } from "../entities/task/task-solution";
+import { AccessType } from "../entities/user-access";
 import { filterNonNullValues, keysForSelection, sortByField } from "../mlib";
 import { TaskCompImpl, TaskCreateImpl, TaskMaxImpl, TaskMinImpl, TaskRemarkModel } from "../types/task-impl-types";
 import { AccessMax } from "./access-service";
 import { createLatexField, getLatexField, getLatexFieldComp, getPackageName, LatexFieldPostModel } from "./latex-service";
 import { getListMin, ListMin } from "./list-service";
 import { UserMin } from "./user-service";
-import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, VersionIds, VersionListModel } from "./version-service";
+import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, versionCheckAccessLevel, VersionIds, VersionListModel } from "./version-service";
 
 
 export interface TaskCreate extends TaskCreateImpl {
@@ -38,10 +39,12 @@ export async function createTask(obj : TaskCreate, actorId : number) : Promise<T
       .then(_ => res));
 }
 
+
 export async function editTask(uuid : string, obj : TaskEdit, actorId : number) {
-    return createVersion(uuid, actorId)
-        .then(vIds => createTaskImpl(vIds.uuid, obj)
-        .then(_ => vIds));
+    await versionCheckAccessLevel(uuid, actorId, AccessType.write);
+    const vIds = await createVersion(uuid, actorId);
+    await createTaskImpl(vIds.uuid, obj);
+    return vIds;
 }
 
 export interface TaskMin extends TaskMinImpl, VersionIds {
@@ -50,6 +53,7 @@ export interface TaskMin extends TaskMinImpl, VersionIds {
 }
 
 export async function getTaskMin(uuid : string, actorId : number) : Promise<TaskMin> {
+    await versionCheckAccessLevel(uuid, actorId, AccessType.read);
     const version = await getVersionMax(uuid, actorId);
     const minObj = await getTaskMinImpl(uuid)
     return {
@@ -73,6 +77,7 @@ export interface TaskMax extends TaskMaxImpl, VersionIds {
 }
 
 export async function getTaskMax(uuid : string, actorId : number) : Promise<TaskMax> {
+    await versionCheckAccessLevel(uuid, actorId, AccessType.read);
     const version = await getVersionMax(uuid, actorId);
     const versionList = await getVersionsList(uuid);
     const access = await getVersionAccess(uuid);
@@ -166,17 +171,24 @@ async function getTaskMinImpl(uuid: string) : Promise<TaskMinImpl> {
 }
 
 async function getTaskUsedInLists(uuid: string, actorId : number) : Promise<ListMin[]> {
-    const listIds = await createQueryBuilder(List, 'list')
+    const listIds : string[] = await createQueryBuilder(List, 'list')
         .innerJoin('list.blocks', 'block')
         .innerJoin('block.blockTasks', 'blockTasks')
         .innerJoin('blockTasks.taskItems', 'item')
         .innerJoin('item.task', 'task')
-        .where({ uuid })
+        .where('task.uuid = :uuid', { uuid })
         .select('list.uuid')
         .getRawMany();
-    return Promise.all(
-        listIds.map(listId => getListMin(listId, actorId).catch((err) => null))
+    const filteredIds = await Promise.all(
+        listIds.map(listUuId => 
+            versionCheckAccessLevel(listUuId, actorId, AccessType.read)
+            .then(_ => listUuId)
+            .catch(_ => null)
+        )
     ).then(filterNonNullValues);
+    return Promise.all(
+        listIds.map(listId => getListMin(listId, actorId))
+    );
 }
 
 async function getTaskMaxImpl(uuid : string, actorId : number) : Promise<TaskMaxImpl> {

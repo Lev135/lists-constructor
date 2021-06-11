@@ -8,6 +8,7 @@ import { VersionIds, VersionListModel } from "../services/version-service";
 export interface PostCreateBody {
     title : string,
     blocks : ListBlockCreate[],
+    packageUuids : string[],
     themeIds : number[],
     userNote ?: string
 }
@@ -37,7 +38,8 @@ export interface PutEditQuery {
 }
 export interface PutEditBody {
     title : string,
-    blocks : ListBlockCreate[]
+    blocks : ListBlockCreate[],
+    packageUuids : string[]
 }
 export interface PutEditSend extends VersionIds {
 }

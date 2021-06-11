@@ -118,10 +118,16 @@ export async function getVersionsList(uuid: string) : Promise<VersionListModel> 
     }
 }
 
+async function getVersion(uuid : string) : Promise<Version> {
+    return getRepository(Version)
+        .findOneOrFail(uuid)
+        .catch(_ => { throw new Error(`Incorrect version uuid: "${uuid}"`) })
+}
 
 export async function versionCheckAccessLevel(uuid : string, userId : number, minLevel : AccessType) {
-    return getRepository(Version).findOneOrFail(uuid)
-        .then(version => materialCheckAccessLevel(version.materialId, userId, minLevel));
+    return getVersion(uuid)
+        .then(version => materialCheckAccessLevel(version.materialId, userId, minLevel))
+        .catch(err => { throw new Error(`Ошибка с версией ${uuid}: ${err.message}`) });
 }
 
 // private methods implementation

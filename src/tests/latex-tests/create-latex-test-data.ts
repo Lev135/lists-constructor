@@ -57,6 +57,7 @@ export async function createLatexTestData() {
                 }
             }
         ],
+        packageUuids : [],
         themeIds : []
     }, 1);
 }

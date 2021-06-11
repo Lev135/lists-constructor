@@ -13,6 +13,7 @@ export type  ListBlockCreate = ListBlockCommentCreate | ListBlockTasksCreate;
 export interface ListCreateImpl {
     title : string,
     blocks : ListBlockCreate[],
+    packageUuids : string[]
 };
 
 // Get types
