@@ -29,7 +29,8 @@ export interface GetViewSend extends VersionIds {
     creationDate: Date,
     blocks: ListBlockModel[]
     userNote ?: string,
-    access : AccessMax
+    access : AccessMax,
+    packageUuids : string[]
 }
 
 // list/edit (query, body) => send

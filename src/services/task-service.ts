@@ -1,16 +1,17 @@
 import { keys } from "ts-transformer-keys";
 import { createQueryBuilder, getRepository } from "typeorm";
 import { PackageName } from "../compilation/options/latex-language-types";
-import { LatexField } from "../entities/latex/latex-field";
+import { LatexPackage } from "../entities/latex/latex-package";
 import { List } from "../entities/list/list";
 import { Task } from "../entities/task/task";
 import { TaskRemark } from "../entities/task/task-remark";
 import { TaskSolution } from "../entities/task/task-solution";
 import { AccessType } from "../entities/user-access";
 import { filterNonNullValues, keysForSelection, sortByField } from "../mlib";
-import { TaskCompImpl, TaskCreateImpl, TaskMaxImpl, TaskMinImpl, TaskRemarkModel } from "../types/task-impl-types";
+import { ListMinImpl } from "../types/list-impl-types";
+import { TaskCompImpl, TaskCreateImpl, TaskMaxImpl, TaskMinImpl, TaskRemarkModel, TaskSolutionModel } from "../types/task-impl-types";
 import { AccessMax } from "./access-service";
-import { createLatexField, getLatexField, getLatexFieldComp, getPackageName, LatexFieldPostModel } from "./latex-service";
+import { getPackage, getPackageName, packageCheckUuid } from "./latex-service";
 import { getListMin, ListMin } from "./list-service";
 import { UserMin } from "./user-service";
 import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, versionCheckAccessLevel, VersionIds, VersionListModel } from "./version-service";
@@ -31,16 +32,18 @@ export interface TaskCreateRes {
 }
 
 export async function createTask(obj : TaskCreate, actorId : number) : Promise<TaskCreateRes> {
-    return createBase({
+    await createTaskImplCheck(obj);
+    const vIds = await createBase({
         authorId : actorId,
         themeIds : obj.themeIds,
         userNote : obj.userNote
-    }).then(res => createTaskImpl(res.uuid, obj)
-      .then(_ => res));
+    });
+    await createTaskImpl(vIds.uuid, obj);
+    return vIds;
 }
 
-
 export async function editTask(uuid : string, obj : TaskEdit, actorId : number) {
+    await createTaskImplCheck(obj);
     await versionCheckAccessLevel(uuid, actorId, AccessType.write);
     const vIds = await createVersion(uuid, actorId);
     await createTaskImpl(vIds.uuid, obj);
@@ -74,6 +77,7 @@ export interface TaskMax extends TaskMaxImpl, VersionIds {
     creationDate : Date;
     userNote ?: string;
     access : AccessMax;
+    usedInLists: ListMinImpl[]
 }
 
 export async function getTaskMax(uuid : string, actorId : number) : Promise<TaskMax> {
@@ -81,7 +85,7 @@ export async function getTaskMax(uuid : string, actorId : number) : Promise<Task
     const version = await getVersionMax(uuid, actorId);
     const versionList = await getVersionsList(uuid);
     const access = await getVersionAccess(uuid);
-    const task = await getTaskMaxImpl(uuid, actorId);
+    const task = await getTaskMaxImpl(uuid);
     return {
         uuid : version.uuid,
         materialId : version.materialId,
@@ -91,7 +95,8 @@ export async function getTaskMax(uuid : string, actorId : number) : Promise<Task
         ... version.material,
         access,
 
-        ...task
+        ...task,
+        usedInLists : await getTaskUsedInLists(uuid, actorId)
     }
 }
 
@@ -104,7 +109,7 @@ export async function getTaskComp(uuid : string, actorId : number) : Promise<Tas
     const version = await getVersionMax(uuid, actorId);
     const taskComp = await getTaskCompImpl(uuid);
     const promises : Promise<PackageName>[] =
-        taskComp.statement.packageUuids.map(uuid => getPackageName(uuid));
+        taskComp.packageUuids.map(uuid => getPackageName(uuid));
     taskComp.solutions.forEach(sol => {
         promises.push(...sol.packageUuids.map(uuid => getPackageName(uuid)));
     })
@@ -128,45 +133,41 @@ export async function getRemarkTypes() : Promise<string[]> {
 
 // Private methods implementation
 
+async function createTaskImplCheck(obj : TaskCreateImpl) : Promise<void> {
+    await Promise.all(obj.packageUuids.map(packageCheckUuid));
+    await Promise.all(obj.solutions.flatMap(sol => sol.packageUuids.map(packageCheckUuid)))
+}
+
 async function createTaskImpl(uuid : string, obj : TaskCreateImpl) : Promise<string> {
+    const packages = await Promise.all(obj.packageUuids.map(getPackage));
+    const solutions = await Promise.all(
+        obj.solutions.map(async (obj, index) => ({
+            body : obj.body,
+            index,
+            packages : await Promise.all(obj.packageUuids.map(getPackage))
+        }))
+    );
+    const remarks = obj.remarks.map((obj, index) => ({
+        ...obj, index
+    }));
     const task : Task = await getRepository(Task).save({
         uuid,
-        statement : await createLatexField(obj.statement),
-        answer : obj.answer
+        statement : obj.statement,
+        answer : obj.answer,
+        packages,
+        solutions,
+        remarks
     });
-    await Promise.all([
-        addSolutions(obj.solutions, task),
-        addRemarks(obj.remarks, task),
-    ]);
     return uuid;
-}
-
-async function addSolutions(solutionsObj : LatexFieldPostModel[], task : Task) : Promise<TaskSolution[]> {
-    const bodies = await Promise.all(solutionsObj.map(createLatexField));
-    const repo = getRepository(TaskSolution);
-    return Promise.all(
-        bodies.map((body, index) => repo.save({
-            body, index, task
-        }))
-    );
-}
-
-async function addRemarks(remarksObj : TaskRemarkModel[], task : Task) : Promise<TaskRemark[]> {
-    const repo = getRepository(TaskRemark);
-    return Promise.all(
-        remarksObj.map((obj, index) => repo.save({
-            ...obj, task, index
-        }))
-    );
 }
 
 async function getTaskMinImpl(uuid: string) : Promise<TaskMinImpl> {
     const task : Task = await createQueryBuilder(Task, 'task')
         .where({ uuid })
-        .addSelect('task.statementId')
+        .addSelect(keysForSelection<Task>('task', ['statement']))
         .getOneOrFail();
     return {
-        statement : await getLatexField(task.statementId)
+        statement : task.statement
     };
 }
 
@@ -191,46 +192,37 @@ async function getTaskUsedInLists(uuid: string, actorId : number) : Promise<List
     );
 }
 
-async function getTaskMaxImpl(uuid : string, actorId : number) : Promise<TaskMaxImpl> {
+async function getTaskMaxImpl(uuid : string) : Promise<TaskMaxImpl> {
     const task : Task = await createQueryBuilder(Task, 'task')
         .where({ uuid })
-            .addSelect('task.statementId')
+            .addSelect(keysForSelection<Task>('task', ['statement']))
         .leftJoin('task.solutions', 'solution')
-            .addSelect(keysForSelection<TaskSolution>('solution', ['index', 'bodyId']))
+            .addSelect(keysForSelection<TaskSolution>('solution', ['index', 'body']))
+        .leftJoin('solution.packages', 'sol-pack')
+            .addSelect(keysForSelection<LatexPackage>('sol-pack', ['uuid']))
         .leftJoin('task.remarks', 'remark')
             .addSelect(keysForSelection<TaskRemark>('remark', keys<TaskRemarkModel>()))
+        .leftJoin('task.packages', 'pack')
+            .addSelect(keysForSelection<LatexPackage>('pack', ['uuid']))
         .getOneOrFail();
     sortByField(task.solutions, 'index');
     sortByField(task.remarks, 'index');
     return {
-        statement : await getLatexField(task.statementId),
+        statement : task.statement,
         answer : task.answer,
-        solutions : await Promise.all(
-                task.solutions.map(s => getLatexField(s.bodyId))
-            ),
+        solutions : task.solutions.map(s => ({ body : s.body, packageUuids : s.packages.map(pack => pack.uuid) })),
         remarks : task.remarks,
-        usedInLists : await getTaskUsedInLists(task.uuid, actorId)
+        packageUuids : task.packages.map(pack => pack.uuid)
     };
 }
 
 async function getTaskCompImpl(uuid : string) : Promise<TaskCompImpl> {
-    const task : Task = await createQueryBuilder(Task, 'task')
-        .where({ uuid })
-        .innerJoin('task.statement', 'statement')
-            .addSelect(keysForSelection<LatexField>('statement', ['id']))
-        .leftJoin('task.solutions', 'solution')
-            .addSelect(keysForSelection<TaskSolution>('solution', ['index', 'bodyId']))
-        .leftJoin('task.remarks', 'remark')
-            .addSelect(keysForSelection<TaskRemark>('remark', [...keys<TaskRemarkModel>(), 'index']))
-        .getOneOrFail();
-    sortByField(task.solutions, 'index');
-    sortByField(task.remarks, 'index');
+    const task = await getTaskMaxImpl(uuid);
     return {
         uuid,
-        statement : await getLatexFieldComp(task.statement.id),
+        statement : task.statement,
         answer : task.answer,
-        solutions : await Promise.all(
-                task.solutions.map(s => getLatexFieldComp(s.bodyId))
-            )
+        solutions : task.solutions,
+        packageUuids : task.packageUuids
     }
 }

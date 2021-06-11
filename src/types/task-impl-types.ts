@@ -1,4 +1,3 @@
-import { LatexFieldCompModel, LatexFieldGetModel, LatexFieldPostModel } from "../services/latex-service";
 import { ListMinImpl } from "./list-impl-types";
 
 export interface TaskRemarkModel {
@@ -7,27 +6,34 @@ export interface TaskRemarkModel {
     body: string
 }
 
+export interface TaskSolutionModel {
+    body : string,
+    packageUuids : string[]
+}
+
 export interface TaskMinImpl {
-    statement : LatexFieldGetModel
+    statement : string
 }
 
 export interface TaskMaxImpl extends TaskMinImpl {
     answer: string,
-    solutions: LatexFieldGetModel[],
+    solutions: TaskSolutionModel[],
     remarks: TaskRemarkModel[],
-    usedInLists: ListMinImpl[]  
+    packageUuids : string[]  
 }
 
 export interface TaskCreateImpl {
-    statement: LatexFieldPostModel,
+    statement: string,
     answer: string,
-    solutions: LatexFieldPostModel[],
+    solutions: TaskSolutionModel[],
     remarks: TaskRemarkModel[],
+    packageUuids : string[]
 }
 
 export interface TaskCompImpl {
     uuid : string,
-    statement : LatexFieldCompModel
+    statement : string
     answer: string,
-    solutions: LatexFieldCompModel[]
+    solutions: TaskSolutionModel[],
+    packageUuids : string[]
 }

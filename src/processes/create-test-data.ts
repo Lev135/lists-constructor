@@ -3,7 +3,7 @@ import * as themeService from '../services/theme-service'
 import * as taskService from '../services/task-service' 
 import { getRepository } from 'typeorm';
 import { User } from '../entities/user';
-import { addPackage, addPackages, getPackages } from '../services/latex-service';
+import { addPackage, getPackages } from '../services/latex-service';
 
 const testUserModels : userService.UserRegistration[] = [
     {
@@ -56,10 +56,7 @@ export let testThemeIds : number[] = [];
 
 const testTaskModels : taskService.TaskCreate[] = [
     {
-        statement: {
-            body : "test statement",
-            packageUuids : []
-        },
+        statement: "test statement",
         answer: "test answer",
         solutions: [
             {
@@ -82,23 +79,19 @@ const testTaskModels : taskService.TaskCreate[] = [
             }
         ],
         themeIds : [],
-        userNote : "User Note"
+        userNote : "User Note",
+        packageUuids : []
     },
     {
-        statement: {
-            body : "2 statement",
-            packageUuids : []
-        },
+        statement: "2 statement",
         answer: "2 answer",
         solutions: [],
         remarks: [],
-        themeIds : []
+        themeIds : [],
+        packageUuids : []
     },
     {
-        statement: {
-            body : "Как набрать $\\frac{2 + 3}{5}$?",
-            packageUuids : []
-        },
+        statement: "Как набрать $\\frac{2 + 3}{5}$?",
         answer: " Привет, \\LaTeX!",
         solutions: [
             {
@@ -108,7 +101,8 @@ const testTaskModels : taskService.TaskCreate[] = [
         ],
         remarks: [],
         themeIds : [],
-        userNote : "User note"
+        userNote : "User note",
+        packageUuids : []
     }
 ];
 export let testTaskUuids : string[] = [];

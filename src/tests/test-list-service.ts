@@ -8,19 +8,13 @@ export async function testListService() {
         title: 'list 1',
         blocks: [
             {
-                body: {
-                    body : "first text block",
-                    packageUuids : []
-                }
+                body : "first text block",
             },
             {
                 taskUuids: [ testTaskUuids[0], testTaskUuids[1] ]
             },
             {
-                body: {
-                    body : "second text block",
-                    packageUuids : []
-                }
+                body : "second text block",
             },
             {
                 taskUuids: [ testTaskUuids[1], testTaskUuids[0] ]

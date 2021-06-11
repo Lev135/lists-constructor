@@ -1,7 +1,7 @@
 import { createQueryBuilder, getRepository } from "typeorm";
 import { getListPackages } from "../compilation/compilation-types";
 import { PackageName } from "../compilation/options/latex-language-types";
-import { LatexField } from "../entities/latex/latex-field";
+import { LatexPackage } from "../entities/latex/latex-package";
 import { List } from "../entities/list/list";
 import { ListBlock } from "../entities/list/list-block";
 import { ListBlockComment } from "../entities/list/list-block-comment";
@@ -10,12 +10,12 @@ import { ListBlockTasks } from "../entities/list/list-block-tasks";
 import { Task } from "../entities/task/task";
 import { AccessType } from "../entities/user-access";
 import { keysForSelection, sortByField } from "../mlib";
-import { ListBlockComp, ListBlockModel, ListBlockCreate, ListComplImpl, ListMaxImpl, ListMinImpl, ListCreateImpl, ListBlockTasksCreate, ListBlockCommentCreate } from "../types/list-impl-types";
-import { AccessMax, checkAccessLevel } from "./access-service";
-import { createLatexField, getLatexField, getLatexFieldComp, getPackageName, packageCheckUuid,  } from "./latex-service";
+import { ListBlockComp, ListBlockModel, ListBlockCreate, ListComplImpl, ListMaxImpl, ListMinImpl, ListCreateImpl, ListBlockTasksCreate } from "../types/list-impl-types";
+import { AccessMax } from "./access-service";
+import { getPackageName, packageCheckUuid,  } from "./latex-service";
 import { getTaskComp, getTaskMin } from "./task-service";
 import { UserMin } from "./user-service";
-import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, versionCheckAccessLevel, VersionIds, VersionListModel } from "./version-service";
+import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionsList, versionCheckAccessLevel, VersionIds, VersionListModel } from "./version-service";
 
 
 export interface ListCreate extends ListCreateImpl {
@@ -134,7 +134,7 @@ async function createListImpl(uuid : string, obj : ListCreateImpl, actorId : num
 async function getBlock(obj : ListBlock, actorId : number) : Promise<ListBlockModel> {
     if (obj.blockComment) {
         return {
-            body : await getLatexField(obj.blockComment.bodyId)
+            body : obj.blockComment.body
         }
     }
     else if (obj.blockTasks) {
@@ -163,18 +163,21 @@ async function getListMaxImpl(uuid : string, actorId : number) : Promise<ListMax
             .leftJoin('list.blocks', 'block')
                 .addSelect(keysForSelection<ListBlock>('block', [ 'index' ]))
             .leftJoin('block.blockComment', 'blockComment')
-                .addSelect(keysForSelection<ListBlockComment>('blockComment', ['bodyId']))
+                .addSelect(keysForSelection<ListBlockComment>('blockComment', ['body']))
             .leftJoin('block.blockTasks', 'blockTasks')
                 .addSelect(keysForSelection<ListBlockTasks>('blockTasks', [ 'id' ]))
             .leftJoin('blockTasks.taskItems', 'item')
                 .addSelect(keysForSelection<ListBlockTaskItem>('item', [ 'index' ]))
             .leftJoin('item.task', 'task')
                 .addSelect(keysForSelection<Task>('task', [ 'uuid' ]))
+            .leftJoin('list.packages', 'package')
+                .addSelect(keysForSelection<LatexPackage>('package', ['uuid']))
             .getOneOrFail();
         sortByField(list.blocks, 'index');
         return {
             title: list.title,
-            blocks: await Promise.all(list.blocks.map(block => getBlock(block, actorId)))
+            blocks: await Promise.all(list.blocks.map(block => getBlock(block, actorId))),
+            packageUuids: list.packages.map(pack => pack.uuid)
         }
     }
     catch (err) {
@@ -186,8 +189,7 @@ async function getListMaxImpl(uuid : string, actorId : number) : Promise<ListMax
 async function getBlockComp(blockId : number, actorId : number) : Promise<ListBlockComp> {
     const commentBlock : ListBlockComment | undefined = await createQueryBuilder(ListBlockComment, 'comment')
         .where({id : blockId})
-        .leftJoin('comment.body', 'body')
-            .addSelect(keysForSelection<LatexField>('body', ['id']))
+        .addSelect(keysForSelection<ListBlockComment>('comment', ['body']))
         .getOne();
     const tasksBlock : ListBlockTasks | undefined = await createQueryBuilder(ListBlockTasks, 'blockTasks')
         .where({id : blockId})
@@ -198,7 +200,7 @@ async function getBlockComp(blockId : number, actorId : number) : Promise<ListBl
         .getOne();
     if (commentBlock) {
         return {
-            body : await getLatexFieldComp(commentBlock.body.id)
+            body : commentBlock.body
         }
     }
     if (tasksBlock) {
@@ -215,11 +217,14 @@ async function getListCompImpl(uuid : string, actorId : number) : Promise<ListCo
         .where({ uuid })
         .leftJoin('list.blocks', 'block')
             .addSelect(keysForSelection<ListBlock>('block', [ 'id', 'index' ]))
+        .leftJoin('list.packages', 'package')
+            .addSelect(keysForSelection<LatexPackage>('package', ['uuid']))
         .getOneOrFail();
     sortByField(list.blocks, 'index');
     return {
         title: list.title,
-        blocks: await Promise.all(list.blocks.map(block => getBlockComp(block.id, actorId)))
+        blocks: await Promise.all(list.blocks.map(block => getBlockComp(block.id, actorId))),
+        packageUuids : list.packages.map(pack => pack.uuid)
     }   
 }
 
@@ -242,7 +247,7 @@ async function createBlock(blockObj : ListBlockCreate, index : number, list : Li
     else {
         await getRepository(ListBlockComment).save({
             listBlock : block, 
-            body : await createLatexField(blockObj.body) 
+            body : blockObj.body 
         });
     }
 }

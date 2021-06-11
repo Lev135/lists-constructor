@@ -1,8 +1,8 @@
-import { Entity, OneToOne, Column, OneToMany, PrimaryColumn, BaseEntity, JoinColumn, ManyToMany } from "typeorm";
+import { Entity, OneToOne, Column, OneToMany, PrimaryColumn, BaseEntity, JoinColumn, ManyToMany, JoinTable } from "typeorm";
 import { TaskSolution } from "./task-solution";
 import { TaskRemark } from "./task-remark";
-import { LatexField } from "../latex/latex-field";
 import { Version } from "../material/version";
+import { LatexPackage } from "../latex/latex-package";
 
 @Entity()
 export class Task {
@@ -10,7 +10,7 @@ export class Task {
   uuid!: string;
 
   @Column()
-  statementId!: number;
+  statement!: string;
   @Column()
   answer!: string;
   @OneToMany(type => TaskSolution, solution => solution.task)
@@ -18,9 +18,9 @@ export class Task {
   @OneToMany(type => TaskRemark, note => note.task)
   remarks!: TaskRemark[];
 
-  @OneToOne(type => LatexField, { nullable : false })
-  @JoinColumn({ name : 'statementId' })
-  statement!: LatexField;
+  @ManyToMany(type => LatexPackage)
+  @JoinTable()
+  packages!: LatexPackage[];
 
   @OneToOne(type => Version, {primary: true})
   @JoinColumn({ name: 'uuid' })
