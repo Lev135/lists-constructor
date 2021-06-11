@@ -1,40 +1,32 @@
 import * as listService from '../services/list-service'
-import { testTaskIds, testThemeIds, testUserIds } from '../processes/create-test-data'
+import { testTaskUuids, testThemeIds, testUserIds } from '../processes/create-test-data'
 import { inspect } from 'util'
 import { createMaterial } from '../services/material-service';
 
 export async function testListService() {
-    const materialId : number = await createMaterial({
-        authorId : testUserIds[0],
-        themeIds : []
-    })
-    const listId : number = await listService.createList(materialId, {
-        name: 'list 1',
+    const { uuid }  = await listService.createList({
+        title: 'list 1',
         blocks: [
             {
-                body: {
-                    body : "first text block",
-                    packageUuids : []
-                }
+                body : "first text block",
             },
             {
-                taskIds: [ testTaskIds[0], testTaskIds[1] ]
+                taskUuids: [ testTaskUuids[0], testTaskUuids[1] ]
             },
             {
-                body: {
-                    body : "second text block",
-                    packageUuids : []
-                }
+                body : "second text block",
             },
             {
-                taskIds: [ testTaskIds[1], testTaskIds[0] ]
+                taskUuids: [ testTaskUuids[1], testTaskUuids[0] ]
             }
-        ]
-    });
+        ],
+        themeIds : [],
+        packageUuids : []
+    }, 1);
     
-    console.log(listId);
-    const listMinObj : listService.ListGetMinModel = await listService.getListMin(listId);
+    console.log(uuid);
+    const listMinObj : listService.ListMin = await listService.getListMin(uuid, 1);
     console.log('listMinObj', inspect(listMinObj, false, null, true));
-    const listMaxObj : listService.ListGetMaxModel = await listService.getListMax(listId);
+    const listMaxObj : listService.ListMax = await listService.getListMax(uuid, 1);
     console.log('listMaxObj', inspect(listMaxObj, false, null, true));
 }

@@ -1,4 +1,4 @@
-import { UserGetProfileModel, UserPostRegistrationModel } from "../services/user-service";
+import { UserProfile, UserRegistration } from "../services/user-service";
 
 // user/login (_, body) => send
 export interface PostLoginBody {
@@ -11,7 +11,7 @@ export interface PostLoginSend {
 }
 
 // user/register (_, body) => send
-export type PostRegisterBody = UserPostRegistrationModel;
+export type PostRegisterBody = UserRegistration;
 export interface PostRegisterSend {
     id : number,
     token : string
@@ -22,5 +22,5 @@ export interface GetProfileQuery {
     id : number
 }
 export interface GetProfilePost {
-    profile : UserGetProfileModel
+    profile : UserProfile
 }

@@ -1,12 +1,11 @@
 import * as userService from '../services/user-service'
 import * as themeService from '../services/theme-service'
 import * as taskService from '../services/task-service' 
-import * as materialService from '../services/material-service'
 import { getRepository } from 'typeorm';
 import { User } from '../entities/user';
-import { addPackage, addPackages, getPackages } from '../services/latex-service';
+import { addPackage, getPackages } from '../services/latex-service';
 
-const testUserModels : userService.UserPostRegistrationModel[] = [
+const testUserModels : userService.UserRegistration[] = [
     {
         name: 'admin',
         surname: 'adminov',
@@ -55,12 +54,9 @@ const testThemeTree : themeService.ThemePostCreateTreeModel[] = [
 ];
 export let testThemeIds : number[] = [];
 
-const testTaskModels : taskService.TaskPostCreateModel[] = [
+const testTaskModels : taskService.TaskCreate[] = [
     {
-        statement: {
-            body : "test statement",
-            packageUuids : []
-        },
+        statement: "test statement",
         answer: "test answer",
         solutions: [
             {
@@ -81,22 +77,21 @@ const testTaskModels : taskService.TaskPostCreateModel[] = [
                 label: "2 note",
                 body: "second note"
             }
-        ]
+        ],
+        themeIds : [],
+        userNote : "User Note",
+        packageUuids : []
     },
     {
-        statement: {
-            body : "2 statement",
-            packageUuids : []
-        },
+        statement: "2 statement",
         answer: "2 answer",
         solutions: [],
-        remarks: []
+        remarks: [],
+        themeIds : [],
+        packageUuids : []
     },
     {
-        statement: {
-            body : "Как набрать $\\frac{2 + 3}{5}$?",
-            packageUuids : []
-        },
+        statement: "Как набрать $\\frac{2 + 3}{5}$?",
         answer: " Привет, \\LaTeX!",
         solutions: [
             {
@@ -105,16 +100,19 @@ const testTaskModels : taskService.TaskPostCreateModel[] = [
             }
         ],
         remarks: [],
+        themeIds : [],
+        userNote : "User note",
+        packageUuids : []
     }
 ];
-export let testTaskIds : number[] = [];
+export let testTaskUuids : string[] = [];
 
 
 async function registerTestUsers() {
     for (const model of testUserModels) {
         const user : User | undefined = await getRepository(User).findOne({where : { email : model.email }});
         if (user) {
-            testTaskIds.push(user.id);
+            testTaskUuids.push();
         }
         else {
             testUserIds.push(await userService.registerUser(model));
@@ -132,16 +130,10 @@ async function createTestThemes() {
 }
 
 async function createTestTasks() {
-    console.log("Creating tasks...");
     for (const model of testTaskModels) {
         const authorId : number = testUserIds[model.answer.length % testUserIds.length];
-        const materialId : number = await materialService.createMaterial({
-            authorId,
-            themeIds : [ testThemeIds[0] ]
-        })
-        testTaskIds.push(await taskService.createTask(materialId, model));
+        testTaskUuids.push(await taskService.createTask(model, authorId).then(res => res.uuid));
     }
-    console.log("tasks were created successfuly");
 }
 
 const testPackages = [

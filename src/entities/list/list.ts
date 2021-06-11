@@ -1,19 +1,24 @@
-import { Entity, OneToOne, Column, OneToMany, PrimaryColumn, JoinColumn } from "typeorm";
-import { Material } from "../material/material";
+import { Entity, OneToOne, Column, OneToMany, PrimaryColumn, JoinColumn, ManyToMany, JoinTable } from "typeorm";
+import { LatexPackage } from "../latex/latex-package";
+import { Version } from "../material/version";
 import { ListBlock } from "./list-block";
 
 @Entity()
 export class List {
   @PrimaryColumn()
-  id!: number;
-
-  @OneToOne(type => Material, {primary: true})
-  @JoinColumn({ name: 'id' })
-  material!: Material;
+  uuid!: string;
 
   @Column()
-  name!: string;
+  title!: string;
 
   @OneToMany(type => ListBlock, block => block.list)
   blocks!: ListBlock[];
+
+  @ManyToMany(type => LatexPackage)
+  @JoinTable()
+  packages!: LatexPackage[];
+
+  @OneToOne(type => Version, {primary: true})
+  @JoinColumn({ name: 'uuid' })
+  version!: Version;
 }

@@ -2,7 +2,7 @@ import { createQueryBuilder, getRepository } from "typeorm";
 import { Access } from "../entities/access";
 import { AccessType, UserAccess } from "../entities/user-access";
 import { keysForSelection } from "../mlib";
-import { getUserMin, UserGetMinModel } from "./user-service";
+import { getUserMin, UserMin } from "./user-service";
 
 export enum NonOwnerAccessType {
     none = 0,
@@ -10,6 +10,13 @@ export enum NonOwnerAccessType {
     write = 2,
     moderate = 3
 }
+
+export interface AccessMax {
+    owner    : UserMin,
+    read     : UserMin[],
+    write    : UserMin[],
+    moderate : UserMin[]
+};
 
 
 export async function createAccess(ownerId : number) : Promise<number> {
@@ -60,20 +67,12 @@ export async function setAccess(accessId : number, userId : number, nonOwnerType
     }
 }
 
-export interface AccessGetMaxModel {
-    owner    : UserGetMinModel,
-    read     : UserGetMinModel[],
-    write    : UserGetMinModel[],
-    moderate : UserGetMinModel[]
-};
-
 interface UserAccessType {
-    user : UserGetMinModel,
+    user : UserMin,
     type : AccessType 
 }
 
-export async function getAccessMax(accessId : number, actorId : number) : Promise<AccessGetMaxModel> {
-    await checkAccessLevel(accessId, actorId, AccessType.read);
+export async function getAccessMax(accessId : number) : Promise<AccessMax> {
     const userAccess = await getRepository(UserAccess).find({ where: { accessId } });
     const infos = await Promise.all(
         userAccess.map(a =>  new Promise<UserAccessType>((res, rej) => {

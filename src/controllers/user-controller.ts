@@ -1,9 +1,9 @@
-import { pick } from '../mlib';
+import { pick, processError } from '../mlib';
 import * as userService from '../services/user-service';
 import jwt from 'jsonwebtoken';
 import { keys } from 'ts-transformer-keys';
 import * as t from '../types/user-types';
-import { ReqT, ResT } from './mlib-controllers';
+import { ReqT, ResT } from "../mlib";
 
 const SECRETKEY = 'SECRET_KEY'
 
@@ -11,7 +11,7 @@ export interface UserTokenInfo {
     id: number
 };
 
-export async function checkAuth(token: string): Promise<userService.UserGetMinModel | null> {
+export async function checkAuth(token: string): Promise<userService.UserMin | null> {
     if (!token) {
         return null;
     }
@@ -63,14 +63,9 @@ export async function register (req : ReqT<void, t.PostRegisterBody>, res : ResT
     }
 }
 export async function profile(req : ReqT<t.GetProfileQuery, void>, res : ResT<t.GetProfilePost>)  {
-    try {
-        const profile = await userService.getUserProfile(req.query.id);
-        res.send({ profile })
-    }
-    catch (err) {
-        console.log(err);
-        res.send("Ошибка при обработке запроса: " + err.message);
-    }
+    return userService.getUserProfile(req.query.id)
+        .then(profile => res.send({ profile }))
+        .catch(err => processError(err, res));
 }
 
 export async function findUsers(req : any, res : any)  {

@@ -3,7 +3,7 @@ import { createQueryBuilder, getRepository } from "typeorm";
 import { User } from "../entities/user";
 import { keysForSelection } from "../mlib";
 
-export interface UserGetMinModel {
+export interface UserMin {
   id: number;
   name: string,
   surname: string,
@@ -11,11 +11,11 @@ export interface UserGetMinModel {
   email: string
 }
 
-export interface UserGetProfileModel extends UserGetMinModel {
+export interface UserProfile extends UserMin {
   // Ещё разная информация об активности User'a
 }
 
-export interface UserPostRegistrationModel {
+export interface UserRegistration {
   name: string,
   surname: string,
   patronymic?: string,
@@ -23,7 +23,7 @@ export interface UserPostRegistrationModel {
   password: string;
 }
 
-export async function registerUser(obj: UserPostRegistrationModel) : Promise<number> {
+export async function registerUser(obj: UserRegistration) : Promise<number> {
   if (await getRepository(User).count({email: obj.email}) > 0) {
     throw new Error("Пользователь с такой почтой уже зарегистрирован");
   }
@@ -34,18 +34,18 @@ export async function getUser(id : number) : Promise<User> {
   return getRepository(User).findOneOrFail(id);
 }
 
-export async function getUserProfile(id: number) : Promise<UserGetProfileModel> {
+export async function getUserProfile(id: number) : Promise<UserProfile> {
   const user = await createQueryBuilder(User, 'user')
       .where({ id })
-      .select(keysForSelection<User>('user', keys<UserGetProfileModel>()))
+      .select(keysForSelection<User>('user', keys<UserProfile>()))
       .getOneOrFail();
   return user;
 }
 
-export async function getUserMin(id: number) : Promise<UserGetMinModel> {
+export async function getUserMin(id: number) : Promise<UserMin> {
   const user = await createQueryBuilder(User, 'user')
       .where({ id })
-      .select(keysForSelection<User>('user', keys<UserGetMinModel>()))
+      .select(keysForSelection<User>('user', keys<UserMin>()))
       .getOneOrFail();
   return user;
 }

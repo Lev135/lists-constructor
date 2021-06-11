@@ -5,19 +5,19 @@ import { Task } from "../task/task";
 @Entity()
 export class ListBlockTaskItem {
   @PrimaryColumn()
+  index!: number;
+
+  @PrimaryColumn()
   blockId!: number;
+
+  @Column()
+  taskUuid!: string;
+
+  @ManyToOne(type => Task)
+  @JoinColumn({ name : 'taskUuid' })
+  task!: Task;
 
   @ManyToOne(type => ListBlockTasks, block => block.taskItems)
   @JoinColumn({ name : 'blockId' })
   block!: ListBlockTasks;
-
-  @Column()
-  taskId!: number;
-
-  @ManyToOne(type => Task)
-  @JoinColumn({ name : 'taskId' })
-  task!: Task;
-
-  @PrimaryColumn()
-  index!: number;
 }

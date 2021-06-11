@@ -1,42 +1,51 @@
 import { GlobalOptions } from "../compilation/options/global-options";
-import { AccessGetMaxModel } from "../services/access-service";
-import { LatexFieldGetModel, LatexFieldPostModel } from "../services/latex-service";
-import { TaskRemarkModel } from "../services/task-service";
-import { UserGetMinModel } from "../services/user-service";
+import { AccessMax } from "../services/access-service";
+import { UserMin } from "../services/user-service";
+import { VersionIds, VersionListModel } from "../services/version-service";
+import { TaskCreateImpl, TaskMaxImpl, TaskRemarkModel } from "./task-impl-types";
 
 // task/create (_, body) => send
-export interface PostCreateBody {
-    statement: LatexFieldPostModel,
-    answer: string,
-    solutions: LatexFieldPostModel[],
-    remarks: TaskRemarkModel[],
+export interface PostCreateBody extends TaskCreateImpl {
     themeIds : number[],
     userNote? : string
 }
 export interface PostCreateSend {
-    id : number
+    uuid : string,
+    materialId : number,
+    index : number
 }
 
 // task/view (query, _) => send
 export interface GetViewQuery {
-    id : number
+    uuid : string
 }
-export interface GetViewSend {
-    id : number,
-    author: UserGetMinModel,
-    statement : LatexFieldGetModel,
+export interface GetViewSend extends TaskMaxImpl {
+    uuid : string,
+    materialId : number,
+    index : number,
+
+    versionList : VersionListModel,
+
+    author: UserMin,
     themeIds : number[],
     creationDate: Date,
-    answer: string,
-    solutions: LatexFieldGetModel[],
-    remarks: TaskRemarkModel[]
     userNote ?: string,
-    accessRules : AccessGetMaxModel
+    access : AccessMax
 }
+
+// task/edit (query, body) => send
+export interface PutEditQuery {
+    uuid : string
+}
+export interface PutEditBody extends TaskCreateImpl {
+}
+export interface PutEditSend extends VersionIds {
+}
+
 
 // task/compile (query, body) => send
 export interface PostCompileQuery {
-    id : number
+    uuid : string
 }
 export type PostCompileBody = GlobalOptions;
 export interface PostCompileSend {

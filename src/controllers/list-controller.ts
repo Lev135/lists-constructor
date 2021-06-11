@@ -1,71 +1,32 @@
-import { getListPackages, ListCompileModel } from "../compilation/compilation-types";
 import { compilePdf } from "../compilation/latex-compilation";
-import { PackageName } from "../compilation/options/latex-language-types";
-import { getPackageName } from "../services/latex-service";
 import * as listService from "../services/list-service";
-import * as materialService from '../services/material-service';
-import * as types from '../types/list-types';
-import { ReqT, ResT } from "./mlib-controllers";
+import * as t from '../types/list-types';
+import { processError, ReqT, ResT } from "../mlib";
 
-export async function create(req : ReqT<void, types.PostCreateBody>, res : ResT<types.PostCreateSend>, _next : any) {
-    try {
-        const id : number = await materialService.createMaterial({
-            authorId : req.user.id,
-            themeIds : req.body.themeIds,
-            userNote : req.body.userNote
-        });
-        await listService.createList(id, req.body);
-        res.send({ id });
-    }
-    catch (err) {
-        console.log(err);
-        res.send("Ошибка при обработке запроса: " + err.message);
-    }
+export async function create(req : ReqT<void, t.PostCreateBody>, res : ResT<t.PostCreateSend>, _next : any) {
+    return listService.createList(req.body, req.user.id)
+        .then(ids => res.send(ids))
+        .catch(err => processError(err, res));
 }
 
-export async function view(req : ReqT<types.GetViewQuery, void>,
-                           res : ResT<types.GetViewSend>) : Promise<void> {
-    try {
-        const id : number = req.query.id;
-        const material = await materialService.getMaterialMax(id, req.user.id);
-        const list = await listService.getListMax(id);
-        res.send({
-            ...material,
-            ...list,
-        });
-    }
-    catch (err) {
-        console.log(err);
-        res.send(`Ошибка при обработке запроса (id = ${req.query.id}): ` + err.message);
-    }
+export async function edit(req : ReqT<t.PutEditQuery, t.PutEditBody>, res : ResT<t.PutEditSend>) {
+    return listService.editList(req.query.uuid, req.body, req.user.id)
+        .then(ids => res.send(ids))
+        .catch(err => processError(err, res));
 }
 
-export async function compile(req : ReqT<types.PostCompileQuery, types.PostCompileBody>,
-                              res : ResT<types.PostCompileSend>) {
-    try {
-        const id : number = req.query.id;
-        const material : materialService.MaterialGetMinModel 
-            = await materialService.getMaterialMin(id, req.user.id);
-        const list : listService.ListCompModel 
-            = await listService.getListCompile(id);
-        const compObj : ListCompileModel = {
-            ...list,
-            author : material.author
-        }
-        const packages : PackageName[] = await Promise.all(
-            getListPackages(compObj).map(uuid => getPackageName(uuid))
-        );
-        res.send({
-            uuid : await compilePdf(
-                id, 
-                'list-template', 
-                req.body, 
-                { ...compObj, packages }
-            )
-        });
-    }
-    catch (err) {
-        console.log(err);
-        res.send(`Ошибка при обработке запроса компиляции (id = ${req.query.id}): ` + err.message);    
-    }
+export async function view(req : ReqT<t.GetViewQuery, void>,
+                           res : ResT<t.GetViewSend>) : Promise<void> {
+    return listService.getListMax(req.query.uuid, req.user.id)
+        .then(list => res.send(list))
+        .catch(err => processError(err, res));
+}
+
+export async function compile(req : ReqT<t.PostCompileQuery, t.PostCompileBody>,
+                              res : ResT<t.PostCompileSend>) {
+    const uuid = req.query.uuid;
+    return listService.getListComp(uuid, req.user.id)
+        .then(listComp => compilePdf(uuid, 'list-template', req.body, listComp))
+        .then(uuid => res.send({ uuid }))
+        .catch(err => processError(err, res));
 }

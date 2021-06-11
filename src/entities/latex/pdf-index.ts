@@ -1,5 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Material } from "../material/material";
+import { Version } from "../material/version";
 
 @Entity()
 export class PdfIndex {
@@ -7,11 +8,11 @@ export class PdfIndex {
     uuid!: string;
 
     @Column()
-    compilableId!: number;
+    compilableUuid!: string;
 
-    @ManyToOne(type => Material)
+    @ManyToOne(type => Version)
     @JoinColumn({ name : 'compilableId' })
-    compilable!: Material;
+    compilable!: Version;
 
     @Column()
     templateName!: string;

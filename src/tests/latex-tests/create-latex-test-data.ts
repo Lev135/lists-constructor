@@ -6,64 +6,48 @@ import { createTask } from "../../services/task-service";
 
 const taskStatementsDir = rootDir + '/src/tests/latex-tests/task-statements';
 
-async function createLatexTasks() : Promise<number[]> {
+async function createLatexTasks() : Promise<string[]> {
     const fileNames : string[] = readdirSync(taskStatementsDir);
-    const promises : Promise<number>[] = [];
+    const promises : Promise<string>[] = [];
     for (const fileName of fileNames) {
         const statement : string = readFileSync(taskStatementsDir + "/" + fileName).toString();
-        console.log('statement', statement);
-        const materialId : number = await createMaterial({
-            authorId : 1,
-            themeIds : []
-        });
-        promises.push(createTask(materialId, {
-            statement : {
-                body : statement,
-                packageUuids : [],
-            },
+        promises.push(createTask({
+            statement,
             answer : "",
             remarks : [],
             solutions : [],
-        }));
+            themeIds : [],
+            packageUuids : []
+        }, 1).then(res => res.uuid));
     }
     return Promise.all(promises);
 }
 
 export async function createLatexTestData() {
-    const ids : number[] = await createLatexTasks();
-    const firstBlockIds = ids.slice();
-    const secondBlockIds = ids.slice(1).reverse();
-    const materialId : number = await createMaterial({
-        authorId : 1,
-        themeIds : []
-    })
-    await createList(materialId, {
-        name : 'first \LaTeX list',
+    const uuids : string[] = await createLatexTasks();
+    const firstBlockIds = uuids.slice();
+    const secondBlockIds = uuids.slice(1).reverse();
+    await createList({
+        title : 'first \LaTeX list',
         blocks : [
             {
-                body : {
-                    body : `Все задачи по порядку: ${firstBlockIds.toString()}\\ldots`,
-                    packageUuids : []
-                }
+                body : `Все задачи по порядку: ${firstBlockIds.toString()}\\ldots`,
             },
             {
-                taskIds : firstBlockIds
+                taskUuids : firstBlockIds
             },
             {
-                body : {
-                    body : `А теперь в обратном порядке: $${secondBlockIds.toString()}$`,
-                    packageUuids : []
-                }
+                body : `А теперь в обратном порядке: $${secondBlockIds.toString()}$`,
+                
             },
             {
-                taskIds : secondBlockIds
+                taskUuids : secondBlockIds
             },
             {
-                body : {
-                    body : `\\texttt{Да мы ещё и одну задачу где-то посеяли!}`,
-                    packageUuids : []
-                }
+                body : `\\texttt{Да мы ещё и одну задачу где-то посеяли!}`,
             }
-        ]
-    });
+        ],
+        packageUuids : [],
+        themeIds : []
+    }, 1);
 }

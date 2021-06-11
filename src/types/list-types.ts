@@ -1,37 +1,53 @@
 import { GlobalOptions } from "../compilation/options/global-options";
-import { AccessGetMaxModel } from "../services/access-service";
-import { ListBlockPostModel, ListBlockGetModel } from "../services/list-service";
-import { UserGetMinModel } from "../services/user-service";
+import { AccessMax } from "../services/access-service";
+import { ListBlockCreate, ListBlockModel } from "./list-impl-types";
+import { UserMin } from "../services/user-service";
+import { VersionIds, VersionListModel } from "../services/version-service";
 
 // list/create (_, body) => send
 export interface PostCreateBody {
-    name : string,
-    blocks : ListBlockPostModel[],
+    title : string,
+    blocks : ListBlockCreate[],
+    packageUuids : string[],
     themeIds : number[],
     userNote ?: string
 }
-export interface PostCreateSend {
-    id : number
+export interface PostCreateSend extends VersionIds {
+    
 }
 
 // list/view (query, _) => send
 export interface GetViewQuery {
-    id : number
+    uuid : string
 }
-export interface GetViewSend {
-    id: number,
-    author: UserGetMinModel,
-    name: string,
+export interface GetViewSend extends VersionIds {
+    versionList : VersionListModel,
+    
+    author: UserMin,
+    title: string,
     themeIds: number[],
     creationDate: Date,
-    blocks: ListBlockGetModel[]
+    blocks: ListBlockModel[]
     userNote ?: string,
-    accessRules : AccessGetMaxModel
+    access : AccessMax,
+    packageUuids : string[]
+}
+
+// list/edit (query, body) => send
+export interface PutEditQuery {
+    uuid : string
+}
+export interface PutEditBody {
+    title : string,
+    blocks : ListBlockCreate[],
+    packageUuids : string[]
+}
+export interface PutEditSend extends VersionIds {
 }
 
 // list/compile (query, body) => send
 export interface PostCompileQuery {
-    id : number
+    uuid : string
 }
 export type PostCompileBody = GlobalOptions;
 export interface PostCompileSend {

@@ -3,18 +3,26 @@ import { Access } from "../access";
 import { User } from "../user";
 import { Theme } from "./theme";
 import { UserNote } from "./user-note";
+import { Version } from "./version";
 
 @Entity()
 export class Material {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @ManyToOne(type => User, user => user.createdMaterials)
-  author!: User;
+  @Column()
+  userId!: number;
 
   @CreateDateColumn()
   creationDate!: Date;
 
+  @Column()
+  accessId!: number
+
+  @ManyToOne(type => User, user => user.createdMaterials)
+  @JoinColumn({ name : 'userId' })
+  author!: User;
+  
   @OneToMany(type => UserNote, note => note.material)
   userNotes!: UserNote[];
 
@@ -22,10 +30,10 @@ export class Material {
   @JoinTable()
   themes!: Theme[];
 
-  @Column()
-  accessId!: number
-
   @OneToOne(type => Access)
   @JoinColumn({ name : 'accessId' })
   access!: Access;
+
+  @OneToMany(type => Version, version => version.material)
+  versions!: Version[];
 }

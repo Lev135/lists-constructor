@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import * as taskController from '../controllers/task-controller'
-import { GetFT, PostFT } from './mlib-routers';
+import { GetFT, PostFT } from '../mlib';
 
 export const taskRouter : Router = Router();
 
@@ -8,6 +8,8 @@ export const taskRouter : Router = Router();
 taskRouter.post('/create', taskController.create as PostFT);
 
 taskRouter.get('/view', taskController.viewPage as GetFT);
+
+taskRouter.put('/edit', taskController.edit as GetFT)
 
 taskRouter.post('/compilePdf', taskController.compile as PostFT);
 
