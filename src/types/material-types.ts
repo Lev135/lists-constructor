@@ -30,3 +30,8 @@ export interface PutAccessRulesBody {
     userId : number,
     type : NonOwnerAccessType
 }
+
+// material/confirmVersion (query, _) => _
+export interface PutConfirmVersionQuery {
+    uuid : string
+}

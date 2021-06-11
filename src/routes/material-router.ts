@@ -10,3 +10,5 @@ materialRouter.post('/userNote', materialController.setUserNote as PostFT);
 
 materialRouter.get('/accessRules', materialController.getAccessRules as GetFT);
 materialRouter.put('/accessRules', materialController.setAccessRule as GetFT);
+
+materialRouter.put('/confirmVersion', materialController.confirmVersion as GetFT);

@@ -56,9 +56,16 @@ export async function confirmVersionCheck(uuid : string, actorId : number) : Pro
     return versionCheckAccessLevel(uuid, actorId, AccessType.moderate);
 }
 export async function confirmVersion(uuid : string, confirmerId : number) : Promise<void>  {
+    const { confirmed } = await createQueryBuilder(Version, 'version')
+        .where({ uuid })
+        .select('confirmed')
+        .getRawOne();
+    if (confirmed)
+        throw new Error(`Version ${uuid} is already confirmed`);
     return getRepository(Version).update(uuid, {
         confirmed : true,
-        confirmerId
+        confirmerId,
+        confirmationDate : new Date()
     }).then();
 }
 
