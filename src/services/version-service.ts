@@ -33,7 +33,7 @@ export async function createBase(obj : BaseCreateModel) : Promise <VersionIds> {
 export async function createVersionCheck(uuid : string, actorId : number) {
     return versionCheckAccessLevel(uuid, actorId, AccessType.write);    
 }
-export async function createVersion(uuid : string, authorId : number) : Promise <VersionIds> {
+export async function createVersion(uuid : string, editorId : number) : Promise <VersionIds> {
     const materialId = await getVersionMaterialId(uuid);
     const obj = await createQueryBuilder(Version, 'version')
         .select("MAX(version.index)", 'lastIndex')
@@ -41,7 +41,7 @@ export async function createVersion(uuid : string, authorId : number) : Promise 
         .getRawOne();
     const lastIndex = obj ? obj.lastIndex : 0;
     const version = await getRepository(Version).save({
-        authorId,
+        editorId,
         materialId,
         index : lastIndex + 1
     });
@@ -79,7 +79,7 @@ export interface VersionGetMaxModel extends VersionGetMinModel {
 
 export interface VersionListModel {
     materialId : number;
-    versions : VersionMinWithoutIds[];
+    versions : VersionGetMinModel[];
 }
 
 export async function getVersionMinCheck(uuid : string, actorId : number) {
@@ -114,7 +114,7 @@ export async function getVersionsList(uuid: string) : Promise<VersionListModel> 
     sortByField(versions, 'index');
     return {
         materialId,
-        versions : await Promise.all(versions.map(getVersionWithoutIdsImpl))
+        versions : await Promise.all(versions.map(getVersionImpl))
     }
 }
 
@@ -129,17 +129,6 @@ export async function versionCheckAccessLevel(uuid : string, userId : number, mi
 async function getVersionMaterialId(uuid : string) : Promise<number> {
     return getRepository(Version).findOneOrFail(uuid)
         .then(v => v.materialId);
-}
-
-
-async function getVersionWithoutIdsImpl(v : Version) : Promise<VersionMinWithoutIds> {
-    return {
-        editor : await getUserMin(v.editorId),
-        creationDate : v.creationDate,
-        confirmed : v.confirmed,
-        confirmer : v.confirmed ? await getUserMin(v.confirmerId) : undefined,
-        confirmationDate: v.confirmed ? v.confirmationDate : undefined
-    }
 }
 
 async function getVersionImpl(v : Version) : Promise<VersionGetMinModel> {

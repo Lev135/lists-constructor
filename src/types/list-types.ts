@@ -31,6 +31,17 @@ export interface GetViewSend extends VersionIds {
     access : AccessMax
 }
 
+// list/edit (query, body) => send
+export interface PutEditQuery {
+    uuid : string
+}
+export interface PutEditBody {
+    title : string,
+    blocks : ListBlockCreate[]
+}
+export interface PutEditSend extends VersionIds {
+}
+
 // list/compile (query, body) => send
 export interface PostCompileQuery {
     uuid : string

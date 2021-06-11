@@ -7,6 +7,7 @@ import { ListBlock } from "../entities/list/list-block";
 import { ListBlockComment } from "../entities/list/list-block-comment";
 import { ListBlockTaskItem } from "../entities/list/list-block-task-item";
 import { ListBlockTasks } from "../entities/list/list-block-tasks";
+import { Version } from "../entities/material/version";
 import { Task } from "../entities/task/task";
 import { AccessType } from "../entities/user-access";
 import { keysForSelection, sortByField } from "../mlib";
@@ -15,12 +16,15 @@ import { AccessMax } from "./access-service";
 import { createLatexField, getLatexField, getLatexFieldComp, getPackageName,  } from "./latex-service";
 import { getTaskComp, getTaskMin } from "./task-service";
 import { UserMin } from "./user-service";
-import { createBase, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, versionCheckAccessLevel, VersionIds, VersionListModel } from "./version-service";
+import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, versionCheckAccessLevel, VersionIds, VersionListModel } from "./version-service";
 
 
 export interface ListCreate extends ListCreateImpl {
     themeIds : number[],
     userNote ?: string
+}
+
+export interface ListEdit extends ListCreateImpl {
 }
 
 export async function createList(obj : ListCreate, actorId : number) : Promise<VersionIds> {
@@ -29,6 +33,12 @@ export async function createList(obj : ListCreate, actorId : number) : Promise<V
     }).then(versionIds => createListImpl(versionIds.uuid, obj, actorId)
       .then(_ => versionIds)
     );
+}
+
+export async function editList(uuid: string, obj : ListEdit, actorId : number) : Promise <VersionIds> {
+    return createVersion(uuid, actorId)
+        .then(vIds => createListImpl(vIds.uuid, obj, actorId)
+        .then(_ => vIds))
 }
 
 export interface ListMin extends ListMinImpl, VersionIds {
@@ -65,9 +75,9 @@ export async function getListMax(uuid : string, actorId : number) : Promise<List
     const list = await getListMaxImpl(uuid, actorId);
     return {
         uuid,
-        versionList,
         materialId : version.materialId,
         index : version.index,
+        versionList,
         ...version.material,
         access,
         ...list

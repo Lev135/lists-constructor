@@ -15,6 +15,12 @@ export async function viewPage(req : ReqT<t.GetViewQuery, void>, res : ResT<t.Ge
         .catch(err => processError(err, res));
 }
 
+export async function edit(req : ReqT<t.PutEditQuery, t.PutEditBody>, res : ResT<t.PutEditSend>) {
+    return taskService.editTask(req.query.uuid, req.body, req.user.id)
+        .then(ids => res.send(ids))
+        .catch(err => processError(err, res));
+}
+
 export async function compile(req : ReqT<t.PostCompileQuery, t.PostCompileBody>,
                               res : ResT<t.PostCompileSend>) {    
     const id = req.query.uuid;

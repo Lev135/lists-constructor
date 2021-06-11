@@ -8,7 +8,6 @@ export interface TaskRemarkModel {
 }
 
 export interface TaskMinImpl {
-    uuid : string,
     statement : LatexFieldGetModel
 }
 

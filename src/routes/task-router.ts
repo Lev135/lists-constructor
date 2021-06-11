@@ -9,6 +9,8 @@ taskRouter.post('/create', taskController.create as PostFT);
 
 taskRouter.get('/view', taskController.viewPage as GetFT);
 
+taskRouter.put('/edit', taskController.edit as GetFT)
+
 taskRouter.post('/compilePdf', taskController.compile as PostFT);
 
 taskRouter.get('/remarkTypes', taskController.remarkTypes as GetFT);

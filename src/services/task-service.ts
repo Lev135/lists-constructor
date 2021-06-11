@@ -11,7 +11,6 @@ import { TaskCompImpl, TaskCreateImpl, TaskMaxImpl, TaskMinImpl, TaskRemarkModel
 import { AccessMax } from "./access-service";
 import { createLatexField, getLatexField, getLatexFieldComp, getPackageName, LatexFieldPostModel } from "./latex-service";
 import { getListMin, ListMin } from "./list-service";
-import { createMaterial, getMaterialAccess, getMaterialMax, getMaterialMin } from "./material-service";
 import { UserMin } from "./user-service";
 import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionMin, getVersionsList, VersionIds, VersionListModel } from "./version-service";
 
@@ -19,6 +18,9 @@ import { createBase, createVersion, getVersionAccess, getVersionMax, getVersionM
 export interface TaskCreate extends TaskCreateImpl {
     themeIds : number[];
     userNote?: string;
+}
+
+export interface TaskEdit extends TaskCreateImpl {
 }
 
 export interface TaskCreateRes {
@@ -36,17 +38,27 @@ export async function createTask(obj : TaskCreate, actorId : number) : Promise<T
       .then(_ => res));
 }
 
-export interface TaskMin extends TaskMinImpl{
+export async function editTask(uuid : string, obj : TaskEdit, actorId : number) {
+    return createVersion(uuid, actorId)
+        .then(vIds => createTaskImpl(vIds.uuid, obj)
+        .then(_ => vIds));
+}
+
+export interface TaskMin extends TaskMinImpl, VersionIds {
     author : UserMin;
 //    owner : UserMin    TODO
 }
 
 export async function getTaskMin(uuid : string, actorId : number) : Promise<TaskMin> {
-    const versionObj = await getVersionMax(uuid, actorId);
+    const version = await getVersionMax(uuid, actorId);
     const minObj = await getTaskMinImpl(uuid)
     return {
+        uuid : version.uuid,
+        materialId : version.materialId,
+        index : version.index,
+
         ...minObj,
-        author : versionObj.material.author
+        author : version.material.author
     };
 }
 
@@ -66,12 +78,14 @@ export async function getTaskMax(uuid : string, actorId : number) : Promise<Task
     const access = await getVersionAccess(uuid);
     const task = await getTaskMaxImpl(uuid, actorId);
     return {
+        uuid : version.uuid,
+        materialId : version.materialId,
+        index : version.index,
+
         versionList, 
         ... version.material,
         access,
-        materialId : version.materialId,
 
-        index : version.index,
         ...task
     }
 }
@@ -147,7 +161,6 @@ async function getTaskMinImpl(uuid: string) : Promise<TaskMinImpl> {
         .addSelect('task.statementId')
         .getOneOrFail();
     return {
-        uuid : task.uuid,
         statement : await getLatexField(task.statementId)
     };
 }
@@ -178,7 +191,6 @@ async function getTaskMaxImpl(uuid : string, actorId : number) : Promise<TaskMax
     sortByField(task.solutions, 'index');
     sortByField(task.remarks, 'index');
     return {
-        uuid : task.uuid,
         statement : await getLatexField(task.statementId),
         answer : task.answer,
         solutions : await Promise.all(

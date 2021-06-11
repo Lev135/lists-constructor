@@ -8,4 +8,6 @@ listRouter.post('/create', listController.create as PostFT);
 
 listRouter.get('/view', listController.view as GetFT);
 
+listRouter.put('/edit', listController.edit as GetFT);
+
 listRouter.post('/compilePdf', listController.compile as PostFT);
