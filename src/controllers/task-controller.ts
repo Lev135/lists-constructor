@@ -25,7 +25,7 @@ export async function compile(req : ReqT<t.PostCompileQuery, t.PostCompileBody>,
                               res : ResT<t.PostCompileSend>) {    
     const id = req.query.uuid;
     return taskService.getTaskComp(id, req.user.id)
-        .then(async taskComp => compilePdf(taskComp.uuid, 'task-template', req.body, taskComp))
+        .then(async taskComp => compilePdf(taskComp.curVersion.uuid, 'task-template', req.body, taskComp))
         .then(uuid => res.send({ uuid }))
         .catch(err => processError(err, res));
 }

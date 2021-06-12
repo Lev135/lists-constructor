@@ -14,7 +14,7 @@ import { getListMin, ListMin } from "./list-service";
 import { UserMin } from "./user-service";
 import { createBase, createVersion, getVersionalMaxInfo, getVersionalMinInfo, versionCheckAccessLevel } from "./version-service";
 import * as t from "../types/task-types"
-import { VersionalMinInfo, VersionIds } from "../types/version-impl-types";
+import { VersionalMaxInfo, VersionalMinInfo, VersionIds } from "../types/version-impl-types";
 
 export async function createTask(obj : t.PostCreateBody, actorId : number) : Promise<t.PostCreateSend> {
     await createTaskImplCheck(obj.task);
@@ -64,12 +64,14 @@ export async function getTaskMax(uuid : string, actorId : number) : Promise<t.Ge
     }
 }
 
-export interface TaskComp extends TaskCompImpl, VersionIds {
-    packages : string[];
-    author : UserMin;
+export interface TaskComp extends VersionalMinInfo {
+    task : TaskCompImpl,
+    packages : string[]
 }
 
 export async function getTaskComp(uuid : string, actorId : number) : Promise<TaskComp> {
+    versionCheckAccessLevel(uuid, actorId, AccessType.read)
+    
     const info = await getVersionalMinInfo(uuid, actorId);
     const taskComp = await getTaskCompImpl(uuid);
     const promises : Promise<PackageName>[] =
@@ -80,10 +82,9 @@ export async function getTaskComp(uuid : string, actorId : number) : Promise<Tas
     const packages = await Promise.all(promises);
 
     return {
-        ...info.curVersion,
-        ...taskComp,
+        ...info,
         packages,
-        author : info.material.author
+        task : taskComp
     };
 }
 

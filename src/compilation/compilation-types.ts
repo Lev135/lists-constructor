@@ -14,10 +14,7 @@ export function getListPackages(obj : ListCompileModel) : string[] {
     obj.blocks.forEach(block => {
         if ('tasks' in block) {
             block.tasks.forEach(task => {
-                packageIds.push(...task.packageUuids);
-                task.solutions.forEach(solution => {
-                    packageIds.push(...solution.packageUuids);
-                }) 
+                packageIds.push(...task.packages);
             })
         }
     })

@@ -10,13 +10,12 @@ import { ListBlockTasks } from "../entities/list/list-block-tasks";
 import { Task } from "../entities/task/task";
 import { AccessType } from "../entities/user-access";
 import { keysForSelection, sortByField } from "../mlib";
-import { ListBlockComp, ListBlockModel, ListBlockCreate, ListComplImpl, ListMaxImpl, ListMinImpl, ListCreateImpl, ListBlockTasksCreate } from "../types/list-impl-types";
+import { ListBlockComp, ListBlockModel, ListBlockCreate, ListComplImpl, ListMaxImpl, ListMinImpl, ListCreateImpl, ListBlockTasksCreate, ListBlockTasksModel, ListBlockTasksComp } from "../types/list-impl-types";
 import { getPackageName, packageCheckUuid,  } from "./latex-service";
-import { getTaskComp, getTaskMin } from "./task-service";
-import { UserMin } from "./user-service";
+import { getTaskComp, getTaskMin, TaskMin } from "./task-service";
 import { createBase, createVersion, getVersionalMaxInfo, getVersionalMinInfo, versionCheckAccessLevel } from "./version-service";
 import * as t from "../types/list-types"
-import { VersionalMinInfo } from "../types/version-impl-types";
+import { VersionalMaxInfo, VersionalMinInfo } from "../types/version-impl-types";
 
 
 export async function createList(obj : t.PostCreateBody, actorId : number) : Promise<t.PostCreateSend> {
@@ -54,42 +53,48 @@ export async function getListMin(uuid : string, actorId : number) : Promise<List
 
 export async function getListMax(uuid : string, actorId : number) : Promise<t.GetViewSend> {
     await versionCheckAccessLevel(uuid, actorId, AccessType.read);
-    // TODO : check access level to all tasks (in getListMaxImplCheck)
     
     const info = await getVersionalMaxInfo(uuid, actorId);
     const list = await getListMaxImpl(uuid, actorId);
+    
+    await getListMaxImplCheck(list, actorId);
+    
     return {
         ...info,
         list
     }
 }
 
-export interface ListComp extends ListComplImpl {
-    packages : string[];
-    author : UserMin;
+export interface ListComp extends VersionalMaxInfo {
+    list : ListComplImpl,
+    packages : string[]
 }
 
 export async function getListComp(uuid : string, actorId : number) : Promise<ListComp> {
-    const info = await getVersionalMinInfo(uuid, actorId);
-    const listComp = await getListCompImpl(uuid, actorId);
+    await versionCheckAccessLevel(uuid, actorId, AccessType.read);
+
+    const info = await getVersionalMaxInfo(uuid, actorId);
+    const list = await getListCompImpl(uuid, actorId);
     const packages : PackageName[] = await Promise.all(
         getListPackages({ 
-            ...listComp,
+            ...list,
             author: info.material.author,
             uuid
         }).map(getPackageName)
     );
+
+    await getListCompImplCheck(list, actorId);
     
     return {
-        ...listComp,
+        ...info,
+        list,
         packages,
-        author : info.material.author
     };
 }
 
 // Private methods implementation
 
-async function checkListTaskBlocks(taskBlocks : ListBlockTasksCreate[], actorId : number) {
+async function checkListTaskBlocks(taskBlocks : { taskUuids : string[] }[], actorId : number) {
     const taskUuids = taskBlocks.flatMap(block => block.taskUuids);
     return Promise.all(
         taskUuids.map(uuid => versionCheckAccessLevel(uuid, actorId, AccessType.read))
@@ -136,6 +141,16 @@ async function getListMinImpl(uuid : string) : Promise<ListMinImpl> {
         .then(list => ({
             title : list.title
         }));
+}
+
+async function getListMaxImplCheck(obj : ListMaxImpl, actorId : number) {
+    const taskBlocks = obj.blocks.filter(block => 'tasks' in block) as ListBlockTasksModel[]
+    checkListTaskBlocks(
+        taskBlocks.map(block => ({ 
+            taskUuids : block.tasks.map(task => task.curVersion.uuid )
+        })),
+        actorId
+        );
 }
 
 async function getListMaxImpl(uuid : string, actorId : number) : Promise<ListMaxImpl> {
@@ -192,6 +207,16 @@ async function getBlockComp(blockId : number, actorId : number) : Promise<ListBl
         }
     }
     throw new Error("Unknown block type");
+}
+
+async function getListCompImplCheck(obj : ListComplImpl, actorId : number) {
+    const taskBlocks = obj.blocks.filter(block => 'tasks' in block) as ListBlockTasksComp[]
+    checkListTaskBlocks(
+        taskBlocks.map(block => ({ 
+            taskUuids : block.tasks.map(task => task.curVersion.uuid )
+        })),
+        actorId
+        );
 }
 
 async function getListCompImpl(uuid : string, actorId : number) : Promise<ListComplImpl> {

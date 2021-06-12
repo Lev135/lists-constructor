@@ -103,13 +103,13 @@ export async function getVersionalMinInfo(uuid : string, userId : number) : Prom
 
 // @access read
 export async function getVersionalMaxInfo(uuid : string, userId : number) : Promise<VersionalMaxInfo> {
-    const curVersion = await getVersionMax(uuid);
+    const curVersionIds = await getVersionIds(uuid);
     const versionList = await getVersionsList(uuid);
-    const material = await getMaterialMax(curVersion.materialId, userId);
-    const access = await getMaterialAccess(curVersion.materialId);
+    const material = await getMaterialMax(curVersionIds.materialId, userId);
+    const access = await getMaterialAccess(curVersionIds.materialId);
     
     return {
-        curVersionIndex : curVersion.index,
+        curVersionIds,
         versionList,
         material,
         access

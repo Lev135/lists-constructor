@@ -26,7 +26,7 @@ export interface VersionalMinInfo {
 }
 
 export interface VersionalMaxInfo {
-    curVersionIndex : number,
+    curVersionIds : VersionIds,
     versionList : VersionListModel,
     
     material : MaterialGetMaxImpl,
