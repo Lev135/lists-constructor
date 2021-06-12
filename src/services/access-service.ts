@@ -91,3 +91,9 @@ export async function getAccessMax(accessId : number) : Promise<AccessMax> {
         moderate : filterUsers(AccessType.moderate)
     }
 }
+
+export async function getAccessOwner(accessId : number) : Promise<UserMin> {
+    return getRepository(UserAccess).findOneOrFail({ where : { accessId, type : AccessType.owner }})
+        .catch(_ => { throw new Error(`Internal error: can't find owner of access ${accessId}`) })
+        .then(userAccess => getUserMin(userAccess.userId));
+}

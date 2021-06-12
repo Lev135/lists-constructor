@@ -21,6 +21,7 @@ import { DraftBlockTask } from '../entities/draft/draft-block-task';
 import { Access } from '../entities/access';
 import { UserAccess } from '../entities/user-access';
 import { Version } from '../entities/material/version';
+import { UserGroup } from '../entities/user-group';
 
 export async function startTypeOrm() {
     const connection = await TypeOrm.createConnection({
@@ -34,7 +35,7 @@ export async function startTypeOrm() {
         logger: options.dataBase.logger,
         synchronize: options.run.syncDataBase,
         entities: [
-            User,
+            User, UserGroup,
             Material, Version, UserNote, Theme,
             Task, TaskRemark, TaskSolution,
             List, ListBlock, ListBlockComment, ListBlockTasks, ListBlockTaskItem,

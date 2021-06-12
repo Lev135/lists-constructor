@@ -8,6 +8,7 @@ import { materialRouter } from '../routes/material-router';
 import { manageRouter } from '../routes/manage-router';
 import { latexRouter } from '../routes/latex-router';
 import { options } from '../processes/personal-options-process';
+import { groupRouter } from '../routes/group-router';
 
 export async function startExpress(){
   const app = express();
@@ -38,6 +39,7 @@ export async function startExpress(){
   app.use('/material', materialRouter);
   app.use('/manage', manageRouter);
   app.use('/latex', latexRouter);
+  app.use('/group', groupRouter);
   
   // обработка ошибки 404
   app.use(function (req, res, next) {

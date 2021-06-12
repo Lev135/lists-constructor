@@ -30,6 +30,12 @@ export async function registerUser(obj: UserRegistration) : Promise<number> {
   return (await getRepository(User).save(obj)).id;
 }
 
+export async function userCheckId(id : number) : Promise<void> {
+  const c = await createQueryBuilder(User).where({ id }).getCount();
+  if (c == 0) 
+    throw new Error(`Incorrect user id: ${id}`);
+}
+
 export async function getUser(id : number) : Promise<User> {
   return getRepository(User).findOneOrFail(id);
 }
